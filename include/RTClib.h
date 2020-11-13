@@ -26,41 +26,41 @@
 class TimeSpan;
 
 /** Registers */
-#define PCF8523_ADDRESS 0x68       ///< I2C address for PCF8523
-#define PCF8523_CLKOUTCONTROL 0x0F ///< Timer and CLKOUT control register
-#define PCF8523_CONTROL_1 0x00     ///< Control and status register 1
-#define PCF8523_CONTROL_2 0x01     ///< Control and status register 2
-#define PCF8523_CONTROL_3 0x02     ///< Control and status register 3
-#define PCF8523_TIMER_B_FRCTL 0x12 ///< Timer B source clock frequency control
-#define PCF8523_TIMER_B_VALUE 0x13 ///< Timer B value (number clock periods)
-#define PCF8523_OFFSET 0x0E        ///< Offset register
-#define PCF8523_STATUSREG 0x03     ///< Status register
+#define PCF8523_ADDRESS 0x68        ///< I2C address for PCF8523
+#define PCF8523_CLKOUTCONTROL 0x0F  ///< Timer and CLKOUT control register
+#define PCF8523_CONTROL_1 0x00      ///< Control and status register 1
+#define PCF8523_CONTROL_2 0x01      ///< Control and status register 2
+#define PCF8523_CONTROL_3 0x02      ///< Control and status register 3
+#define PCF8523_TIMER_B_FRCTL 0x12  ///< Timer B source clock frequency control
+#define PCF8523_TIMER_B_VALUE 0x13  ///< Timer B value (number clock periods)
+#define PCF8523_OFFSET 0x0E         ///< Offset register
+#define PCF8523_STATUSREG 0x03      ///< Status register
 
-#define PCF8563_ADDRESS 0x51       ///< I2C address for PCF8563
-#define PCF8563_CLKOUTCONTROL 0x0D ///< CLKOUT control register
-#define PCF8563_CONTROL_1 0x00     ///< Control and status register 1
-#define PCF8563_CONTROL_2 0x01     ///< Control and status register 2
-#define PCF8563_VL_SECONDS 0x02    ///< register address for VL_SECONDS
-#define PCF8563_CLKOUT_MASK 0x83   ///< bitmask for SqwPinMode on CLKOUT pin
+#define PCF8563_ADDRESS 0x51        ///< I2C address for PCF8563
+#define PCF8563_CLKOUTCONTROL 0x0D  ///< CLKOUT control register
+#define PCF8563_CONTROL_1 0x00      ///< Control and status register 1
+#define PCF8563_CONTROL_2 0x01      ///< Control and status register 2
+#define PCF8563_VL_SECONDS 0x02     ///< register address for VL_SECONDS
+#define PCF8563_CLKOUT_MASK 0x83    ///< bitmask for SqwPinMode on CLKOUT pin
 
-#define DS1307_ADDRESS 0x68 ///< I2C address for DS1307
-#define DS1307_CONTROL 0x07 ///< Control register
-#define DS1307_NVRAM 0x08   ///< Start of RAM registers - 56 bytes, 0x08 to 0x3f
+#define DS1307_ADDRESS 0x68  ///< I2C address for DS1307
+#define DS1307_CONTROL 0x07  ///< Control register
+#define DS1307_NVRAM 0x08  ///< Start of RAM registers - 56 bytes, 0x08 to 0x3f
 
-#define DS3231_ADDRESS 0x68   ///< I2C address for DS3231
-#define DS3231_TIME 0x00      ///< Time register
-#define DS3231_ALARM1 0x07    ///< Alarm 1 register
-#define DS3231_ALARM2 0x0B    ///< Alarm 2 register
-#define DS3231_CONTROL 0x0E   ///< Control register
-#define DS3231_STATUSREG 0x0F ///< Status register
-#define DS3231_TEMPERATUREREG                                                  \
-  0x11 ///< Temperature register (high byte - low byte is at 0x12), 10-bit
-       ///< temperature value
+#define DS3231_ADDRESS 0x68    ///< I2C address for DS3231
+#define DS3231_TIME 0x00       ///< Time register
+#define DS3231_ALARM1 0x07     ///< Alarm 1 register
+#define DS3231_ALARM2 0x0B     ///< Alarm 2 register
+#define DS3231_CONTROL 0x0E    ///< Control register
+#define DS3231_STATUSREG 0x0F  ///< Status register
+#define DS3231_TEMPERATUREREG \
+  0x11  ///< Temperature register (high byte - low byte is at 0x12), 10-bit
+        ///< temperature value
 
 /** Constants */
-#define SECONDS_PER_DAY 86400L ///< 60 * 60 * 24
-#define SECONDS_FROM_1970_TO_2000                                              \
-  946684800 ///< Unixtime for 2000-01-01 00:00:00, useful for initialization
+#define SECONDS_PER_DAY 86400L  ///< 60 * 60 * 24
+#define SECONDS_FROM_1970_TO_2000 \
+  946684800  ///< Unixtime for 2000-01-01 00:00:00, useful for initialization
 
 /**************************************************************************/
 /*!
@@ -79,16 +79,20 @@ class TimeSpan;
 */
 /**************************************************************************/
 class DateTime {
-public:
+ public:
   DateTime(uint32_t t = SECONDS_FROM_1970_TO_2000);
-  DateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour = 0,
-           uint8_t min = 0, uint8_t sec = 0);
-  DateTime(const DateTime &copy);
-  DateTime(const char *date, const char *time);
-  DateTime(const __FlashStringHelper *date, const __FlashStringHelper *time);
-  DateTime(const char *iso8601date);
+  DateTime(uint16_t year,
+           uint8_t month,
+           uint8_t day,
+           uint8_t hour = 0,
+           uint8_t min = 0,
+           uint8_t sec = 0);
+  DateTime(const DateTime& copy);
+  DateTime(const char* date, const char* time);
+  DateTime(const __FlashStringHelper* date, const __FlashStringHelper* time);
+  DateTime(const char* iso8601date);
   bool isValid() const;
-  char *toString(char *buffer);
+  char* toString(char* buffer);
 
   /*!
       @brief  Return the year.
@@ -141,16 +145,16 @@ public:
       option corresponds to a `toString()` format as follows:
   */
   enum timestampOpt {
-    TIMESTAMP_FULL, //!< `YYYY-MM-DDThh:mm:ss`
-    TIMESTAMP_TIME, //!< `hh:mm:ss`
-    TIMESTAMP_DATE  //!< `YYYY-MM-DD`
+    TIMESTAMP_FULL,  //!< `YYYY-MM-DDThh:mm:ss`
+    TIMESTAMP_TIME,  //!< `hh:mm:ss`
+    TIMESTAMP_DATE   //!< `YYYY-MM-DD`
   };
   String timestamp(timestampOpt opt = TIMESTAMP_FULL);
 
-  DateTime operator+(const TimeSpan &span);
-  DateTime operator-(const TimeSpan &span);
-  TimeSpan operator-(const DateTime &right);
-  bool operator<(const DateTime &right) const;
+  DateTime operator+(const TimeSpan& span);
+  DateTime operator-(const TimeSpan& span);
+  TimeSpan operator-(const DateTime& right);
+  bool operator<(const DateTime& right) const;
 
   /*!
       @brief  Test if one DateTime is greater (later) than another.
@@ -161,7 +165,7 @@ public:
       @return True if the left DateTime is later than the right one,
         false otherwise
   */
-  bool operator>(const DateTime &right) const { return right < *this; }
+  bool operator>(const DateTime& right) const { return right < *this; }
 
   /*!
       @brief  Test if one DateTime is less (earlier) than or equal to another
@@ -172,7 +176,7 @@ public:
       @return True if the left DateTime is earlier than or equal to the
         right one, false otherwise
   */
-  bool operator<=(const DateTime &right) const { return !(*this > right); }
+  bool operator<=(const DateTime& right) const { return !(*this > right); }
 
   /*!
       @brief  Test if one DateTime is greater (later) than or equal to another
@@ -183,8 +187,8 @@ public:
       @return True if the left DateTime is later than or equal to the right
         one, false otherwise
   */
-  bool operator>=(const DateTime &right) const { return !(*this < right); }
-  bool operator==(const DateTime &right) const;
+  bool operator>=(const DateTime& right) const { return !(*this < right); }
+  bool operator==(const DateTime& right) const;
 
   /*!
       @brief  Test if two DateTime objects are not equal.
@@ -194,15 +198,15 @@ public:
       @param right DateTime object to compare
       @return True if the two objects are not equal, false if they are
   */
-  bool operator!=(const DateTime &right) const { return !(*this == right); }
+  bool operator!=(const DateTime& right) const { return !(*this == right); }
 
-protected:
-  uint8_t yOff; ///< Year offset from 2000
-  uint8_t m;    ///< Month 1-12
-  uint8_t d;    ///< Day 1-31
-  uint8_t hh;   ///< Hours 0-23
-  uint8_t mm;   ///< Minutes 0-59
-  uint8_t ss;   ///< Seconds 0-59
+ protected:
+  uint8_t yOff;  ///< Year offset from 2000
+  uint8_t m;     ///< Month 1-12
+  uint8_t d;     ///< Day 1-31
+  uint8_t hh;    ///< Hours 0-23
+  uint8_t mm;    ///< Minutes 0-59
+  uint8_t ss;    ///< Seconds 0-59
 };
 
 /**************************************************************************/
@@ -211,10 +215,10 @@ protected:
 */
 /**************************************************************************/
 class TimeSpan {
-public:
+ public:
   TimeSpan(int32_t seconds = 0);
   TimeSpan(int16_t days, int8_t hours, int8_t minutes, int8_t seconds);
-  TimeSpan(const TimeSpan &copy);
+  TimeSpan(const TimeSpan& copy);
 
   /*!
       @brief  Number of days in the TimeSpan
@@ -249,21 +253,21 @@ public:
   */
   int32_t totalseconds() const { return _seconds; }
 
-  TimeSpan operator+(const TimeSpan &right);
-  TimeSpan operator-(const TimeSpan &right);
+  TimeSpan operator+(const TimeSpan& right);
+  TimeSpan operator-(const TimeSpan& right);
 
-protected:
-  int32_t _seconds; ///< Actual TimeSpan value is stored as seconds
+ protected:
+  int32_t _seconds;  ///< Actual TimeSpan value is stored as seconds
 };
 
 /** DS1307 SQW pin mode settings */
 enum Ds1307SqwPinMode {
-  DS1307_OFF = 0x00,            // Low
-  DS1307_ON = 0x80,             // High
-  DS1307_SquareWave1HZ = 0x10,  // 1Hz square wave
-  DS1307_SquareWave4kHz = 0x11, // 4kHz square wave
-  DS1307_SquareWave8kHz = 0x12, // 8kHz square wave
-  DS1307_SquareWave32kHz = 0x13 // 32kHz square wave
+  DS1307_OFF = 0x00,             // Low
+  DS1307_ON = 0x80,              // High
+  DS1307_SquareWave1HZ = 0x10,   // 1Hz square wave
+  DS1307_SquareWave4kHz = 0x11,  // 4kHz square wave
+  DS1307_SquareWave8kHz = 0x12,  // 8kHz square wave
+  DS1307_SquareWave32kHz = 0x13  // 32kHz square wave
 };
 
 /**************************************************************************/
@@ -272,17 +276,17 @@ enum Ds1307SqwPinMode {
 */
 /**************************************************************************/
 class RTC_DS1307 {
-public:
+ public:
   boolean begin(void);
-  static void adjust(const DateTime &dt);
+  static void adjust(const DateTime& dt);
   uint8_t isrunning(void);
   static DateTime now();
   static Ds1307SqwPinMode readSqwPinMode();
   static void writeSqwPinMode(Ds1307SqwPinMode mode);
   uint8_t readnvram(uint8_t address);
-  void readnvram(uint8_t *buf, uint8_t size, uint8_t address);
+  void readnvram(uint8_t* buf, uint8_t size, uint8_t address);
   void writenvram(uint8_t address, uint8_t data);
-  void writenvram(uint8_t address, uint8_t *buf, uint8_t size);
+  void writenvram(uint8_t address, uint8_t* buf, uint8_t size);
 };
 
 /** DS3231 SQW pin mode settings */
@@ -324,22 +328,22 @@ enum Ds3231Alarm2Mode {
 */
 /**************************************************************************/
 class RTC_DS3231 {
-public:
+ public:
   boolean begin(void);
-  static void adjust(const DateTime &dt);
+  static void adjust(const DateTime& dt);
   bool lostPower(void);
   static DateTime now();
   static Ds3231SqwPinMode readSqwPinMode();
   static void writeSqwPinMode(Ds3231SqwPinMode mode);
-  bool setAlarm1(const DateTime &dt, Ds3231Alarm1Mode alarm_mode);
-  bool setAlarm2(const DateTime &dt, Ds3231Alarm2Mode alarm_mode);
+  bool setAlarm1(const DateTime& dt, Ds3231Alarm1Mode alarm_mode);
+  bool setAlarm2(const DateTime& dt, Ds3231Alarm2Mode alarm_mode);
   void disableAlarm(uint8_t alarm_num);
   void clearAlarm(uint8_t alarm_num);
   bool alarmFired(uint8_t alarm_num);
   void enable32K(void);
   void disable32K(void);
   bool isEnabled32K(void);
-  static float getTemperature(); // in Celcius degree
+  static float getTemperature();  // in Celcius degree
 };
 
 /** PCF8523 INT/SQW pin mode settings */
@@ -389,9 +393,9 @@ enum Pcf8523OffsetMode {
 */
 /**************************************************************************/
 class RTC_PCF8523 {
-public:
+ public:
   boolean begin(void);
-  void adjust(const DateTime &dt);
+  void adjust(const DateTime& dt);
   boolean lostPower(void);
   boolean initialized(void);
   static DateTime now();
@@ -402,7 +406,8 @@ public:
   void writeSqwPinMode(Pcf8523SqwPinMode mode);
   void enableSecondTimer(void);
   void disableSecondTimer(void);
-  void enableCountdownTimer(PCF8523TimerClockFreq clkFreq, uint8_t numPeriods,
+  void enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
+                            uint8_t numPeriods,
                             uint8_t lowPulseWidth);
   void enableCountdownTimer(PCF8523TimerClockFreq clkFreq, uint8_t numPeriods);
   void disableCountdownTimer(void);
@@ -426,10 +431,10 @@ enum Pcf8563SqwPinMode {
 /**************************************************************************/
 
 class RTC_PCF8563 {
-public:
+ public:
   boolean begin(void);
   boolean lostPower(void);
-  void adjust(const DateTime &dt);
+  void adjust(const DateTime& dt);
   static DateTime now();
   void start(void);
   void stop(void);
@@ -445,20 +450,20 @@ public:
 */
 /**************************************************************************/
 class RTC_Millis {
-public:
+ public:
   /*!
       @brief  Start the RTC
       @param dt DateTime object with the date/time to set
   */
-  static void begin(const DateTime &dt) { adjust(dt); }
-  static void adjust(const DateTime &dt);
+  static void begin(const DateTime& dt) { adjust(dt); }
+  static void adjust(const DateTime& dt);
   static DateTime now();
 
-protected:
-  static uint32_t lastUnix;   ///< Unix time from the previous call to now() -
-                              ///< prevents rollover issues
-  static uint32_t lastMillis; ///< the millis() value corresponding to the last
-                              ///< **full second** of Unix time
+ protected:
+  static uint32_t lastUnix;    ///< Unix time from the previous call to now() -
+                               ///< prevents rollover issues
+  static uint32_t lastMillis;  ///< the millis() value corresponding to the last
+                               ///< **full second** of Unix time
 };
 
 /**************************************************************************/
@@ -471,23 +476,23 @@ protected:
 */
 /**************************************************************************/
 class RTC_Micros {
-public:
+ public:
   /*!
       @brief  Start the RTC
       @param dt DateTime object with the date/time to set
   */
-  static void begin(const DateTime &dt) { adjust(dt); }
-  static void adjust(const DateTime &dt);
+  static void begin(const DateTime& dt) { adjust(dt); }
+  static void adjust(const DateTime& dt);
   static void adjustDrift(int ppm);
   static DateTime now();
 
-protected:
-  static uint32_t microsPerSecond; ///< Number of microseconds reported by
-                                   ///< micros() per "true" (calibrated) second
-  static uint32_t lastUnix;   ///< Unix time from the previous call to now() -
-                              ///< prevents rollover issues
-  static uint32_t lastMicros; ///< micros() value corresponding to the last full
-                              ///< second of Unix time
+ protected:
+  static uint32_t microsPerSecond;  ///< Number of microseconds reported by
+                                    ///< micros() per "true" (calibrated) second
+  static uint32_t lastUnix;    ///< Unix time from the previous call to now() -
+                               ///< prevents rollover issues
+  static uint32_t lastMicros;  ///< micros() value corresponding to the last
+                               ///< full second of Unix time
 };
 
-#endif // _RTCLIB_H_
+#endif  // _RTCLIB_H_
