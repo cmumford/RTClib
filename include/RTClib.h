@@ -26,6 +26,10 @@
 #include <memory>
 #include <string>
 
+#include <driver/i2c.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
+
 #if 1  // Do only for not Arduino.
 typedef char __FlashStringHelper;
 #endif
@@ -286,7 +290,10 @@ class RTC_I2C_WriteCmd {
 
  private:
   friend class RTC_I2C;
-  RTC_I2C_WriteCmd();
+  RTC_I2C_WriteCmd(i2c_cmd_handle_t cmd, SemaphoreHandle_t i2c_mutex);
+
+  i2c_cmd_handle_t cmd_;
+  SemaphoreHandle_t i2c_mutex_;
 };
 
 class RTC_I2C_ReadCmd {
@@ -298,12 +305,16 @@ class RTC_I2C_ReadCmd {
 
  private:
   friend class RTC_I2C;
-  RTC_I2C_ReadCmd();
+  RTC_I2C_ReadCmd(i2c_cmd_handle_t cmd, SemaphoreHandle_t i2c_mutex);
+
+  i2c_cmd_handle_t cmd_;
+  SemaphoreHandle_t i2c_mutex_;
 };
 
 class RTC_I2C {
  public:
-  RTC_I2C();
+  RTC_I2C(i2c_port_t i2c_num = I2C_NUM_0,
+          SemaphoreHandle_t i2c_mutex = nullptr);
   ~RTC_I2C();
 
   bool WriteRegister(uint8_t addr, uint8_t reg, uint8_t val);
@@ -311,6 +322,10 @@ class RTC_I2C {
   bool Ping(uint8_t addr);
   std::unique_ptr<RTC_I2C_WriteCmd> BeginWrite(uint8_t addr);
   std::unique_ptr<RTC_I2C_ReadCmd> BeginRead(uint8_t addr, uint32_t num_bytes);
+
+ private:
+  i2c_port_t i2c_num_;
+  SemaphoreHandle_t i2c_mutex_;
 };
 
 /**************************************************************************/

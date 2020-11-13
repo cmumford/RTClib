@@ -59,27 +59,27 @@ bool RTC_DS3231::lostPower(void) {
 */
 /**************************************************************************/
 void RTC_DS3231::adjust(const DateTime& dt) {
-  auto transmission = i2c_->BeginWrite(DS3231_ADDRESS);
-  if (!transmission)
-    return;
+  {
+    auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
+    if (!write_op)
+      return;
 
-  transmission->WriteByte((uint8_t)DS3231_TIME);  // start at location 0
-  transmission->WriteByte(bin2bcd(dt.second()));
-  transmission->WriteByte(bin2bcd(dt.minute()));
-  transmission->WriteByte(bin2bcd(dt.hour()));
-  // The RTC must know the day of the week for the weekly alarms to work.
-  transmission->WriteByte(bin2bcd(dowToDS3231(dt.dayOfTheWeek())));
-  transmission->WriteByte(bin2bcd(dt.day()));
-  transmission->WriteByte(bin2bcd(dt.month()));
-  transmission->WriteByte(bin2bcd(dt.year() - 2000U));
-  if (!transmission->End())
-    return;
+    write_op->WriteByte((uint8_t)DS3231_TIME);  // start at location 0
+    write_op->WriteByte(bin2bcd(dt.second()));
+    write_op->WriteByte(bin2bcd(dt.minute()));
+    write_op->WriteByte(bin2bcd(dt.hour()));
+    // The RTC must know the day of the week for the weekly alarms to work.
+    write_op->WriteByte(bin2bcd(dowToDS3231(dt.dayOfTheWeek())));
+    write_op->WriteByte(bin2bcd(dt.day()));
+    write_op->WriteByte(bin2bcd(dt.month()));
+    write_op->WriteByte(bin2bcd(dt.year() - 2000U));
+  }
 
-  uint8_t statreg;
-  if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_STATUSREG, &statreg))
+  uint8_t status;
+  if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_STATUSREG, &status))
     return;
-  statreg &= ~0x80;  // flip OSF bit
-  i2c_->WriteRegister(DS3231_ADDRESS, DS3231_STATUSREG, statreg);
+  status &= ~0x80;  // flip OSF bit
+  i2c_->WriteRegister(DS3231_ADDRESS, DS3231_STATUSREG, status);
 }
 
 /**************************************************************************/
@@ -89,19 +89,20 @@ void RTC_DS3231::adjust(const DateTime& dt) {
 */
 /**************************************************************************/
 DateTime RTC_DS3231::now() {
-  auto transmission = i2c_->BeginWrite(DS3231_ADDRESS);
-  if (!transmission)
-    return DateTime();
+  {
+    auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
+    if (!write_op)
+      return DateTime();
 
-  transmission->WriteByte(0x0);
-  transmission->End();
+    write_op->WriteByte(0x0);
+  }
 
   auto read_op = i2c_->BeginRead(DS3231_ADDRESS, 7);
   uint8_t value = 0;
   uint8_t ss = read_op->ReadByte(&value) ? bcd2bin(value & 0x7F) : 0;
   uint8_t mm = read_op->ReadByte(&value) ? bcd2bin(value) : 0;
   uint8_t hh = read_op->ReadByte(&value) ? bcd2bin(value) : 0;
-  read_op->ReadByte(&value); // Ignore this value.
+  read_op->ReadByte(&value);  // Ignore this value.
   uint8_t d = read_op->ReadByte(&value) ? bcd2bin(value) : 0;
   uint8_t m = read_op->ReadByte(&value) ? bcd2bin(value) : 0;
   uint16_t y = read_op->ReadByte(&value) ? bcd2bin(value) + 2000 : 0;
@@ -116,9 +117,10 @@ DateTime RTC_DS3231::now() {
 */
 /**************************************************************************/
 Ds3231SqwPinMode RTC_DS3231::readSqwPinMode() {
-  auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
-  write_op->WriteByte(DS3231_CONTROL);
-  write_op->End();
+  {
+    auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
+    write_op->WriteByte(DS3231_CONTROL);
+  }
 
   auto read_op = i2c_->BeginRead(DS3231_ADDRESS, 1);
   uint8_t mode = 0;
@@ -158,9 +160,10 @@ void RTC_DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
 */
 /**************************************************************************/
 float RTC_DS3231::getTemperature() {
-  auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
-  write_op->WriteByte(DS3231_TEMPERATUREREG);
-  write_op->End();
+  {
+    auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
+    write_op->WriteByte(DS3231_TEMPERATUREREG);
+  }
 
   auto read_op = i2c_->BeginRead(DS3231_ADDRESS, 2);
   uint8_t msb = 0;
@@ -198,17 +201,19 @@ bool RTC_DS3231::setAlarm1(const DateTime& dt, Ds3231Alarm1Mode alarm_mode) {
   uint8_t DY_DT = (alarm_mode & 0x10)
                   << 2;  // Day/Date bit 6. Date when 0, day of week when 1.
 
-  auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
-  write_op->WriteByte(DS3231_ALARM1);
-  write_op->WriteByte(bin2bcd(dt.second()) | A1M1);
-  write_op->WriteByte(bin2bcd(dt.minute()) | A1M2);
-  write_op->WriteByte(bin2bcd(dt.hour()) | A1M3);
-  if (DY_DT) {
-    write_op->WriteByte(bin2bcd(dowToDS3231(dt.dayOfTheWeek())) | A1M4 | DY_DT);
-  } else {
-    write_op->WriteByte(bin2bcd(dt.day()) | A1M4 | DY_DT);
+  {
+    auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
+    write_op->WriteByte(DS3231_ALARM1);
+    write_op->WriteByte(bin2bcd(dt.second()) | A1M1);
+    write_op->WriteByte(bin2bcd(dt.minute()) | A1M2);
+    write_op->WriteByte(bin2bcd(dt.hour()) | A1M3);
+    if (DY_DT) {
+      write_op->WriteByte(bin2bcd(dowToDS3231(dt.dayOfTheWeek())) | A1M4 |
+                          DY_DT);
+    } else {
+      write_op->WriteByte(bin2bcd(dt.day()) | A1M4 | DY_DT);
+    }
   }
-  write_op->End();
 
   ctrl |= 0x01;  // AI1E
   return i2c_->WriteRegister(DS3231_ADDRESS, DS3231_CONTROL, ctrl);
@@ -235,16 +240,18 @@ bool RTC_DS3231::setAlarm2(const DateTime& dt, Ds3231Alarm2Mode alarm_mode) {
   uint8_t DY_DT = (alarm_mode & 0x8)
                   << 3;  // Day/Date bit 6. Date when 0, day of week when 1.
 
-  auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
-  write_op->WriteByte(DS3231_ALARM2);
-  write_op->WriteByte(bin2bcd(dt.minute()) | A2M2);
-  write_op->WriteByte(bin2bcd(dt.hour()) | A2M3);
-  if (DY_DT) {
-    write_op->WriteByte(bin2bcd(dowToDS3231(dt.dayOfTheWeek())) | A2M4 | DY_DT);
-  } else {
-    write_op->WriteByte(bin2bcd(dt.day()) | A2M4 | DY_DT);
+  {
+    auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
+    write_op->WriteByte(DS3231_ALARM2);
+    write_op->WriteByte(bin2bcd(dt.minute()) | A2M2);
+    write_op->WriteByte(bin2bcd(dt.hour()) | A2M3);
+    if (DY_DT) {
+      write_op->WriteByte(bin2bcd(dowToDS3231(dt.dayOfTheWeek())) | A2M4 |
+                          DY_DT);
+    } else {
+      write_op->WriteByte(bin2bcd(dt.day()) | A2M4 | DY_DT);
+    }
   }
-  write_op->End();
 
   ctrl |= 0x02;  // AI2E
   return i2c_->WriteRegister(DS3231_ADDRESS, DS3231_CONTROL, ctrl);

@@ -31,4 +31,4 @@ uint8_t bcd2bin(uint8_t val);
 /**************************************************************************/
 uint8_t bin2bcd(uint8_t val);
 
-#endif // #define RTC_UTIL_H_
+#endif  // #define RTC_UTIL_H_
