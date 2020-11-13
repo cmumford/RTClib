@@ -17,6 +17,15 @@
 uint32_t RTC_Millis::lastMillis;
 uint32_t RTC_Millis::lastUnix;
 
+namespace {
+
+uint32_t millisSinceStart() {
+  // TODO: Implement me.
+  return 0;
+}
+
+}  // anonymous namespace
+
 /**************************************************************************/
 /*!
     @brief  Set the current date/time of the RTC_Millis clock.
@@ -24,7 +33,7 @@ uint32_t RTC_Millis::lastUnix;
 */
 /**************************************************************************/
 void RTC_Millis::adjust(const DateTime& dt) {
-  lastMillis = millis();
+  lastMillis = millisSinceStart();
   lastUnix = dt.unixtime();
 }
 
@@ -37,7 +46,7 @@ void RTC_Millis::adjust(const DateTime& dt) {
 */
 /**************************************************************************/
 DateTime RTC_Millis::now() {
-  uint32_t elapsedSeconds = (millis() - lastMillis) / 1000;
+  uint32_t elapsedSeconds = (millisSinceStart() - lastMillis) / 1000;
   lastMillis += elapsedSeconds * 1000;
   lastUnix += elapsedSeconds;
   return lastUnix;

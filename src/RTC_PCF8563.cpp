@@ -9,6 +9,8 @@
 
 #include <RTClib.h>
 
+#if 0
+
 // START RTC_PCF8563 implementation
 
 /**************************************************************************/
@@ -151,3 +153,4 @@ void RTC_PCF8563::writeSqwPinMode(Pcf8563SqwPinMode mode) {
   Wire.endTransmission();
 }
 // END RTC_PCF8563 implementation
+#endif

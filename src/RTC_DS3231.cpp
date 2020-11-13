@@ -9,6 +9,10 @@
 
 #include <RTClib.h>
 
+#include "RTC_util.h"
+
+namespace {
+
 /**************************************************************************/
 /*!
     @brief  Convert the day of the week to a representation suitable for
@@ -21,18 +25,16 @@ static uint8_t dowToDS3231(uint8_t d) {
   return d == 0 ? 7 : d;
 }
 
+}  // anonymous namespace
+
 /**************************************************************************/
 /*!
     @brief  Start I2C for the DS3231 and test succesful connection
     @return True if Wire can find DS3231 or false otherwise.
 */
 /**************************************************************************/
-boolean RTC_DS3231::begin(void) {
-  Wire.begin();
-  Wire.beginTransmission(DS3231_ADDRESS);
-  if (Wire.endTransmission() == 0)
-    return true;
-  return false;
+bool RTC_DS3231::begin(void) {
+  return i2c_->Ping(DS3231_ADDRESS);
 }
 
 /**************************************************************************/
@@ -44,7 +46,10 @@ boolean RTC_DS3231::begin(void) {
 */
 /**************************************************************************/
 bool RTC_DS3231::lostPower(void) {
-  return (read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG) >> 7);
+  uint8_t reg_val;
+  if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_STATUSREG, &reg_val))
+    return true;  // Can't read, assume true.
+  return reg_val >> 7;
 }
 
 /**************************************************************************/
@@ -54,21 +59,27 @@ bool RTC_DS3231::lostPower(void) {
 */
 /**************************************************************************/
 void RTC_DS3231::adjust(const DateTime& dt) {
-  Wire.beginTransmission(DS3231_ADDRESS);
-  Wire._I2C_WRITE((byte)DS3231_TIME);  // start at location 0
-  Wire._I2C_WRITE(bin2bcd(dt.second()));
-  Wire._I2C_WRITE(bin2bcd(dt.minute()));
-  Wire._I2C_WRITE(bin2bcd(dt.hour()));
-  // The RTC must know the day of the week for the weekly alarms to work.
-  Wire._I2C_WRITE(bin2bcd(dowToDS3231(dt.dayOfTheWeek())));
-  Wire._I2C_WRITE(bin2bcd(dt.day()));
-  Wire._I2C_WRITE(bin2bcd(dt.month()));
-  Wire._I2C_WRITE(bin2bcd(dt.year() - 2000U));
-  Wire.endTransmission();
+  auto transmission = i2c_->BeginWrite(DS3231_ADDRESS);
+  if (!transmission)
+    return;
 
-  uint8_t statreg = read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG);
+  transmission->WriteByte((uint8_t)DS3231_TIME);  // start at location 0
+  transmission->WriteByte(bin2bcd(dt.second()));
+  transmission->WriteByte(bin2bcd(dt.minute()));
+  transmission->WriteByte(bin2bcd(dt.hour()));
+  // The RTC must know the day of the week for the weekly alarms to work.
+  transmission->WriteByte(bin2bcd(dowToDS3231(dt.dayOfTheWeek())));
+  transmission->WriteByte(bin2bcd(dt.day()));
+  transmission->WriteByte(bin2bcd(dt.month()));
+  transmission->WriteByte(bin2bcd(dt.year() - 2000U));
+  if (!transmission->End())
+    return;
+
+  uint8_t statreg;
+  if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_STATUSREG, &statreg))
+    return;
   statreg &= ~0x80;  // flip OSF bit
-  write_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG, statreg);
+  i2c_->WriteRegister(DS3231_ADDRESS, DS3231_STATUSREG, statreg);
 }
 
 /**************************************************************************/
@@ -78,18 +89,22 @@ void RTC_DS3231::adjust(const DateTime& dt) {
 */
 /**************************************************************************/
 DateTime RTC_DS3231::now() {
-  Wire.beginTransmission(DS3231_ADDRESS);
-  Wire._I2C_WRITE((byte)0);
-  Wire.endTransmission();
+  auto transmission = i2c_->BeginWrite(DS3231_ADDRESS);
+  if (!transmission)
+    return DateTime();
 
-  Wire.requestFrom(DS3231_ADDRESS, 7);
-  uint8_t ss = bcd2bin(Wire._I2C_READ() & 0x7F);
-  uint8_t mm = bcd2bin(Wire._I2C_READ());
-  uint8_t hh = bcd2bin(Wire._I2C_READ());
-  Wire._I2C_READ();
-  uint8_t d = bcd2bin(Wire._I2C_READ());
-  uint8_t m = bcd2bin(Wire._I2C_READ());
-  uint16_t y = bcd2bin(Wire._I2C_READ()) + 2000U;
+  transmission->WriteByte(0x0);
+  transmission->End();
+
+  auto read_op = i2c_->BeginRead(DS3231_ADDRESS, 7);
+  uint8_t value = 0;
+  uint8_t ss = read_op->ReadByte(&value) ? bcd2bin(value & 0x7F) : 0;
+  uint8_t mm = read_op->ReadByte(&value) ? bcd2bin(value) : 0;
+  uint8_t hh = read_op->ReadByte(&value) ? bcd2bin(value) : 0;
+  read_op->ReadByte(&value); // Ignore this value.
+  uint8_t d = read_op->ReadByte(&value) ? bcd2bin(value) : 0;
+  uint8_t m = read_op->ReadByte(&value) ? bcd2bin(value) : 0;
+  uint16_t y = read_op->ReadByte(&value) ? bcd2bin(value) + 2000 : 0;
 
   return DateTime(y, m, d, hh, mm, ss);
 }
@@ -101,14 +116,13 @@ DateTime RTC_DS3231::now() {
 */
 /**************************************************************************/
 Ds3231SqwPinMode RTC_DS3231::readSqwPinMode() {
-  int mode;
+  auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
+  write_op->WriteByte(DS3231_CONTROL);
+  write_op->End();
 
-  Wire.beginTransmission(DS3231_ADDRESS);
-  Wire._I2C_WRITE(DS3231_CONTROL);
-  Wire.endTransmission();
-
-  Wire.requestFrom((uint8_t)DS3231_ADDRESS, (uint8_t)1);
-  mode = Wire._I2C_READ();
+  auto read_op = i2c_->BeginRead(DS3231_ADDRESS, 1);
+  uint8_t mode = 0;
+  read_op->ReadByte(&mode);
 
   mode &= 0x93;
   return static_cast<Ds3231SqwPinMode>(mode);
@@ -121,8 +135,8 @@ Ds3231SqwPinMode RTC_DS3231::readSqwPinMode() {
 */
 /**************************************************************************/
 void RTC_DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
-  uint8_t ctrl;
-  ctrl = read_i2c_register(DS3231_ADDRESS, DS3231_CONTROL);
+  uint8_t ctrl = 0x0;
+  i2c_->ReadRegister(DS3231_ADDRESS, DS3231_CONTROL, &ctrl);
 
   ctrl &= ~0x04;  // turn off INTCON
   ctrl &= ~0x18;  // set freq bits to 0
@@ -132,7 +146,7 @@ void RTC_DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
   } else {
     ctrl |= mode;
   }
-  write_i2c_register(DS3231_ADDRESS, DS3231_CONTROL, ctrl);
+  i2c_->WriteRegister(DS3231_ADDRESS, DS3231_CONTROL, ctrl);
 
   // Serial.println( read_i2c_register(DS3231_ADDRESS, DS3231_CONTROL), HEX);
 }
@@ -144,15 +158,15 @@ void RTC_DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
 */
 /**************************************************************************/
 float RTC_DS3231::getTemperature() {
-  uint8_t lsb;
-  int8_t msb;
-  Wire.beginTransmission(DS3231_ADDRESS);
-  Wire._I2C_WRITE(DS3231_TEMPERATUREREG);
-  Wire.endTransmission();
+  auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
+  write_op->WriteByte(DS3231_TEMPERATUREREG);
+  write_op->End();
 
-  Wire.requestFrom(DS3231_ADDRESS, 2);
-  msb = Wire._I2C_READ();
-  lsb = Wire._I2C_READ();
+  auto read_op = i2c_->BeginRead(DS3231_ADDRESS, 2);
+  uint8_t msb = 0;
+  read_op->ReadByte(&msb);
+  int8_t lsb = 0;
+  read_op->ReadByte(reinterpret_cast<uint8_t*>(&lsb));
 
   //  Serial.print("msb=");
   //  Serial.print(msb,HEX);
@@ -171,7 +185,8 @@ float RTC_DS3231::getTemperature() {
 */
 /**************************************************************************/
 bool RTC_DS3231::setAlarm1(const DateTime& dt, Ds3231Alarm1Mode alarm_mode) {
-  uint8_t ctrl = read_i2c_register(DS3231_ADDRESS, DS3231_CONTROL);
+  uint8_t ctrl = 0;
+  i2c_->ReadRegister(DS3231_ADDRESS, DS3231_CONTROL, &ctrl);
   if (!(ctrl & 0x04)) {
     return false;
   }
@@ -183,21 +198,20 @@ bool RTC_DS3231::setAlarm1(const DateTime& dt, Ds3231Alarm1Mode alarm_mode) {
   uint8_t DY_DT = (alarm_mode & 0x10)
                   << 2;  // Day/Date bit 6. Date when 0, day of week when 1.
 
-  Wire.beginTransmission(DS3231_ADDRESS);
-  Wire._I2C_WRITE(DS3231_ALARM1);
-  Wire._I2C_WRITE(bin2bcd(dt.second()) | A1M1);
-  Wire._I2C_WRITE(bin2bcd(dt.minute()) | A1M2);
-  Wire._I2C_WRITE(bin2bcd(dt.hour()) | A1M3);
+  auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
+  write_op->WriteByte(DS3231_ALARM1);
+  write_op->WriteByte(bin2bcd(dt.second()) | A1M1);
+  write_op->WriteByte(bin2bcd(dt.minute()) | A1M2);
+  write_op->WriteByte(bin2bcd(dt.hour()) | A1M3);
   if (DY_DT) {
-    Wire._I2C_WRITE(bin2bcd(dowToDS3231(dt.dayOfTheWeek())) | A1M4 | DY_DT);
+    write_op->WriteByte(bin2bcd(dowToDS3231(dt.dayOfTheWeek())) | A1M4 | DY_DT);
   } else {
-    Wire._I2C_WRITE(bin2bcd(dt.day()) | A1M4 | DY_DT);
+    write_op->WriteByte(bin2bcd(dt.day()) | A1M4 | DY_DT);
   }
-  Wire.endTransmission();
+  write_op->End();
 
   ctrl |= 0x01;  // AI1E
-  write_i2c_register(DS3231_ADDRESS, DS3231_CONTROL, ctrl);
-  return true;
+  return i2c_->WriteRegister(DS3231_ADDRESS, DS3231_CONTROL, ctrl);
 }
 
 /**************************************************************************/
@@ -209,7 +223,8 @@ bool RTC_DS3231::setAlarm1(const DateTime& dt, Ds3231Alarm1Mode alarm_mode) {
 */
 /**************************************************************************/
 bool RTC_DS3231::setAlarm2(const DateTime& dt, Ds3231Alarm2Mode alarm_mode) {
-  uint8_t ctrl = read_i2c_register(DS3231_ADDRESS, DS3231_CONTROL);
+  uint8_t ctrl = 0;
+  i2c_->ReadRegister(DS3231_ADDRESS, DS3231_CONTROL, &ctrl);
   if (!(ctrl & 0x04)) {
     return false;
   }
@@ -220,20 +235,19 @@ bool RTC_DS3231::setAlarm2(const DateTime& dt, Ds3231Alarm2Mode alarm_mode) {
   uint8_t DY_DT = (alarm_mode & 0x8)
                   << 3;  // Day/Date bit 6. Date when 0, day of week when 1.
 
-  Wire.beginTransmission(DS3231_ADDRESS);
-  Wire._I2C_WRITE(DS3231_ALARM2);
-  Wire._I2C_WRITE(bin2bcd(dt.minute()) | A2M2);
-  Wire._I2C_WRITE(bin2bcd(dt.hour()) | A2M3);
+  auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
+  write_op->WriteByte(DS3231_ALARM2);
+  write_op->WriteByte(bin2bcd(dt.minute()) | A2M2);
+  write_op->WriteByte(bin2bcd(dt.hour()) | A2M3);
   if (DY_DT) {
-    Wire._I2C_WRITE(bin2bcd(dowToDS3231(dt.dayOfTheWeek())) | A2M4 | DY_DT);
+    write_op->WriteByte(bin2bcd(dowToDS3231(dt.dayOfTheWeek())) | A2M4 | DY_DT);
   } else {
-    Wire._I2C_WRITE(bin2bcd(dt.day()) | A2M4 | DY_DT);
+    write_op->WriteByte(bin2bcd(dt.day()) | A2M4 | DY_DT);
   }
-  Wire.endTransmission();
+  write_op->End();
 
   ctrl |= 0x02;  // AI2E
-  write_i2c_register(DS3231_ADDRESS, DS3231_CONTROL, ctrl);
-  return true;
+  return i2c_->WriteRegister(DS3231_ADDRESS, DS3231_CONTROL, ctrl);
 }
 
 /**************************************************************************/
@@ -243,9 +257,10 @@ bool RTC_DS3231::setAlarm2(const DateTime& dt, Ds3231Alarm2Mode alarm_mode) {
 */
 /**************************************************************************/
 void RTC_DS3231::disableAlarm(uint8_t alarm_num) {
-  uint8_t ctrl = read_i2c_register(DS3231_ADDRESS, DS3231_CONTROL);
+  uint8_t ctrl = 0;
+  i2c_->ReadRegister(DS3231_ADDRESS, DS3231_CONTROL, &ctrl);
   ctrl &= ~(1 << (alarm_num - 1));
-  write_i2c_register(DS3231_ADDRESS, DS3231_CONTROL, ctrl);
+  i2c_->WriteRegister(DS3231_ADDRESS, DS3231_CONTROL, ctrl);
 }
 
 /**************************************************************************/
@@ -255,9 +270,11 @@ void RTC_DS3231::disableAlarm(uint8_t alarm_num) {
 */
 /**************************************************************************/
 void RTC_DS3231::clearAlarm(uint8_t alarm_num) {
-  uint8_t status = read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG);
+  uint8_t status;
+  if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_STATUSREG, &status))
+    return;
   status &= ~(0x1 << (alarm_num - 1));
-  write_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG, status);
+  i2c_->WriteRegister(DS3231_ADDRESS, DS3231_STATUSREG, status);
 }
 
 /**************************************************************************/
@@ -268,7 +285,9 @@ void RTC_DS3231::clearAlarm(uint8_t alarm_num) {
 */
 /**************************************************************************/
 bool RTC_DS3231::alarmFired(uint8_t alarm_num) {
-  uint8_t status = read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG);
+  uint8_t status;
+  if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_STATUSREG, &status))
+    return false;
   return (status >> (alarm_num - 1)) & 0x1;
 }
 
@@ -280,9 +299,11 @@ bool RTC_DS3231::alarmFired(uint8_t alarm_num) {
 */
 /**************************************************************************/
 void RTC_DS3231::enable32K(void) {
-  uint8_t status = read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG);
+  uint8_t status;
+  if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_STATUSREG, &status))
+    return;
   status |= (0x1 << 0x03);
-  write_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG, status);
+  i2c_->WriteRegister(DS3231_ADDRESS, DS3231_STATUSREG, status);
   // Serial.println(read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG), BIN);
 }
 
@@ -292,9 +313,11 @@ void RTC_DS3231::enable32K(void) {
 */
 /**************************************************************************/
 void RTC_DS3231::disable32K(void) {
-  uint8_t status = read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG);
+  uint8_t status;
+  if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_STATUSREG, &status))
+    return;
   status &= ~(0x1 << 0x03);
-  write_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG, status);
+  i2c_->WriteRegister(DS3231_ADDRESS, DS3231_STATUSREG, status);
   // Serial.println(read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG), BIN);
 }
 
@@ -305,6 +328,8 @@ void RTC_DS3231::disable32K(void) {
 */
 /**************************************************************************/
 bool RTC_DS3231::isEnabled32K(void) {
-  uint8_t status = read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG);
+  uint8_t status;
+  if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_STATUSREG, &status))
+    return false;
   return (status >> 0x03) & 0x1;
 }

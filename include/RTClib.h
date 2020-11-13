@@ -22,7 +22,14 @@
 #ifndef _RTCLIB_H_
 #define _RTCLIB_H_
 
-#include <Arduino.h>
+#include <cstdint>
+#include <memory>
+#include <string>
+
+#if 1  // Do only for not Arduino.
+typedef char __FlashStringHelper;
+#endif
+
 class TimeSpan;
 
 /** Registers */
@@ -89,7 +96,7 @@ class DateTime {
            uint8_t sec = 0);
   DateTime(const DateTime& copy);
   DateTime(const char* date, const char* time);
-  DateTime(const __FlashStringHelper* date, const __FlashStringHelper* time);
+  // DateTime(const char* date, const char* time);
   DateTime(const char* iso8601date);
   bool isValid() const;
   char* toString(char* buffer);
@@ -149,7 +156,7 @@ class DateTime {
     TIMESTAMP_TIME,  //!< `hh:mm:ss`
     TIMESTAMP_DATE   //!< `YYYY-MM-DD`
   };
-  String timestamp(timestampOpt opt = TIMESTAMP_FULL);
+  std::string timestamp(timestampOpt opt = TIMESTAMP_FULL);
 
   DateTime operator+(const TimeSpan& span);
   DateTime operator-(const TimeSpan& span);
@@ -270,6 +277,42 @@ enum Ds1307SqwPinMode {
   DS1307_SquareWave32kHz = 0x13  // 32kHz square wave
 };
 
+class RTC_I2C_WriteCmd {
+ public:
+  ~RTC_I2C_WriteCmd();
+
+  bool WriteByte(uint8_t val);
+  bool End();
+
+ private:
+  friend class RTC_I2C;
+  RTC_I2C_WriteCmd();
+};
+
+class RTC_I2C_ReadCmd {
+ public:
+  ~RTC_I2C_ReadCmd();
+
+  bool ReadByte(uint8_t* val);
+  bool End();
+
+ private:
+  friend class RTC_I2C;
+  RTC_I2C_ReadCmd();
+};
+
+class RTC_I2C {
+ public:
+  RTC_I2C();
+  ~RTC_I2C();
+
+  bool WriteRegister(uint8_t addr, uint8_t reg, uint8_t val);
+  bool ReadRegister(uint8_t addr, uint8_t reg, uint8_t* val);
+  bool Ping(uint8_t addr);
+  std::unique_ptr<RTC_I2C_WriteCmd> BeginWrite(uint8_t addr);
+  std::unique_ptr<RTC_I2C_ReadCmd> BeginRead(uint8_t addr, uint32_t num_bytes);
+};
+
 /**************************************************************************/
 /*!
     @brief  RTC based on the DS1307 chip connected via I2C and the Wire library
@@ -277,7 +320,7 @@ enum Ds1307SqwPinMode {
 /**************************************************************************/
 class RTC_DS1307 {
  public:
-  boolean begin(void);
+  bool begin(void);
   static void adjust(const DateTime& dt);
   uint8_t isrunning(void);
   static DateTime now();
@@ -287,6 +330,9 @@ class RTC_DS1307 {
   void readnvram(uint8_t* buf, uint8_t size, uint8_t address);
   void writenvram(uint8_t address, uint8_t data);
   void writenvram(uint8_t address, uint8_t* buf, uint8_t size);
+
+ private:
+  RTC_I2C* i2c_;
 };
 
 /** DS3231 SQW pin mode settings */
@@ -329,12 +375,12 @@ enum Ds3231Alarm2Mode {
 /**************************************************************************/
 class RTC_DS3231 {
  public:
-  boolean begin(void);
-  static void adjust(const DateTime& dt);
+  void adjust(const DateTime& dt);
+  bool begin(void);
   bool lostPower(void);
-  static DateTime now();
-  static Ds3231SqwPinMode readSqwPinMode();
-  static void writeSqwPinMode(Ds3231SqwPinMode mode);
+  DateTime now();
+  Ds3231SqwPinMode readSqwPinMode();
+  void writeSqwPinMode(Ds3231SqwPinMode mode);
   bool setAlarm1(const DateTime& dt, Ds3231Alarm1Mode alarm_mode);
   bool setAlarm2(const DateTime& dt, Ds3231Alarm2Mode alarm_mode);
   void disableAlarm(uint8_t alarm_num);
@@ -343,7 +389,10 @@ class RTC_DS3231 {
   void enable32K(void);
   void disable32K(void);
   bool isEnabled32K(void);
-  static float getTemperature();  // in Celcius degree
+  float getTemperature();  // in Celcius degree
+
+ private:
+  RTC_I2C* i2c_;
 };
 
 /** PCF8523 INT/SQW pin mode settings */
@@ -394,10 +443,10 @@ enum Pcf8523OffsetMode {
 /**************************************************************************/
 class RTC_PCF8523 {
  public:
-  boolean begin(void);
+  bool begin(void);
   void adjust(const DateTime& dt);
-  boolean lostPower(void);
-  boolean initialized(void);
+  bool lostPower(void);
+  bool initialized(void);
   static DateTime now();
   void start(void);
   void stop(void);
@@ -413,6 +462,9 @@ class RTC_PCF8523 {
   void disableCountdownTimer(void);
   void deconfigureAllTimers(void);
   void calibrate(Pcf8523OffsetMode mode, int8_t offset);
+
+ private:
+  RTC_I2C* i2c_;
 };
 
 /** PCF8563 CLKOUT pin mode settings */
@@ -432,8 +484,8 @@ enum Pcf8563SqwPinMode {
 
 class RTC_PCF8563 {
  public:
-  boolean begin(void);
-  boolean lostPower(void);
+  bool begin(void);
+  bool lostPower(void);
   void adjust(const DateTime& dt);
   static DateTime now();
   void start(void);
@@ -441,6 +493,9 @@ class RTC_PCF8563 {
   uint8_t isrunning();
   Pcf8563SqwPinMode readSqwPinMode();
   void writeSqwPinMode(Pcf8563SqwPinMode mode);
+
+ private:
+  RTC_I2C* i2c_;
 };
 
 /**************************************************************************/

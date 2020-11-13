@@ -9,28 +9,7 @@
 
 #include <RTClib.h>
 
-/**************************************************************************/
-/*!
-    @brief  Convert a binary coded decimal value to binary. RTC stores time/date
-   values as BCD.
-    @param val BCD value
-    @return Binary value
-*/
-/**************************************************************************/
-static uint8_t bcd2bin(uint8_t val) {
-  return val - 6 * (val >> 4);
-}
-
-/**************************************************************************/
-/*!
-    @brief  Convert a binary value to BCD format for the RTC registers
-    @param val Binary value
-    @return BCD value
-*/
-/**************************************************************************/
-static uint8_t bin2bcd(uint8_t val) {
-  return val + 6 * (val / 10);
-}
+#if 0
 
 /**************************************************************************/
 /*!
@@ -38,12 +17,8 @@ static uint8_t bin2bcd(uint8_t val) {
     @return True if Wire can find DS1307 or false otherwise.
 */
 /**************************************************************************/
-boolean RTC_DS1307::begin(void) {
-  Wire.begin();
-  Wire.beginTransmission(DS1307_ADDRESS);
-  if (Wire.endTransmission() == 0)
-    return true;
-  return false;
+bool RTC_DS1307::begin(void) {
+  return i2c_->Ping(DS1307_ADDRESS);
 }
 
 /**************************************************************************/
@@ -53,6 +28,10 @@ boolean RTC_DS1307::begin(void) {
 */
 /**************************************************************************/
 uint8_t RTC_DS1307::isrunning(void) {
+#if 1
+  // TODO: Complete this.
+  return 0;
+#else
   Wire.beginTransmission(DS1307_ADDRESS);
   Wire._I2C_WRITE((byte)0);
   Wire.endTransmission();
@@ -60,6 +39,7 @@ uint8_t RTC_DS1307::isrunning(void) {
   Wire.requestFrom(DS1307_ADDRESS, 1);
   uint8_t ss = Wire._I2C_READ();
   return !(ss >> 7);
+#endif
 }
 
 /**************************************************************************/
@@ -69,6 +49,8 @@ uint8_t RTC_DS1307::isrunning(void) {
 */
 /**************************************************************************/
 void RTC_DS1307::adjust(const DateTime& dt) {
+  // TODO: Complete this.
+#if 0
   Wire.beginTransmission(DS1307_ADDRESS);
   Wire._I2C_WRITE((byte)0);  // start at location 0
   Wire._I2C_WRITE(bin2bcd(dt.second()));
@@ -79,6 +61,7 @@ void RTC_DS1307::adjust(const DateTime& dt) {
   Wire._I2C_WRITE(bin2bcd(dt.month()));
   Wire._I2C_WRITE(bin2bcd(dt.year() - 2000U));
   Wire.endTransmission();
+#endif
 }
 
 /**************************************************************************/
@@ -88,6 +71,8 @@ void RTC_DS1307::adjust(const DateTime& dt) {
 */
 /**************************************************************************/
 DateTime RTC_DS1307::now() {
+  // TODO: Complete this.
+#if 0
   Wire.beginTransmission(DS1307_ADDRESS);
   Wire._I2C_WRITE((byte)0);
   Wire.endTransmission();
@@ -102,6 +87,8 @@ DateTime RTC_DS1307::now() {
   uint16_t y = bcd2bin(Wire._I2C_READ()) + 2000U;
 
   return DateTime(y, m, d, hh, mm, ss);
+#endif
+  return DateTime();
 }
 
 /**************************************************************************/
@@ -111,6 +98,7 @@ DateTime RTC_DS1307::now() {
 */
 /**************************************************************************/
 Ds1307SqwPinMode RTC_DS1307::readSqwPinMode() {
+#if 0
   int mode;
 
   Wire.beginTransmission(DS1307_ADDRESS);
@@ -122,6 +110,9 @@ Ds1307SqwPinMode RTC_DS1307::readSqwPinMode() {
 
   mode &= 0x93;
   return static_cast<Ds1307SqwPinMode>(mode);
+#endif
+  // TODO: complete.
+  return DS1307_OFF;
 }
 
 /**************************************************************************/
@@ -130,11 +121,13 @@ Ds1307SqwPinMode RTC_DS1307::readSqwPinMode() {
     @param mode The mode to use
 */
 /**************************************************************************/
-void RTC_DS1307::writeSqwPinMode(Ds1307SqwPinMode mode) {
+void RTC_DS1307::writeSqwPinMode(Ds1307SqwPinMode mode) {  // TODO: complete.
+#if 0
   Wire.beginTransmission(DS1307_ADDRESS);
   Wire._I2C_WRITE(DS1307_CONTROL);
   Wire._I2C_WRITE(mode);
   Wire.endTransmission();
+#endif
 }
 
 /**************************************************************************/
@@ -147,6 +140,8 @@ void RTC_DS1307::writeSqwPinMode(Ds1307SqwPinMode mode) {
 */
 /**************************************************************************/
 void RTC_DS1307::readnvram(uint8_t* buf, uint8_t size, uint8_t address) {
+// TODO: complete.
+#if 0
   int addrByte = DS1307_NVRAM + address;
   Wire.beginTransmission(DS1307_ADDRESS);
   Wire._I2C_WRITE(addrByte);
@@ -156,6 +151,7 @@ void RTC_DS1307::readnvram(uint8_t* buf, uint8_t size, uint8_t address) {
   for (uint8_t pos = 0; pos < size; ++pos) {
     buf[pos] = Wire._I2C_READ();
   }
+#endif
 }
 
 /**************************************************************************/
@@ -167,6 +163,8 @@ void RTC_DS1307::readnvram(uint8_t* buf, uint8_t size, uint8_t address) {
 */
 /**************************************************************************/
 void RTC_DS1307::writenvram(uint8_t address, uint8_t* buf, uint8_t size) {
+// TODO: complete.
+#if 0
   int addrByte = DS1307_NVRAM + address;
   Wire.beginTransmission(DS1307_ADDRESS);
   Wire._I2C_WRITE(addrByte);
@@ -174,6 +172,7 @@ void RTC_DS1307::writenvram(uint8_t address, uint8_t* buf, uint8_t size) {
     Wire._I2C_WRITE(buf[pos]);
   }
   Wire.endTransmission();
+#endif
 }
 
 /**************************************************************************/
@@ -199,3 +198,5 @@ uint8_t RTC_DS1307::readnvram(uint8_t address) {
 void RTC_DS1307::writenvram(uint8_t address, uint8_t data) {
   writenvram(address, &data, 1);
 }
+
+#endif

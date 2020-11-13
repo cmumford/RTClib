@@ -9,6 +9,14 @@
 
 #include <RTClib.h>
 
+#include <string.h>
+
+#if !defined(PROGMEM)
+#define PROGMEM
+#endif
+
+#define pgm_read_byte(addr) (*(const unsigned char*)(addr))
+
 /**************************************************************************/
 // utility code, some of this could be exposed in the DateTime API if needed
 /**************************************************************************/
@@ -224,6 +232,7 @@ DateTime::DateTime(const char* date, const char* time) {
   ss = conv2d(time + 6);
 }
 
+#if 0
 /**************************************************************************/
 /*!
     @brief  Memory friendly constructor for generating the build time.
@@ -277,6 +286,7 @@ DateTime::DateTime(const __FlashStringHelper* date,
   mm = conv2d(buff + 3);
   ss = conv2d(buff + 6);
 }
+#endif
 
 /**************************************************************************/
 /*!
@@ -303,7 +313,7 @@ DateTime::DateTime(const __FlashStringHelper* date,
 /**************************************************************************/
 DateTime::DateTime(const char* iso8601dateTime) {
   char ref[] = "2000-01-01T00:00:00";
-  memcpy(ref, iso8601dateTime, min(strlen(ref), strlen(iso8601dateTime)));
+  memcpy(ref, iso8601dateTime, std::min(strlen(ref), strlen(iso8601dateTime)));
   yOff = conv2d(ref + 2);
   m = conv2d(ref + 5);
   d = conv2d(ref + 8);
@@ -391,6 +401,8 @@ char* DateTime::toString(char* buffer) {
       isPM = true;
       hourReformatted = hh - 12;
     }
+  } else {
+    isPM = false;
   }
 
   for (size_t i = 0; i < strlen(buffer) - 1; i++) {

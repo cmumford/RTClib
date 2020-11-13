@@ -9,6 +9,8 @@
 
 #include <RTClib.h>
 
+#if 0
+
 /**************************************************************************/
 /*!
     @brief  Start I2C for the PCF8523 and test succesful connection
@@ -334,3 +336,5 @@ void RTC_PCF8523::calibrate(Pcf8523OffsetMode mode, int8_t offset) {
   Wire._I2C_WRITE(reg);
   Wire.endTransmission();
 }
+
+#endif

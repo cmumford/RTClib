@@ -9,6 +9,8 @@
 
 #include <RTClib.h>
 
+#include <string>
+
 /**************************************************************************/
 /*!
     @brief  Add a TimeSpan to the DateTime object
@@ -104,7 +106,7 @@ bool DateTime::operator==(const DateTime& right) const {
     @return Timestamp string, e.g. "2020-04-16T18:34:56".
 */
 /**************************************************************************/
-String DateTime::timestamp(timestampOpt opt) {
+std::string DateTime::timestamp(timestampOpt opt) {
   char buffer[25];  // large enough for any DateTime, including invalid ones
 
   // Generate timestamp according to opt
@@ -122,7 +124,7 @@ String DateTime::timestamp(timestampOpt opt) {
       sprintf(buffer, "%u-%02d-%02dT%02d:%02d:%02d", 2000U + yOff, m, d, hh, mm,
               ss);
   }
-  return String(buffer);
+  return std::string(buffer);
 }
 
 /**************************************************************************/

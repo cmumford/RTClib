@@ -9,6 +9,8 @@
 
 #include <RTClib.h>
 
+#include <cstdint>
+
 /** Number of microseconds reported by micros() per "true" (calibrated) second.
  */
 uint32_t RTC_Micros::microsPerSecond = 1000000;
@@ -17,6 +19,15 @@ uint32_t RTC_Micros::microsPerSecond = 1000000;
 uint32_t RTC_Micros::lastMicros;
 uint32_t RTC_Micros::lastUnix;
 
+namespace {
+
+uint32_t microsSinceStart() {
+  // TODO: Implement me.
+  return 0;
+}
+
+}  // anonymous namespace
+
 /**************************************************************************/
 /*!
     @brief  Set the current date/time of the RTC_Micros clock.
@@ -24,7 +35,7 @@ uint32_t RTC_Micros::lastUnix;
 */
 /**************************************************************************/
 void RTC_Micros::adjust(const DateTime& dt) {
-  lastMicros = micros();
+  lastMicros = microsSinceStart();
   lastUnix = dt.unixtime();
 }
 
@@ -46,7 +57,7 @@ void RTC_Micros::adjustDrift(int ppm) {
 */
 /**************************************************************************/
 DateTime RTC_Micros::now() {
-  uint32_t elapsedSeconds = (micros() - lastMicros) / microsPerSecond;
+  uint32_t elapsedSeconds = (microsSinceStart() - lastMicros) / microsPerSecond;
   lastMicros += elapsedSeconds * microsPerSecond;
   lastUnix += elapsedSeconds;
   return lastUnix;

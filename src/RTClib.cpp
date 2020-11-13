@@ -42,38 +42,9 @@
 */
 /**************************************************************************/
 
-#ifdef __AVR_ATtiny85__
-#include <TinyWireM.h>
-#define Wire TinyWireM
-#else
-#include <Wire.h>
-#endif
-
 #include "RTClib.h"
-#ifdef __AVR__
-#include <avr/pgmspace.h>
-#elif defined(ESP8266)
-#include <pgmspace.h>
-#elif defined(ARDUINO_ARCH_SAMD)
-// nothing special needed
-#elif defined(ARDUINO_SAM_DUE)
-#define PROGMEM
-#define pgm_read_byte(addr) (*(const unsigned char*)(addr))
-#define Wire Wire1
-#endif
 
-#if (ARDUINO >= 100)
-#include <Arduino.h>  // capital A so it is error prone on case-sensitive filesystems
-// Macro to deal with the difference in I2C write functions from old and new
-// Arduino versions.
-#define _I2C_WRITE write  ///< Modern I2C write
-#define _I2C_READ read    ///< Modern I2C read
-#else
-#include <WProgram.h>
-#define _I2C_WRITE send    ///< Legacy I2C write
-#define _I2C_READ receive  ///< legacy I2C read
-#endif
-
+#if 0
 /**************************************************************************/
 /*!
     @brief  Read a byte from an I2C register
@@ -105,3 +76,5 @@ static void write_i2c_register(uint8_t addr, uint8_t reg, uint8_t val) {
   Wire._I2C_WRITE((byte)val);
   Wire.endTransmission();
 }
+
+#endif
