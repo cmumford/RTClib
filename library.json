@@ -1,0 +1,27 @@
+{
+    "authors": [
+        {
+            "email": "cmumford@cmumford.com",
+            "name": "Chris Mumford",
+            "url": "https://github.com/cmumford"
+        }
+    ],
+    "build": {
+        "srcFilter": [
+            "+<*.cpp>",
+            "+<*.h>"
+        ]
+    },
+    "description": "A library for interfacing with real-time clocks",
+    "frameworks": "*",
+    "homepage": "https://github.com/cmumford/RTClib",
+    "keywords": "RTC",
+    "license": "MIT",
+    "name": "RTClib",
+    "platforms": "*",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/cmumford/RTClib"
+    },
+    "version": "0.8.0"
+}
