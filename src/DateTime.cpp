@@ -543,4 +543,4 @@ uint32_t DateTime::secondstime(void) const {
   return t;
 }
 
-} // rtc namespace
+}  // namespace rtc

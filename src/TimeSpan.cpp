@@ -182,4 +182,4 @@ TimeSpan TimeSpan::operator-(const TimeSpan& right) {
   return TimeSpan(_seconds - right._seconds);
 }
 
-} // rtc namespace
+}  // namespace rtc

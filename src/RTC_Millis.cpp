@@ -54,4 +54,4 @@ DateTime RTC_Millis::now() {
   return lastUnix;
 }
 
-} // rtc namespace
+}  // namespace rtc

@@ -64,18 +64,20 @@ bool RTC_DS3231::lostPower(void) {
 /**************************************************************************/
 bool RTC_DS3231::adjust(const DateTime& dt) {
   {
-    auto write_op = i2c_->BeginOp(DS3231_ADDRESS);
-    if (!write_op)
+    auto op = i2c_->CreateOp(DS3231_ADDRESS);
+    if (!op)
       return false;
-    write_op->WriteByte((uint8_t)DS3231_TIME);  // start at location 0
-    write_op->WriteByte(bin2bcd(dt.second()));
-    write_op->WriteByte(bin2bcd(dt.minute()));
-    write_op->WriteByte(bin2bcd(dt.hour()));
+    op->WriteByte((uint8_t)DS3231_TIME);  // start at location 0
+    op->WriteByte(bin2bcd(dt.second()));
+    op->WriteByte(bin2bcd(dt.minute()));
+    op->WriteByte(bin2bcd(dt.hour()));
     // The RTC must know the day of the week for the weekly alarms to work.
-    write_op->WriteByte(bin2bcd(dowToDS3231(dt.dayOfTheWeek())));
-    write_op->WriteByte(bin2bcd(dt.day()));
-    write_op->WriteByte(bin2bcd(dt.month()));
-    write_op->WriteByte(bin2bcd(dt.year() - 2000U));
+    op->WriteByte(bin2bcd(dowToDS3231(dt.dayOfTheWeek())));
+    op->WriteByte(bin2bcd(dt.day()));
+    op->WriteByte(bin2bcd(dt.month()));
+    op->WriteByte(bin2bcd(dt.year() - 2000U));
+    if (!op->Execute())
+      return false;
   }
 
   uint8_t status;
@@ -93,17 +95,20 @@ bool RTC_DS3231::adjust(const DateTime& dt) {
 /**************************************************************************/
 DateTime RTC_DS3231::now() {
   {
-    auto write_op = i2c_->BeginOp(DS3231_ADDRESS);
-    if (!write_op)
+    auto op = i2c_->CreateOp(DS3231_ADDRESS);
+    if (!op)
       return DateTime();
-
-    write_op->WriteByte(0x0);
+    op->WriteByte(0x0);
+    if (!op->Execute())
+      return DateTime();
   }
 
   uint8_t values[7];
   {
-    auto read_op = i2c_->BeginOp(DS3231_ADDRESS);
-    if (!read_op->Read(values, sizeof(values)))
+    auto op = i2c_->CreateOp(DS3231_ADDRESS);
+    if (!op->Read(values, sizeof(values)))
+      return DateTime();
+    if (!op->Execute())
       return DateTime();
   }
 
@@ -126,13 +131,13 @@ DateTime RTC_DS3231::now() {
 /**************************************************************************/
 Ds3231SqwPinMode RTC_DS3231::readSqwPinMode() {
   {
-    auto op = i2c_->BeginOp(DS3231_ADDRESS);
+    auto op = i2c_->CreateOp(DS3231_ADDRESS);
     op->WriteByte(DS3231_CONTROL);
   }
 
   uint8_t mode = 0;
   {
-    auto op = i2c_->BeginOp(DS3231_ADDRESS);
+    auto op = i2c_->CreateOp(DS3231_ADDRESS);
     op->Read(&mode, sizeof(mode));
   }
 
@@ -171,14 +176,18 @@ void RTC_DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
 /**************************************************************************/
 float RTC_DS3231::getTemperature() {
   {
-    auto op = i2c_->BeginOp(DS3231_ADDRESS);
+    auto op = i2c_->CreateOp(DS3231_ADDRESS);
+    if (!op)
+      return std::numeric_limits<float>::quiet_NaN();
     op->WriteByte(DS3231_TEMPERATUREREG);
   }
 
   uint8_t msb = 0;
   int8_t lsb = 0;
   {
-    auto op = i2c_->BeginOp(DS3231_ADDRESS);
+    auto op = i2c_->CreateOp(DS3231_ADDRESS);
+    if (!op)
+      return std::numeric_limits<float>::quiet_NaN();
     op->Read(&msb, sizeof(msb));
     op->Read(&lsb, sizeof(lsb));
   }
@@ -214,7 +223,7 @@ bool RTC_DS3231::setAlarm1(const DateTime& dt, Ds3231Alarm1Mode alarm_mode) {
                   << 2;  // Day/Date bit 6. Date when 0, day of week when 1.
 
   {
-    auto write_op = i2c_->BeginOp(DS3231_ADDRESS);
+    auto write_op = i2c_->CreateOp(DS3231_ADDRESS);
     write_op->WriteByte(DS3231_ALARM1);
     write_op->WriteByte(bin2bcd(dt.second()) | A1M1);
     write_op->WriteByte(bin2bcd(dt.minute()) | A1M2);
@@ -253,16 +262,16 @@ bool RTC_DS3231::setAlarm2(const DateTime& dt, Ds3231Alarm2Mode alarm_mode) {
                   << 3;  // Day/Date bit 6. Date when 0, day of week when 1.
 
   {
-    auto write_op = i2c_->BeginOp(DS3231_ADDRESS);
-    write_op->WriteByte(DS3231_ALARM2);
-    write_op->WriteByte(bin2bcd(dt.minute()) | A2M2);
-    write_op->WriteByte(bin2bcd(dt.hour()) | A2M3);
-    if (DY_DT) {
-      write_op->WriteByte(bin2bcd(dowToDS3231(dt.dayOfTheWeek())) | A2M4 |
-                          DY_DT);
-    } else {
-      write_op->WriteByte(bin2bcd(dt.day()) | A2M4 | DY_DT);
-    }
+    auto op = i2c_->CreateOp(DS3231_ADDRESS);
+    op->WriteByte(DS3231_ALARM2);
+    op->WriteByte(bin2bcd(dt.minute()) | A2M2);
+    op->WriteByte(bin2bcd(dt.hour()) | A2M3);
+    if (DY_DT)
+      op->WriteByte(bin2bcd(dowToDS3231(dt.dayOfTheWeek())) | A2M4 | DY_DT);
+    else
+      op->WriteByte(bin2bcd(dt.day()) | A2M4 | DY_DT);
+    if (!op->Execute())
+      return false;
   }
 
   ctrl |= 0x02;  // AI2E
@@ -353,4 +362,4 @@ bool RTC_DS3231::isEnabled32K(void) {
   return (status >> 0x03) & 0x1;
 }
 
-} // rtc namespace
+}  // namespace rtc
