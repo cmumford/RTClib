@@ -281,6 +281,12 @@ enum Ds1307SqwPinMode {
   DS1307_SquareWave32kHz = 0x13  // 32kHz square wave
 };
 
+/**
+ * A single I2C write command where zero or more bytes may be written.
+ *
+ * The command is started when this instance is created, and this instance
+ * will automatically stop the operation when deleted.
+ */
 class RTC_I2C_WriteCmd {
  public:
   ~RTC_I2C_WriteCmd();
@@ -296,6 +302,12 @@ class RTC_I2C_WriteCmd {
   SemaphoreHandle_t i2c_mutex_;
 };
 
+/**
+ * A single I2C read command where zero or more bytes may be read.
+ *
+ * The command is started when this instance is created, and this instance
+ * will automatically stop the operation when deleted.
+ */
 class RTC_I2C_ReadCmd {
  public:
   ~RTC_I2C_ReadCmd();
@@ -311,6 +323,9 @@ class RTC_I2C_ReadCmd {
   SemaphoreHandle_t i2c_mutex_;
 };
 
+/**
+ * Does all I2C bus interaction for the various RTC's.
+ */
 class RTC_I2C {
  public:
   RTC_I2C(i2c_port_t i2c_num = I2C_NUM_0,
@@ -335,6 +350,8 @@ class RTC_I2C {
 /**************************************************************************/
 class RTC_DS1307 {
  public:
+  RTC_DS1307(RTC_I2C* i2c);
+
   bool begin(void);
   static void adjust(const DateTime& dt);
   uint8_t isrunning(void);
@@ -347,7 +364,7 @@ class RTC_DS1307 {
   void writenvram(uint8_t address, uint8_t* buf, uint8_t size);
 
  private:
-  RTC_I2C* i2c_;
+  RTC_I2C* const i2c_;
 };
 
 /** DS3231 SQW pin mode settings */
@@ -390,6 +407,8 @@ enum Ds3231Alarm2Mode {
 /**************************************************************************/
 class RTC_DS3231 {
  public:
+  RTC_DS3231(RTC_I2C* i2c);
+
   void adjust(const DateTime& dt);
   bool begin(void);
   bool lostPower(void);
@@ -407,7 +426,7 @@ class RTC_DS3231 {
   float getTemperature();  // in Celcius degree
 
  private:
-  RTC_I2C* i2c_;
+  RTC_I2C* const i2c_;
 };
 
 /** PCF8523 INT/SQW pin mode settings */

@@ -21,11 +21,13 @@ namespace {
             from 0 (Sunday) to 6 (Saturday).
 */
 /**************************************************************************/
-static uint8_t dowToDS3231(uint8_t d) {
+uint8_t dowToDS3231(uint8_t d) {
   return d == 0 ? 7 : d;
 }
 
 }  // anonymous namespace
+
+RTC_DS3231::RTC_DS3231(RTC_I2C* i2c) : i2c_(i2c) {}
 
 /**************************************************************************/
 /*!
