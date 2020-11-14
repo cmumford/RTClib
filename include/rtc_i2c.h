@@ -69,11 +69,18 @@ class I2CMaster {
   bool Ping(uint8_t addr);
 
   /**
-   * Start an I2C operation to the I2C slave address.
+   * Start an I2C write operation to the I2C slave address.
    *
    * @return The operation pointer - null if error creating operation.
    */
-  std::unique_ptr<I2COperation> CreateOp(uint8_t addr);
+  std::unique_ptr<I2COperation> CreateWriteOp(uint8_t addr);
+
+  /**
+   * Start an I2C read operation to the I2C slave address.
+   *
+   * @return The operation pointer - null if error creating operation.
+   */
+  std::unique_ptr<I2COperation> CreateReadOp(uint8_t addr);
 
  private:
   i2c_port_t i2c_num_;

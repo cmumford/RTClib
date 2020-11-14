@@ -57,16 +57,6 @@ class TimeSpan;
 #define DS1307_CONTROL 0x07  ///< Control register
 #define DS1307_NVRAM 0x08  ///< Start of RAM registers - 56 bytes, 0x08 to 0x3f
 
-#define DS3231_ADDRESS 0x68    ///< I2C address for DS3231
-#define DS3231_TIME 0x00       ///< Time register
-#define DS3231_ALARM1 0x07     ///< Alarm 1 register
-#define DS3231_ALARM2 0x0B     ///< Alarm 2 register
-#define DS3231_CONTROL 0x0E    ///< Control register
-#define DS3231_STATUSREG 0x0F  ///< Status register
-#define DS3231_TEMPERATUREREG \
-  0x11  ///< Temperature register (high byte - low byte is at 0x12), 10-bit
-        ///< temperature value
-
 /** Constants */
 #define SECONDS_PER_DAY 86400L  ///< 60 * 60 * 24
 #define SECONDS_FROM_1970_TO_2000 \
