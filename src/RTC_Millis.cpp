@@ -9,6 +9,8 @@
 
 #include <RTClib.h>
 
+namespace rtc {
+
 /** Alignment between the milis() timescale and the Unix timescale. These
   two variables are updated on each call to now(), which prevents
   rollover issues. Note that lastMillis is **not** the millis() value
@@ -51,3 +53,5 @@ DateTime RTC_Millis::now() {
   lastUnix += elapsedSeconds;
   return lastUnix;
 }
+
+} // rtc namespace

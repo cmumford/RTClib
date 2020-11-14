@@ -11,6 +11,8 @@
 
 #include <cstdint>
 
+namespace rtc {
+
 /** Number of microseconds reported by micros() per "true" (calibrated) second.
  */
 uint32_t RTC_Micros::microsPerSecond = 1000000;
@@ -62,3 +64,5 @@ DateTime RTC_Micros::now() {
   lastUnix += elapsedSeconds;
   return lastUnix;
 }
+
+}  // namespace rtc

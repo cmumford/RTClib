@@ -11,6 +11,8 @@
 
 #include <string>
 
+namespace rtc {
+
 /**************************************************************************/
 /*!
     @brief  Add a TimeSpan to the DateTime object
@@ -179,3 +181,5 @@ TimeSpan TimeSpan::operator+(const TimeSpan& right) {
 TimeSpan TimeSpan::operator-(const TimeSpan& right) {
   return TimeSpan(_seconds - right._seconds);
 }
+
+} // rtc namespace

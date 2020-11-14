@@ -23,12 +23,11 @@
 #define _RTCLIB_H_
 
 #include <cstdint>
-#include <memory>
 #include <string>
 
-#include <driver/i2c.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
+#include "rtc_i2c.h"
+
+namespace rtc {
 
 #if 1  // Do only when not Arduino.
 typedef char __FlashStringHelper;
@@ -281,68 +280,6 @@ enum Ds1307SqwPinMode {
   DS1307_SquareWave32kHz = 0x13  // 32kHz square wave
 };
 
-/**
- * A single I2C write command where zero or more bytes may be written.
- *
- * The command is started when this instance is created, and this instance
- * will automatically stop the operation when deleted.
- */
-class RTC_I2C_WriteCmd {
- public:
-  ~RTC_I2C_WriteCmd();
-
-  bool WriteByte(uint8_t val);
-  bool End();
-
- private:
-  friend class RTC_I2C;
-  RTC_I2C_WriteCmd(i2c_cmd_handle_t cmd, SemaphoreHandle_t i2c_mutex);
-
-  i2c_cmd_handle_t cmd_;
-  SemaphoreHandle_t i2c_mutex_;
-};
-
-/**
- * A single I2C read command where zero or more bytes may be read.
- *
- * The command is started when this instance is created, and this instance
- * will automatically stop the operation when deleted.
- */
-class RTC_I2C_ReadCmd {
- public:
-  ~RTC_I2C_ReadCmd();
-
-  bool ReadByte(uint8_t* val);
-  bool End();
-
- private:
-  friend class RTC_I2C;
-  RTC_I2C_ReadCmd(i2c_cmd_handle_t cmd, SemaphoreHandle_t i2c_mutex);
-
-  i2c_cmd_handle_t cmd_;
-  SemaphoreHandle_t i2c_mutex_;
-};
-
-/**
- * Does all I2C bus interaction for the various RTC's.
- */
-class RTC_I2C {
- public:
-  RTC_I2C(i2c_port_t i2c_num = I2C_NUM_0,
-          SemaphoreHandle_t i2c_mutex = nullptr);
-  ~RTC_I2C();
-
-  bool WriteRegister(uint8_t addr, uint8_t reg, uint8_t val);
-  bool ReadRegister(uint8_t addr, uint8_t reg, uint8_t* val);
-  bool Ping(uint8_t addr);
-  std::unique_ptr<RTC_I2C_WriteCmd> BeginWrite(uint8_t addr);
-  std::unique_ptr<RTC_I2C_ReadCmd> BeginRead(uint8_t addr, uint32_t num_bytes);
-
- private:
-  i2c_port_t i2c_num_;
-  SemaphoreHandle_t i2c_mutex_;
-};
-
 /**************************************************************************/
 /*!
     @brief  RTC based on the DS1307 chip connected via I2C and the Wire library
@@ -350,7 +287,7 @@ class RTC_I2C {
 /**************************************************************************/
 class RTC_DS1307 {
  public:
-  RTC_DS1307(RTC_I2C* i2c);
+  RTC_DS1307(I2CMaster* i2c);
 
   bool begin(void);
   static void adjust(const DateTime& dt);
@@ -364,7 +301,7 @@ class RTC_DS1307 {
   void writenvram(uint8_t address, uint8_t* buf, uint8_t size);
 
  private:
-  RTC_I2C* const i2c_;
+  I2CMaster* const i2c_;
 };
 
 /** DS3231 SQW pin mode settings */
@@ -407,9 +344,9 @@ enum Ds3231Alarm2Mode {
 /**************************************************************************/
 class RTC_DS3231 {
  public:
-  RTC_DS3231(RTC_I2C* i2c);
+  RTC_DS3231(std::unique_ptr<I2CMaster> i2c);
 
-  void adjust(const DateTime& dt);
+  bool adjust(const DateTime& dt);
   bool begin(void);
   bool lostPower(void);
   DateTime now();
@@ -426,7 +363,7 @@ class RTC_DS3231 {
   float getTemperature();  // in Celcius degree
 
  private:
-  RTC_I2C* const i2c_;
+  std::unique_ptr<I2CMaster> const i2c_;
 };
 
 /** PCF8523 INT/SQW pin mode settings */
@@ -498,7 +435,7 @@ class RTC_PCF8523 {
   void calibrate(Pcf8523OffsetMode mode, int8_t offset);
 
  private:
-  RTC_I2C* i2c_;
+  I2CMaster* i2c_;
 };
 
 /** PCF8563 CLKOUT pin mode settings */
@@ -529,7 +466,7 @@ class RTC_PCF8563 {
   void writeSqwPinMode(Pcf8563SqwPinMode mode);
 
  private:
-  RTC_I2C* i2c_;
+  I2CMaster* i2c_;
 };
 
 /**************************************************************************/
@@ -583,5 +520,7 @@ class RTC_Micros {
   static uint32_t lastMicros;  ///< micros() value corresponding to the last
                                ///< full second of Unix time
 };
+
+}  // namespace rtc
 
 #endif  // _RTCLIB_H_

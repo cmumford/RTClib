@@ -1,22 +1,41 @@
 #include <RTClib.h>
 
+#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
+#include <esp_log.h>
+
 #include <driver/i2c.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 
-RTC_I2C_ReadCmd::RTC_I2C_ReadCmd(i2c_cmd_handle_t cmd,
-                                 SemaphoreHandle_t i2c_mutex)
+namespace rtc {
+
+namespace {
+constexpr char TAG[] = "I2C-op";
+}
+
+I2COperation::I2COperation(i2c_cmd_handle_t cmd, SemaphoreHandle_t i2c_mutex)
     : cmd_(cmd), i2c_mutex_(i2c_mutex) {}
 
-RTC_I2C_ReadCmd::~RTC_I2C_ReadCmd() {
+I2COperation::~I2COperation() {
   End();
 }
 
-bool RTC_I2C_ReadCmd::ReadByte(uint8_t* val) {
-  return i2c_master_read(cmd_, val, sizeof(*val), I2C_MASTER_ACK) == ESP_OK;
+bool I2COperation::Read(void* dst, size_t num_bytes) {
+  const esp_err_t err = i2c_master_read(cmd_, static_cast<uint8_t*>(dst),
+                                        num_bytes, I2C_MASTER_ACK);
+  if (err != ESP_OK)
+    ESP_LOGE(TAG, "Read failure: %s", esp_err_to_name(err));
+  return err == ESP_OK;
 }
 
-bool RTC_I2C_ReadCmd::End() {
+bool I2COperation::WriteByte(uint8_t val) {
+  const esp_err_t err = i2c_master_write_byte(cmd_, val, I2C_MASTER_ACK);
+  if (err != ESP_OK)
+    ESP_LOGE(TAG, "Write failure: %s", esp_err_to_name(err));
+  return err == ESP_OK;
+}
+
+bool I2COperation::End() {
   if (!cmd_)
     return true;
 
@@ -31,3 +50,5 @@ bool RTC_I2C_ReadCmd::End() {
 
   return err == ESP_OK;
 }
+
+} // rtc namespace

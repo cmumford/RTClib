@@ -11,6 +11,8 @@
 
 #include <string.h>
 
+namespace rtc {
+
 #if !defined(PROGMEM)
 #define PROGMEM
 #endif
@@ -540,3 +542,5 @@ uint32_t DateTime::secondstime(void) const {
   t = time2ulong(days, hh, mm, ss);
   return t;
 }
+
+} // rtc namespace

@@ -11,6 +11,8 @@
 
 #include "RTC_util.h"
 
+namespace rtc {
+
 namespace {
 
 /**************************************************************************/
@@ -27,7 +29,7 @@ uint8_t dowToDS3231(uint8_t d) {
 
 }  // anonymous namespace
 
-RTC_DS3231::RTC_DS3231(RTC_I2C* i2c) : i2c_(i2c) {}
+RTC_DS3231::RTC_DS3231(std::unique_ptr<I2CMaster> i2c) : i2c_(std::move(i2c)) {}
 
 /**************************************************************************/
 /*!
@@ -60,12 +62,11 @@ bool RTC_DS3231::lostPower(void) {
     @param dt DateTime object containing the date/time to set
 */
 /**************************************************************************/
-void RTC_DS3231::adjust(const DateTime& dt) {
+bool RTC_DS3231::adjust(const DateTime& dt) {
   {
-    auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
+    auto write_op = i2c_->BeginOp(DS3231_ADDRESS);
     if (!write_op)
-      return;
-
+      return false;
     write_op->WriteByte((uint8_t)DS3231_TIME);  // start at location 0
     write_op->WriteByte(bin2bcd(dt.second()));
     write_op->WriteByte(bin2bcd(dt.minute()));
@@ -79,9 +80,9 @@ void RTC_DS3231::adjust(const DateTime& dt) {
 
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_STATUSREG, &status))
-    return;
+    return false;
   status &= ~0x80;  // flip OSF bit
-  i2c_->WriteRegister(DS3231_ADDRESS, DS3231_STATUSREG, status);
+  return i2c_->WriteRegister(DS3231_ADDRESS, DS3231_STATUSREG, status);
 }
 
 /**************************************************************************/
@@ -92,22 +93,27 @@ void RTC_DS3231::adjust(const DateTime& dt) {
 /**************************************************************************/
 DateTime RTC_DS3231::now() {
   {
-    auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
+    auto write_op = i2c_->BeginOp(DS3231_ADDRESS);
     if (!write_op)
       return DateTime();
 
     write_op->WriteByte(0x0);
   }
 
-  auto read_op = i2c_->BeginRead(DS3231_ADDRESS, 7);
-  uint8_t value = 0;
-  uint8_t ss = read_op->ReadByte(&value) ? bcd2bin(value & 0x7F) : 0;
-  uint8_t mm = read_op->ReadByte(&value) ? bcd2bin(value) : 0;
-  uint8_t hh = read_op->ReadByte(&value) ? bcd2bin(value) : 0;
-  read_op->ReadByte(&value);  // Ignore this value.
-  uint8_t d = read_op->ReadByte(&value) ? bcd2bin(value) : 0;
-  uint8_t m = read_op->ReadByte(&value) ? bcd2bin(value) : 0;
-  uint16_t y = read_op->ReadByte(&value) ? bcd2bin(value) + 2000 : 0;
+  uint8_t values[7];
+  {
+    auto read_op = i2c_->BeginOp(DS3231_ADDRESS);
+    if (!read_op->Read(values, sizeof(values)))
+      return DateTime();
+  }
+
+  const uint8_t ss = bcd2bin(values[0]);
+  const uint8_t mm = bcd2bin(values[1]);
+  const uint8_t hh = bcd2bin(values[2]);
+  // Ignore value 3.
+  const uint8_t d = bcd2bin(values[4]);
+  const uint8_t m = bcd2bin(values[5]);
+  const uint16_t y = bcd2bin(values[6]);
 
   return DateTime(y, m, d, hh, mm, ss);
 }
@@ -120,13 +126,15 @@ DateTime RTC_DS3231::now() {
 /**************************************************************************/
 Ds3231SqwPinMode RTC_DS3231::readSqwPinMode() {
   {
-    auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
-    write_op->WriteByte(DS3231_CONTROL);
+    auto op = i2c_->BeginOp(DS3231_ADDRESS);
+    op->WriteByte(DS3231_CONTROL);
   }
 
-  auto read_op = i2c_->BeginRead(DS3231_ADDRESS, 1);
   uint8_t mode = 0;
-  read_op->ReadByte(&mode);
+  {
+    auto op = i2c_->BeginOp(DS3231_ADDRESS);
+    op->Read(&mode, sizeof(mode));
+  }
 
   mode &= 0x93;
   return static_cast<Ds3231SqwPinMode>(mode);
@@ -163,15 +171,17 @@ void RTC_DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
 /**************************************************************************/
 float RTC_DS3231::getTemperature() {
   {
-    auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
-    write_op->WriteByte(DS3231_TEMPERATUREREG);
+    auto op = i2c_->BeginOp(DS3231_ADDRESS);
+    op->WriteByte(DS3231_TEMPERATUREREG);
   }
 
-  auto read_op = i2c_->BeginRead(DS3231_ADDRESS, 2);
   uint8_t msb = 0;
-  read_op->ReadByte(&msb);
   int8_t lsb = 0;
-  read_op->ReadByte(reinterpret_cast<uint8_t*>(&lsb));
+  {
+    auto op = i2c_->BeginOp(DS3231_ADDRESS);
+    op->Read(&msb, sizeof(msb));
+    op->Read(&lsb, sizeof(lsb));
+  }
 
   //  Serial.print("msb=");
   //  Serial.print(msb,HEX);
@@ -204,7 +214,7 @@ bool RTC_DS3231::setAlarm1(const DateTime& dt, Ds3231Alarm1Mode alarm_mode) {
                   << 2;  // Day/Date bit 6. Date when 0, day of week when 1.
 
   {
-    auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
+    auto write_op = i2c_->BeginOp(DS3231_ADDRESS);
     write_op->WriteByte(DS3231_ALARM1);
     write_op->WriteByte(bin2bcd(dt.second()) | A1M1);
     write_op->WriteByte(bin2bcd(dt.minute()) | A1M2);
@@ -243,7 +253,7 @@ bool RTC_DS3231::setAlarm2(const DateTime& dt, Ds3231Alarm2Mode alarm_mode) {
                   << 3;  // Day/Date bit 6. Date when 0, day of week when 1.
 
   {
-    auto write_op = i2c_->BeginWrite(DS3231_ADDRESS);
+    auto write_op = i2c_->BeginOp(DS3231_ADDRESS);
     write_op->WriteByte(DS3231_ALARM2);
     write_op->WriteByte(bin2bcd(dt.minute()) | A2M2);
     write_op->WriteByte(bin2bcd(dt.hour()) | A2M3);
@@ -342,3 +352,5 @@ bool RTC_DS3231::isEnabled32K(void) {
     return false;
   return (status >> 0x03) & 0x1;
 }
+
+} // rtc namespace
