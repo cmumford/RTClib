@@ -39,7 +39,7 @@ uint8_t dowToDS3231(uint8_t d) {
 
 }  // anonymous namespace
 
-RTC_DS3231::RTC_DS3231(std::unique_ptr<I2CMaster> i2c) : i2c_(std::move(i2c)) {}
+DS3231::DS3231(std::unique_ptr<I2CMaster> i2c) : i2c_(std::move(i2c)) {}
 
 /**************************************************************************/
 /*!
@@ -47,7 +47,7 @@ RTC_DS3231::RTC_DS3231(std::unique_ptr<I2CMaster> i2c) : i2c_(std::move(i2c)) {}
     @return True if Wire can find DS3231 or false otherwise.
 */
 /**************************************************************************/
-bool RTC_DS3231::begin(void) {
+bool DS3231::begin(void) {
   return i2c_->Ping(DS3231_ADDRESS);
 }
 
@@ -59,7 +59,7 @@ bool RTC_DS3231::begin(void) {
    running
 */
 /**************************************************************************/
-bool RTC_DS3231::lostPower(void) {
+bool DS3231::lostPower(void) {
   uint8_t reg_val;
   if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_STATUSREG, &reg_val))
     return true;  // Can't read, assume true.
@@ -72,7 +72,7 @@ bool RTC_DS3231::lostPower(void) {
     @param dt DateTime object containing the date/time to set
 */
 /**************************************************************************/
-bool RTC_DS3231::adjust(const DateTime& dt) {
+bool DS3231::adjust(const DateTime& dt) {
   {
     auto op = i2c_->CreateWriteOp(DS3231_ADDRESS);
     if (!op)
@@ -103,7 +103,7 @@ bool RTC_DS3231::adjust(const DateTime& dt) {
     @return DateTime object with the current date/time
 */
 /**************************************************************************/
-DateTime RTC_DS3231::now() {
+DateTime DS3231::now() {
   uint8_t values[7];
   {
     auto op = i2c_->CreateReadOp(DS3231_ADDRESS);
@@ -131,7 +131,7 @@ DateTime RTC_DS3231::now() {
     @return Pin mode, see Ds3231SqwPinMode enum
 */
 /**************************************************************************/
-Ds3231SqwPinMode RTC_DS3231::readSqwPinMode() {
+Ds3231SqwPinMode DS3231::readSqwPinMode() {
   {
     auto op = i2c_->CreateWriteOp(DS3231_ADDRESS);
     op->WriteByte(DS3231_CONTROL);
@@ -155,7 +155,7 @@ Ds3231SqwPinMode RTC_DS3231::readSqwPinMode() {
     @param mode Desired mode, see Ds3231SqwPinMode enum
 */
 /**************************************************************************/
-void RTC_DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
+void DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
   uint8_t ctrl = 0x0;
   i2c_->ReadRegister(DS3231_ADDRESS, DS3231_CONTROL, &ctrl);
 
@@ -178,7 +178,7 @@ void RTC_DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
     @return Current temperature (float)
 */
 /**************************************************************************/
-float RTC_DS3231::getTemperature() {
+float DS3231::getTemperature() {
   {
     auto op = i2c_->CreateWriteOp(DS3231_ADDRESS);
     if (!op)
@@ -214,7 +214,7 @@ float RTC_DS3231::getTemperature() {
     @return False if control register is not set, otherwise true
 */
 /**************************************************************************/
-bool RTC_DS3231::setAlarm1(const DateTime& dt, Ds3231Alarm1Mode alarm_mode) {
+bool DS3231::setAlarm1(const DateTime& dt, Ds3231Alarm1Mode alarm_mode) {
   uint8_t ctrl = 0;
   i2c_->ReadRegister(DS3231_ADDRESS, DS3231_CONTROL, &ctrl);
   if (!(ctrl & 0x04)) {
@@ -255,7 +255,7 @@ bool RTC_DS3231::setAlarm1(const DateTime& dt, Ds3231Alarm1Mode alarm_mode) {
     @return False if control register is not set, otherwise true
 */
 /**************************************************************************/
-bool RTC_DS3231::setAlarm2(const DateTime& dt, Ds3231Alarm2Mode alarm_mode) {
+bool DS3231::setAlarm2(const DateTime& dt, Ds3231Alarm2Mode alarm_mode) {
   uint8_t ctrl = 0;
   i2c_->ReadRegister(DS3231_ADDRESS, DS3231_CONTROL, &ctrl);
   if (!(ctrl & 0x04)) {
@@ -291,7 +291,7 @@ bool RTC_DS3231::setAlarm2(const DateTime& dt, Ds3231Alarm2Mode alarm_mode) {
         @param 	alarm_num Alarm number to disable
 */
 /**************************************************************************/
-void RTC_DS3231::disableAlarm(uint8_t alarm_num) {
+void DS3231::disableAlarm(uint8_t alarm_num) {
   uint8_t ctrl = 0;
   i2c_->ReadRegister(DS3231_ADDRESS, DS3231_CONTROL, &ctrl);
   ctrl &= ~(1 << (alarm_num - 1));
@@ -304,7 +304,7 @@ void RTC_DS3231::disableAlarm(uint8_t alarm_num) {
         @param 	alarm_num Alarm number to clear
 */
 /**************************************************************************/
-void RTC_DS3231::clearAlarm(uint8_t alarm_num) {
+void DS3231::clearAlarm(uint8_t alarm_num) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_STATUSREG, &status))
     return;
@@ -319,7 +319,7 @@ void RTC_DS3231::clearAlarm(uint8_t alarm_num) {
         @return True if alarm has been fired otherwise false
 */
 /**************************************************************************/
-bool RTC_DS3231::alarmFired(uint8_t alarm_num) {
+bool DS3231::alarmFired(uint8_t alarm_num) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_STATUSREG, &status))
     return false;
@@ -333,7 +333,7 @@ bool RTC_DS3231::alarmFired(uint8_t alarm_num) {
     pull-up resistor to function correctly
 */
 /**************************************************************************/
-void RTC_DS3231::enable32K(void) {
+void DS3231::enable32K(void) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_STATUSREG, &status))
     return;
@@ -347,7 +347,7 @@ void RTC_DS3231::enable32K(void) {
     @brief  Disable 32KHz Output
 */
 /**************************************************************************/
-void RTC_DS3231::disable32K(void) {
+void DS3231::disable32K(void) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_STATUSREG, &status))
     return;
@@ -362,7 +362,7 @@ void RTC_DS3231::disable32K(void) {
     @return True if enabled otherwise false
 */
 /**************************************************************************/
-bool RTC_DS3231::isEnabled32K(void) {
+bool DS3231::isEnabled32K(void) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_STATUSREG, &status))
     return false;

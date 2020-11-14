@@ -329,12 +329,12 @@ enum Ds3231Alarm2Mode {
 
 /**************************************************************************/
 /*!
-    @brief  RTC based on the DS3231 chip connected via I2C and the Wire library
+    @brief  RTC based on the DS3231 chip connected via I2C.
 */
 /**************************************************************************/
-class RTC_DS3231 {
+class DS3231 {
  public:
-  RTC_DS3231(std::unique_ptr<I2CMaster> i2c);
+  DS3231(std::unique_ptr<I2CMaster> i2c);
 
   bool adjust(const DateTime& dt);
   bool begin(void);
