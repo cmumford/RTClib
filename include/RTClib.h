@@ -30,7 +30,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 
-#if 1  // Do only for not Arduino.
+#if 1  // Do only when not Arduino.
 typedef char __FlashStringHelper;
 #endif
 
