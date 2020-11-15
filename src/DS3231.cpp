@@ -104,7 +104,7 @@ bool DS3231::adjust(const DateTime& dt) {
     auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "adjust");
     if (!op)
       return false;
-    op->WriteByte(REGISTER_TIME_SECONDS);  // start at location 0
+    op->WriteByte(REGISTER_TIME_SECONDS);  // First time register
     op->WriteByte(bin2bcd(dt.second()));
     op->WriteByte(bin2bcd(dt.minute()));
     op->WriteByte(bin2bcd(dt.hour()));
@@ -131,28 +131,22 @@ bool DS3231::adjust(const DateTime& dt) {
 */
 /**************************************************************************/
 DateTime DS3231::now() {
-  {
-    auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "now:write");
-    op->WriteByte(0x0);  // First time register address.
-    if (!op->Execute())
-      return DateTime();
-  }
-  uint8_t values[7];
-  {
-    auto op = i2c_->CreateReadOp(DS3231_I2C_ADDRESS, "now:read");
-    if (!op->Read(values, sizeof(values)))
-      return DateTime();
-    if (!op->Execute())
-      return DateTime();
-  }
+  uint8_t values[7];  // for registers 0x00 - 0x06.
+  auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "now");
+  op->WriteByte(REGISTER_TIME_SECONDS);  // First time register address.
+  op->Restart(DS3231_I2C_ADDRESS, OperationType::READ);
+  if (!op->Read(values, sizeof(values)))
+    return DateTime();
+  if (!op->Execute())
+    return DateTime();
 
-  const uint8_t ss = bcd2bin(values[0]);
-  const uint8_t mm = bcd2bin(values[1]);
-  const uint8_t hh = bcd2bin(values[2]);
-  // Ignore value 3.
-  const uint8_t d = bcd2bin(values[4]);
-  const uint8_t m = bcd2bin(values[5]);
-  const uint16_t y = bcd2bin(values[6]);
+  const uint8_t ss = bcd2bin(values[REGISTER_TIME_SECONDS]);
+  const uint8_t mm = bcd2bin(values[REGISTER_TIME_MINUTES]);
+  const uint8_t hh = bcd2bin(values[REGISTER_TIME_HOURS]);
+  // Skip day of week.
+  const uint8_t d = bcd2bin(values[REGISTER_TIME_DATE]);
+  const uint8_t m = bcd2bin(values[REGISTER_TIME_MONTH]);
+  const uint16_t y = bcd2bin(values[REGISTER_TIME_YEAR]);
 
   return DateTime(y, m, d, hh, mm, ss);
 }
@@ -179,7 +173,7 @@ Ds3231SqwPinMode DS3231::readSqwPinMode() {
 */
 /**************************************************************************/
 bool DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
-  uint8_t ctrl = 0x0;
+  uint8_t ctrl;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl))
     return false;
 

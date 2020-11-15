@@ -40,7 +40,13 @@ class I2COperation {
    */
   bool WriteByte(uint8_t val);
 
-  bool Restart(uint8_t address, OperationType type);
+  /**
+   * Restart the I2C operation.
+   *
+   * When this instance is created the operation is already started. This will
+   * enqueue another start into this operation.
+   */
+  bool Restart(uint8_t i2c_address, OperationType type);
 
   /**
    * Execute all queued tasks.
