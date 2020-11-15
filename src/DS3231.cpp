@@ -35,7 +35,7 @@ constexpr uint8_t REGISTER_TIME_DATE      = 0x04;
 constexpr uint8_t REGISTER_TIME_MONTH     = 0x05;
 constexpr uint8_t REGISTER_TIME_YEAR      = 0x06;
 constexpr uint8_t REGISTER_ALARM1_SECONDS = 0x07;
-constexpr uint8_t REGISTER_ALARM2_SECONDS = 0x0B;
+constexpr uint8_t REGISTER_ALARM2_MINUTES = 0x0B;
 constexpr uint8_t REGISTER_CONTROL        = 0x0E;
 constexpr uint8_t REGISTER_STATUS         = 0x0F;
 constexpr uint8_t REGISTER_TEMP_MSB       = 0x11;
@@ -271,7 +271,7 @@ bool DS3231::setAlarm2(const DateTime& dt, Ds3231Alarm2Mode alarm_mode) {
 
   {
     auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "setalm2");
-    op->WriteByte(REGISTER_ALARM2_SECONDS);
+    op->WriteByte(REGISTER_ALARM2_MINUTES);
     op->WriteByte(bin2bcd(dt.minute()) | A2M2);
     op->WriteByte(bin2bcd(dt.hour()) | A2M3);
     if (DY_DT)

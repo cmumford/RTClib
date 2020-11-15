@@ -26,27 +26,23 @@ bool I2CMaster::WriteRegister(uint8_t addr, uint8_t reg, uint8_t val) {
   std::unique_ptr<I2COperation> op = CreateWriteOp(addr, "WriteRegister");
   if (!op)
     return false;
-  op->WriteByte(reg);
-  op->WriteByte(val);
-
+  if (!op->WriteByte(reg))
+    return false;
+  if (!op->WriteByte(val))
+    return false;
   return op->Execute();
 }
 
 bool I2CMaster::ReadRegister(uint8_t addr, uint8_t reg, uint8_t* val) {
-  {
-    std::unique_ptr<I2COperation> op = CreateWriteOp(addr, "ReadReg:write");
-    if (!op)
-      return false;
-    op->WriteByte(reg);
-    if (!op->Execute())
-      return false;
-  }
-
-  std::unique_ptr<I2COperation> op = CreateReadOp(addr, "ReadReg:read");
+  std::unique_ptr<I2COperation> op = CreateWriteOp(addr, "ReadRegister");
   if (!op)
     return false;
-  op->Read(val, sizeof(*val));
-
+  if (!op->WriteByte(reg))
+    return false;
+  if (!op->Restart(addr, OperationType::READ))
+    return false;
+  if (!op->Read(val, sizeof(*val)))
+    return false;
   return op->Execute();
 }
 
