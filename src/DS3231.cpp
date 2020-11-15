@@ -190,16 +190,22 @@ bool DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
 */
 /**************************************************************************/
 float DS3231::getTemperature() {
-  auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "gettemp");
+  auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "getTemp");
   if (!op)
-    return std::numeric_limits<float>::quiet_NaN();
+    return std::numeric_limits<int16_t>::max();
   op->WriteByte(REGISTER_TEMP_MSB);
+  op->Restart(DS3231_I2C_ADDRESS, OperationType::READ);
   uint8_t values[2];  // MSB and LSB respectively.
   op->Read(&values, sizeof(values));
   if (!op->Execute())
-    return std::numeric_limits<float>::quiet_NaN();
-  return static_cast<float>(static_cast<int8_t>(values[0])) +
-         0.25f * (values[1] >> 6);
+    return std::numeric_limits<int16_t>::max();
+  // Combine the 10-bit signed msb+lsb into a single floating point number
+  // with 0.25°C accuracy. See DSD3231 spec pg. 15.
+  // Multiply/divide by four as left-shifting a signed integer is undefined
+  // according to the C++ spec.
+  const int16_t msb = static_cast<int16_t>(values[0]);
+  const uint8_t lsb = (values[1] >> 6);
+  return static_cast<float>(msb * 4 + lsb) * 0.25f;
 }
 
 /**************************************************************************/
