@@ -43,6 +43,12 @@ READ_END:
   return err == ESP_OK;
 }
 
+bool I2COperation::Write(const void* data, size_t num_bytes) {
+  // In newer IDF's data is const.
+  return i2c_master_write(cmd_, (uint8_t*)(data), num_bytes, ACK_CHECK_EN) ==
+         ESP_OK;
+}
+
 bool I2COperation::WriteByte(uint8_t val) {
   return i2c_master_write_byte(cmd_, val, I2C_MASTER_ACK) == ESP_OK;
 }

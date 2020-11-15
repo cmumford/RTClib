@@ -53,10 +53,6 @@ class TimeSpan;
 #define PCF8563_VL_SECONDS 0x02     ///< register address for VL_SECONDS
 #define PCF8563_CLKOUT_MASK 0x83    ///< bitmask for SqwPinMode on CLKOUT pin
 
-#define DS1307_ADDRESS 0x68  ///< I2C address for DS1307
-#define DS1307_CONTROL 0x07  ///< Control register
-#define DS1307_NVRAM 0x08  ///< Start of RAM registers - 56 bytes, 0x08 to 0x3f
-
 /** Constants */
 #define SECONDS_PER_DAY 86400L  ///< 60 * 60 * 24
 #define SECONDS_FROM_1970_TO_2000 \
@@ -262,12 +258,12 @@ class TimeSpan {
 
 /** DS1307 SQW pin mode settings */
 enum Ds1307SqwPinMode {
-  DS1307_OFF = 0x00,             // Low
-  DS1307_ON = 0x80,              // High
-  DS1307_SquareWave1HZ = 0x10,   // 1Hz square wave
-  DS1307_SquareWave4kHz = 0x11,  // 4kHz square wave
-  DS1307_SquareWave8kHz = 0x12,  // 8kHz square wave
-  DS1307_SquareWave32kHz = 0x13  // 32kHz square wave
+  DS1307_SquareWaveOff = 0x0,          // Set SQW/OUT pin set to zero.
+  DS1307_SquareWaveOn = 0b10000000,    // Set SQW/OUT pin set to 1.
+  DS1307_SquareWave1Hz = 0b00010000,   // 1Hz square wave.
+  DS1307_SquareWave4kHz = 0b00010001,  // 4kHz square wave.
+  DS1307_SquareWave8kHz = 0b00010010,  // 8kHz square wave.
+  DS1307_SquareWave32kHz = 0b00010011  // 32kHz square wave.
 };
 
 /**************************************************************************/
@@ -275,23 +271,21 @@ enum Ds1307SqwPinMode {
     @brief  RTC based on the DS1307 chip connected via I2C and the Wire library
 */
 /**************************************************************************/
-class RTC_DS1307 {
+class DS1307 {
  public:
-  RTC_DS1307(I2CMaster* i2c);
+  DS1307(std::unique_ptr<I2CMaster> i2c);
 
   bool begin(void);
-  static void adjust(const DateTime& dt);
+  bool adjust(const DateTime& dt);
   uint8_t isrunning(void);
-  static DateTime now();
-  static Ds1307SqwPinMode readSqwPinMode();
-  static void writeSqwPinMode(Ds1307SqwPinMode mode);
-  uint8_t readnvram(uint8_t address);
-  void readnvram(uint8_t* buf, uint8_t size, uint8_t address);
-  void writenvram(uint8_t address, uint8_t data);
-  void writenvram(uint8_t address, uint8_t* buf, uint8_t size);
+  DateTime now();
+  Ds1307SqwPinMode readSqwPinMode();
+  bool writeSqwPinMode(Ds1307SqwPinMode mode);
+  bool readnvram(uint8_t address, void* buf, size_t num_bytes);
+  bool writenvram(uint8_t address, const void* buf, size_t num_bytes);
 
  private:
-  I2CMaster* const i2c_;
+  std::unique_ptr<I2CMaster> const i2c_;
 };
 
 /** DS3231 SQW pin mode settings */

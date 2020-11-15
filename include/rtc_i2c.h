@@ -41,6 +41,16 @@ class I2COperation {
   bool WriteByte(uint8_t val);
 
   /**
+   * @brief Queue a write operation.
+   *
+   * @param val The data to write
+   * @param num_bytes The size of \p val.
+   *
+   * @return true if successfully enqueued, false upon error.
+   */
+  bool Write(const void* val, size_t num_bytes);
+
+  /**
    * Restart the I2C operation.
    *
    * When this instance is created the operation is already started. This will
