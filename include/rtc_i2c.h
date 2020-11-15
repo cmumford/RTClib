@@ -48,11 +48,13 @@ class I2COperation {
 
   I2COperation(i2c_cmd_handle_t cmd,
                i2c_port_t i2c_num,
-               SemaphoreHandle_t i2c_mutex);
+               SemaphoreHandle_t i2c_mutex,
+               const char* op_name);
 
-  i2c_cmd_handle_t cmd_;
-  i2c_port_t i2c_num_;
-  SemaphoreHandle_t i2c_mutex_;
+  i2c_cmd_handle_t cmd_;         // The started command.
+  i2c_port_t i2c_num_;           // I2C bus or port number.
+  SemaphoreHandle_t i2c_mutex_;  // Mutex used for synchronization.
+  const char* name_;             // The operation name - used for debugging.
 };
 
 /**
@@ -73,14 +75,15 @@ class I2CMaster {
    *
    * @return The operation pointer - null if error creating operation.
    */
-  std::unique_ptr<I2COperation> CreateWriteOp(uint8_t addr);
+  std::unique_ptr<I2COperation> CreateWriteOp(uint8_t addr,
+                                              const char* op_name);
 
   /**
    * Start an I2C read operation to the I2C slave address.
    *
    * @return The operation pointer - null if error creating operation.
    */
-  std::unique_ptr<I2COperation> CreateReadOp(uint8_t addr);
+  std::unique_ptr<I2COperation> CreateReadOp(uint8_t addr, const char* op_name);
 
  private:
   i2c_port_t i2c_num_;

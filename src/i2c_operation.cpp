@@ -11,24 +11,35 @@ namespace rtc {
 
 namespace {
 constexpr char TAG[] = "I2C-op";
-constexpr TickType_t kI2CCmdWaitTicks = 5000 / portTICK_RATE_MS;
+constexpr TickType_t kI2CCmdWaitTicks = 1000 / portTICK_RATE_MS;
 }  // namespace
 
 I2COperation::I2COperation(i2c_cmd_handle_t cmd,
                            i2c_port_t i2c_num,
-                           SemaphoreHandle_t i2c_mutex)
-    : cmd_(cmd), i2c_num_(i2c_num), i2c_mutex_(i2c_mutex) {}
+                           SemaphoreHandle_t i2c_mutex,
+                           const char* op_name)
+    : cmd_(cmd), i2c_num_(i2c_num), i2c_mutex_(i2c_mutex), name_(op_name) {}
 
 I2COperation::~I2COperation() {
   if (cmd_) {
-    ESP_LOGW(TAG, "Operation created but never executed (doing so now).");
+    ESP_LOGW(TAG, "Op \"%s\" created but never executed (doing so now).",
+             name_);
     Execute();
   }
 }
 
 bool I2COperation::Read(void* dst, size_t num_bytes) {
-  return i2c_master_read(cmd_, static_cast<uint8_t*>(dst), num_bytes,
-                         I2C_MASTER_ACK) == ESP_OK;
+  esp_err_t err;
+  if (num_bytes > 1) {
+    err = i2c_master_read(cmd_, static_cast<uint8_t*>(dst), num_bytes - 1,
+                          I2C_MASTER_ACK);
+    if (err != ESP_OK)
+      goto READ_END;
+  }
+  err = i2c_master_read_byte(cmd_, static_cast<uint8_t*>(dst) + num_bytes - 1,
+                             I2C_MASTER_NACK);
+READ_END:
+  return err == ESP_OK;
 }
 
 bool I2COperation::WriteByte(uint8_t val) {
@@ -55,11 +66,12 @@ bool I2COperation::Execute() {
   cmd_ = nullptr;
 
   if (err != ESP_OK) {
-    ESP_LOGE(TAG, "i2c_master_cmd_begin failed: %s", esp_err_to_name(err));
+    ESP_LOGE(TAG, "i2c_master_cmd_begin for \"%s\" failed: %s", name_,
+             esp_err_to_name(err));
     return false;
   }
 
-  ESP_LOGV(TAG, "I2C operation completed successfully.");
+  ESP_LOGV(TAG, "\"%s\" completed successfully.", name_);
   return true;
 }
 

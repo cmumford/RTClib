@@ -296,11 +296,11 @@ class RTC_DS1307 {
 
 /** DS3231 SQW pin mode settings */
 enum Ds3231SqwPinMode {
-  DS3231_OFF = 0x1C,            /**< Off */
-  DS3231_SquareWave1Hz = 0x00,  /**<  1Hz square wave */
-  DS3231_SquareWave1kHz = 0x08, /**<  1kHz square wave */
-  DS3231_SquareWave4kHz = 0x10, /**<  4kHz square wave */
-  DS3231_SquareWave8kHz = 0x18  /**<  8kHz square wave */
+  DS3231_OFF = 0b00100,            /**< Off */
+  DS3231_SquareWave1Hz = 0b00000,  /**<  1Hz square wave */
+  DS3231_SquareWave1kHz = 0b01000, /**<  1kHz square wave */
+  DS3231_SquareWave4kHz = 0b10000, /**<  4kHz square wave */
+  DS3231_SquareWave8kHz = 0b11000  /**<  8kHz square wave */
 };
 
 /** DS3231 Alarm modes for alarm 1 */
@@ -341,7 +341,7 @@ class DS3231 {
   bool lostPower(void);
   DateTime now();
   Ds3231SqwPinMode readSqwPinMode();
-  void writeSqwPinMode(Ds3231SqwPinMode mode);
+  bool writeSqwPinMode(Ds3231SqwPinMode mode);
   bool setAlarm1(const DateTime& dt, Ds3231Alarm1Mode alarm_mode);
   bool setAlarm2(const DateTime& dt, Ds3231Alarm2Mode alarm_mode);
   void disableAlarm(uint8_t alarm_num);

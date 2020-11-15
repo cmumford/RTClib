@@ -15,6 +15,14 @@ namespace rtc {
 
 namespace {
 
+#if !defined(SET_BITS)
+#define SET_BITS(value, bits) (value |= (bits))
+#endif
+
+#if !defined(CLEAR_BITS)
+#define CLEAR_BITS(value, bits) (value &= ~(bits))
+#endif
+
 #define DS3231_ADDRESS 0x68    ///< I2C address for DS3231
 #define DS3231_TIME 0x00       ///< Time register
 #define DS3231_ALARM1 0x07     ///< Alarm 1 register
@@ -24,6 +32,17 @@ namespace {
 #define DS3231_TEMPERATUREREG \
   0x11  ///< Temperature register (high byte - low byte is at 0x12), 10-bit
         ///< temperature value
+
+// clang-format off
+constexpr uint8_t CONTROL_EOSC  = 0b10000000;
+constexpr uint8_t CONTROL_BBSQW = 0b01000000;
+constexpr uint8_t CONTROL_CONV  = 0b00100000;
+constexpr uint8_t CONTROL_RS2   = 0b00010000;
+constexpr uint8_t CONTROL_RS1   = 0b00001000;
+constexpr uint8_t CONTROL_INTCN = 0b00000100;
+constexpr uint8_t CONTROL_A2IE  = 0b00000010;
+constexpr uint8_t CONTROL_A1IE  = 0b00000001;
+// clang-format on
 
 /**************************************************************************/
 /*!
@@ -74,7 +93,7 @@ bool DS3231::lostPower(void) {
 /**************************************************************************/
 bool DS3231::adjust(const DateTime& dt) {
   {
-    auto op = i2c_->CreateWriteOp(DS3231_ADDRESS);
+    auto op = i2c_->CreateWriteOp(DS3231_ADDRESS, "adjust");
     if (!op)
       return false;
     op->WriteByte((uint8_t)DS3231_TIME);  // start at location 0
@@ -104,10 +123,15 @@ bool DS3231::adjust(const DateTime& dt) {
 */
 /**************************************************************************/
 DateTime DS3231::now() {
+  {
+    auto op = i2c_->CreateWriteOp(DS3231_ADDRESS, "now:write");
+    op->WriteByte(0x0);  // First time register address.
+    if (!op->Execute())
+      return DateTime();
+  }
   uint8_t values[7];
   {
-    auto op = i2c_->CreateReadOp(DS3231_ADDRESS);
-    op->WriteByte(0x0);  // First time register address.
+    auto op = i2c_->CreateReadOp(DS3231_ADDRESS, "now:read");
     if (!op->Read(values, sizeof(values)))
       return DateTime();
     if (!op->Execute())
@@ -132,21 +156,12 @@ DateTime DS3231::now() {
 */
 /**************************************************************************/
 Ds3231SqwPinMode DS3231::readSqwPinMode() {
-  {
-    auto op = i2c_->CreateWriteOp(DS3231_ADDRESS);
-    op->WriteByte(DS3231_CONTROL);
-    op->Execute();
-  }
+  uint8_t value;
+  if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_CONTROL, &value))
+    return DS3231_OFF;
 
-  uint8_t mode = 0;
-  {
-    auto op = i2c_->CreateReadOp(DS3231_ADDRESS);
-    op->Read(&mode, sizeof(mode));
-    op->Execute();
-  }
-
-  mode &= 0x93;
-  return static_cast<Ds3231SqwPinMode>(mode);
+  return static_cast<Ds3231SqwPinMode>(
+      value & (CONTROL_RS2 | CONTROL_RS1 | CONTROL_INTCN));
 }
 
 /**************************************************************************/
@@ -155,21 +170,15 @@ Ds3231SqwPinMode DS3231::readSqwPinMode() {
     @param mode Desired mode, see Ds3231SqwPinMode enum
 */
 /**************************************************************************/
-void DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
+bool DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
   uint8_t ctrl = 0x0;
-  i2c_->ReadRegister(DS3231_ADDRESS, DS3231_CONTROL, &ctrl);
+  if (!i2c_->ReadRegister(DS3231_ADDRESS, DS3231_CONTROL, &ctrl))
+    return false;
 
-  ctrl &= ~0x04;  // turn off INTCON
-  ctrl &= ~0x18;  // set freq bits to 0
+  CLEAR_BITS(ctrl, CONTROL_RS2 | CONTROL_RS1 | CONTROL_INTCN);
+  SET_BITS(ctrl, mode);
 
-  if (mode == DS3231_OFF) {
-    ctrl |= 0x04;  // turn on INTCN
-  } else {
-    ctrl |= mode;
-  }
-  i2c_->WriteRegister(DS3231_ADDRESS, DS3231_CONTROL, ctrl);
-
-  // Serial.println( read_i2c_register(DS3231_ADDRESS, DS3231_CONTROL), HEX);
+  return i2c_->WriteRegister(DS3231_ADDRESS, DS3231_CONTROL, ctrl);
 }
 
 /**************************************************************************/
@@ -180,7 +189,7 @@ void DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
 /**************************************************************************/
 float DS3231::getTemperature() {
   {
-    auto op = i2c_->CreateWriteOp(DS3231_ADDRESS);
+    auto op = i2c_->CreateWriteOp(DS3231_ADDRESS, "gettemp1");
     if (!op)
       return std::numeric_limits<float>::quiet_NaN();
     op->WriteByte(DS3231_TEMPERATUREREG);
@@ -190,7 +199,7 @@ float DS3231::getTemperature() {
   uint8_t msb = 0;
   int8_t lsb = 0;
   {
-    auto op = i2c_->CreateReadOp(DS3231_ADDRESS);
+    auto op = i2c_->CreateReadOp(DS3231_ADDRESS, "gettemp1");
     if (!op)
       return std::numeric_limits<float>::quiet_NaN();
     op->Read(&msb, sizeof(msb));
@@ -229,7 +238,7 @@ bool DS3231::setAlarm1(const DateTime& dt, Ds3231Alarm1Mode alarm_mode) {
                   << 2;  // Day/Date bit 6. Date when 0, day of week when 1.
 
   {
-    auto write_op = i2c_->CreateWriteOp(DS3231_ADDRESS);
+    auto write_op = i2c_->CreateWriteOp(DS3231_ADDRESS, "setalm1");
     write_op->WriteByte(DS3231_ALARM1);
     write_op->WriteByte(bin2bcd(dt.second()) | A1M1);
     write_op->WriteByte(bin2bcd(dt.minute()) | A1M2);
@@ -269,7 +278,7 @@ bool DS3231::setAlarm2(const DateTime& dt, Ds3231Alarm2Mode alarm_mode) {
                   << 3;  // Day/Date bit 6. Date when 0, day of week when 1.
 
   {
-    auto op = i2c_->CreateWriteOp(DS3231_ADDRESS);
+    auto op = i2c_->CreateWriteOp(DS3231_ADDRESS, "setalm2");
     op->WriteByte(DS3231_ALARM2);
     op->WriteByte(bin2bcd(dt.minute()) | A2M2);
     op->WriteByte(bin2bcd(dt.hour()) | A2M3);
