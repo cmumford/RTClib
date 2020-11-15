@@ -10,6 +10,8 @@
 
 namespace rtc {
 
+enum class OperationType { READ, WRITE };
+
 /**
  * A single I2C command operation.
  *
@@ -37,6 +39,8 @@ class I2COperation {
    * Queue the write of a byte in this operation.
    */
   bool WriteByte(uint8_t val);
+
+  bool Restart(uint8_t address, OperationType type);
 
   /**
    * Execute all queued tasks.

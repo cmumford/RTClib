@@ -196,26 +196,16 @@ bool DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
 */
 /**************************************************************************/
 float DS3231::getTemperature() {
-  {
-    auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "gettemp1");
-    if (!op)
-      return std::numeric_limits<float>::quiet_NaN();
-    op->WriteByte(REGISTER_TEMP_MSB);
-    op->Execute();
-  }
-
-  uint8_t msb = 0;
-  int8_t lsb = 0;
-  {
-    auto op = i2c_->CreateReadOp(DS3231_I2C_ADDRESS, "gettemp1");
-    if (!op)
-      return std::numeric_limits<float>::quiet_NaN();
-    op->Read(&msb, sizeof(msb));
-    op->Read(&lsb, sizeof(lsb));
-    op->Execute();
-  }
-
-  return (float)msb + (lsb >> 6) * 0.25f;
+  auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "gettemp");
+  if (!op)
+    return std::numeric_limits<float>::quiet_NaN();
+  op->WriteByte(REGISTER_TEMP_MSB);
+  uint8_t values[2];  // MSB and LSB respectively.
+  op->Read(&values, sizeof(values));
+  if (!op->Execute())
+    return std::numeric_limits<float>::quiet_NaN();
+  return static_cast<float>(static_cast<int8_t>(values[0])) +
+         0.25f * (values[1] >> 6);
 }
 
 /**************************************************************************/
@@ -229,9 +219,8 @@ float DS3231::getTemperature() {
 bool DS3231::setAlarm1(const DateTime& dt, Ds3231Alarm1Mode alarm_mode) {
   uint8_t ctrl = 0;
   i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
-  if (!(ctrl & 0x04)) {
+  if (!(ctrl & 0x04))
     return false;
-  }
 
   uint8_t A1M1 = (alarm_mode & 0x01) << 7;  // Seconds bit 7.
   uint8_t A1M2 = (alarm_mode & 0x02) << 6;  // Minutes bit 7.

@@ -12,6 +12,7 @@ namespace rtc {
 namespace {
 constexpr char TAG[] = "I2C-op";
 constexpr TickType_t kI2CCmdWaitTicks = 1000 / portTICK_RATE_MS;
+constexpr bool ACK_CHECK_EN = true;  ///< I2C master will check ack from slave.
 }  // namespace
 
 I2COperation::I2COperation(i2c_cmd_handle_t cmd,
@@ -72,6 +73,20 @@ bool I2COperation::Execute() {
   }
 
   ESP_LOGV(TAG, "\"%s\" completed successfully.", name_);
+  return true;
+}
+
+bool I2COperation::Restart(uint8_t address, OperationType type) {
+  i2c_rw_t op =
+      type == OperationType::READ ? I2C_MASTER_READ : I2C_MASTER_WRITE;
+  esp_err_t err = i2c_master_start(cmd_);
+  if (err == ESP_OK)
+    err = i2c_master_write_byte(cmd_, (address << 1) | op, ACK_CHECK_EN);
+  if (err != ESP_OK) {
+    ESP_LOGE(TAG, "%s restart failed: %s", name_, esp_err_to_name(err));
+    return false;
+  }
+  ESP_LOGV(TAG, "%s Restarted", name_);
   return true;
 }
 
