@@ -9,6 +9,8 @@
 
 #include <RTClib.h>
 
+#include <limits>
+
 #include "RTC_util.h"
 
 namespace rtc {
