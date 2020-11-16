@@ -16,14 +16,6 @@ namespace rtc {
 
 namespace {
 
-#if !defined(SET_BITS)
-#define SET_BITS(value, bits) (value |= (bits))
-#endif
-
-#if !defined(CLEAR_BITS)
-#define CLEAR_BITS(value, bits) (value &= ~(bits))
-#endif
-
 // clang-format off
 constexpr uint8_t DS1307_ADDRESS = 0x68;  ///< I2C address for DS1307
 

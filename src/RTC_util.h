@@ -12,6 +12,14 @@
 
 #include <cstdint>
 
+#if !defined(SET_BITS)
+#define SET_BITS(value, bits) (value |= (bits))
+#endif
+
+#if !defined(CLEAR_BITS)
+#define CLEAR_BITS(value, bits) (value &= ~(bits))
+#endif
+
 /**************************************************************************/
 /*!
     @brief  Convert a binary coded decimal value to binary. RTC stores time/date
