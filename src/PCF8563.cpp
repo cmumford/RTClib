@@ -9,9 +9,24 @@
 
 #include <RTClib.h>
 
-#if 0
+#include "RTC_util.h"
 
-// START RTC_PCF8563 implementation
+namespace rtc {
+
+namespace {
+
+// clang-format off
+constexpr uint8_t PCF8563_ADDRESS = 0x51;        ///< I2C address for PCF8563
+
+constexpr uint8_t PCF8563_CLKOUTCONTROL = 0x0D;  ///< CLKOUT control register
+constexpr uint8_t PCF8563_CONTROL_1 = 0x00;      ///< Control and status register 1
+constexpr uint8_t PCF8563_CONTROL_2 = 0x01;      ///< Control and status register 2
+constexpr uint8_t PCF8563_VL_SECONDS = 0x02;     ///< register address for VL_SECONDS
+constexpr uint8_t PCF8563_CLKOUT_MASK = 0x83;    ///< bitmask for SqwPinMode on CLKOUT pin
+// clang-format on
+
+}  // namespace
+PCF8563::PCF8563(std::unique_ptr<I2CMaster> i2c) : i2c_(std::move(i2c)) {}
 
 /**************************************************************************/
 /*!
@@ -19,12 +34,8 @@
     @return True if Wire can find PCF8563 or false otherwise.
 */
 /**************************************************************************/
-boolean RTC_PCF8563::begin(void) {
-  Wire.begin();
-  Wire.beginTransmission(PCF8563_ADDRESS);
-  if (Wire.endTransmission() == 0)
-    return true;
-  return false;
+bool PCF8563::begin() {
+  return i2c_->Ping(PCF8563_ADDRESS);
 }
 
 /**************************************************************************/
@@ -39,8 +50,11 @@ boolean RTC_PCF8563::begin(void) {
 */
 /**************************************************************************/
 
-boolean RTC_PCF8563::lostPower(void) {
-  return (read_i2c_register(PCF8563_ADDRESS, PCF8563_VL_SECONDS) >> 7);
+bool PCF8563::lostPower() {
+  uint8_t value;
+  if (!i2c_->ReadRegister(PCF8563_ADDRESS, PCF8563_VL_SECONDS, &value))
+    return false;
+  return value >> 7;
 }
 
 /**************************************************************************/
@@ -49,17 +63,19 @@ boolean RTC_PCF8563::lostPower(void) {
     @param dt DateTime to set
 */
 /**************************************************************************/
-void RTC_PCF8563::adjust(const DateTime& dt) {
-  Wire.beginTransmission(PCF8563_ADDRESS);
-  Wire._I2C_WRITE(PCF8563_VL_SECONDS);  // start at location 2, VL_SECONDS
-  Wire._I2C_WRITE(bin2bcd(dt.second()));
-  Wire._I2C_WRITE(bin2bcd(dt.minute()));
-  Wire._I2C_WRITE(bin2bcd(dt.hour()));
-  Wire._I2C_WRITE(bin2bcd(dt.day()));
-  Wire._I2C_WRITE(bin2bcd(0));  // skip weekdays
-  Wire._I2C_WRITE(bin2bcd(dt.month()));
-  Wire._I2C_WRITE(bin2bcd(dt.year() - 2000));
-  Wire.endTransmission();
+bool PCF8563::adjust(const DateTime& dt) {
+  auto op = i2c_->CreateWriteOp(PCF8563_ADDRESS, "adjust");
+  if (!op)
+    return false;
+  op->WriteByte(PCF8563_VL_SECONDS);  // start at location 2, VL_SECONDS
+  op->WriteByte(bin2bcd(dt.second()));
+  op->WriteByte(bin2bcd(dt.minute()));
+  op->WriteByte(bin2bcd(dt.hour()));
+  op->WriteByte(bin2bcd(dt.day()));
+  op->WriteByte(0x0);  // skip weekdays
+  op->WriteByte(bin2bcd(dt.month()));
+  op->WriteByte(bin2bcd(dt.year() - 2000));
+  return op->Execute();
 }
 
 /**************************************************************************/
@@ -69,19 +85,24 @@ void RTC_PCF8563::adjust(const DateTime& dt) {
 */
 /**************************************************************************/
 
-DateTime RTC_PCF8563::now() {
-  Wire.beginTransmission(PCF8563_ADDRESS);
-  Wire._I2C_WRITE((byte)2);
-  Wire.endTransmission();
+DateTime PCF8563::now() {
+  auto op = i2c_->CreateWriteOp(PCF8563_ADDRESS, "now");
+  if (!op)
+    return false;
+  op->WriteByte(PCF8563_VL_SECONDS);
+  op->Restart(PCF8563_ADDRESS, OperationType::READ);
+  uint8_t values[7];
+  op->Read(values, sizeof(values));
+  if (!op->Execute())
+    return false;
 
-  Wire.requestFrom(PCF8563_ADDRESS, 7);
-  uint8_t ss = bcd2bin(Wire._I2C_READ() & 0x7F);
-  uint8_t mm = bcd2bin(Wire._I2C_READ() & 0x7F);
-  uint8_t hh = bcd2bin(Wire._I2C_READ() & 0x3F);
-  uint8_t d = bcd2bin(Wire._I2C_READ() & 0x3F);
-  Wire._I2C_READ();  // skip 'weekdays'
-  uint8_t m = bcd2bin(Wire._I2C_READ() & 0x1F);
-  uint16_t y = bcd2bin(Wire._I2C_READ()) + 2000;
+  const uint8_t ss = bcd2bin(values[0] & 0x7F);
+  const uint8_t mm = bcd2bin(values[1] & 0x7F);
+  const uint8_t hh = bcd2bin(values[2] & 0x3F);
+  const uint8_t d = bcd2bin(values[3] & 0x3F);
+  // skip 'weekdays'
+  const uint8_t m = bcd2bin(values[5] & 0x1F);
+  const uint16_t y = bcd2bin(values[6]) + 2000;
 
   return DateTime(y, m, d, hh, mm, ss);
 }
@@ -91,11 +112,13 @@ DateTime RTC_PCF8563::now() {
     @brief  Resets the STOP bit in register Control_1
 */
 /**************************************************************************/
-void RTC_PCF8563::start(void) {
-  uint8_t ctlreg = read_i2c_register(PCF8563_ADDRESS, PCF8563_CONTROL_1);
-  if (ctlreg & (1 << 5)) {
-    write_i2c_register(PCF8563_ADDRESS, PCF8563_CONTROL_1, ctlreg & ~(1 << 5));
-  }
+bool PCF8563::start() {
+  uint8_t ctlreg;
+  if (!i2c_->ReadRegister(PCF8563_ADDRESS, PCF8563_CONTROL_1, &ctlreg))
+    return false;
+
+  return i2c_->WriteRegister(PCF8563_ADDRESS, PCF8563_CONTROL_1,
+                             ctlreg & ~(1 << 5));
 }
 
 /**************************************************************************/
@@ -103,11 +126,13 @@ void RTC_PCF8563::start(void) {
     @brief  Sets the STOP bit in register Control_1
 */
 /**************************************************************************/
-void RTC_PCF8563::stop(void) {
-  uint8_t ctlreg = read_i2c_register(PCF8563_ADDRESS, PCF8563_CONTROL_1);
-  if (!(ctlreg & (1 << 5))) {
-    write_i2c_register(PCF8523_ADDRESS, PCF8563_CONTROL_1, ctlreg | (1 << 5));
-  }
+bool PCF8563::stop() {
+  uint8_t ctlreg;
+  if (!i2c_->ReadRegister(PCF8563_ADDRESS, PCF8563_CONTROL_1, &ctlreg))
+    return false;
+
+  return i2c_->WriteRegister(PCF8563_ADDRESS, PCF8563_CONTROL_1,
+                             ctlreg | (1 << 5));
 }
 
 /**************************************************************************/
@@ -116,8 +141,10 @@ void RTC_PCF8563::stop(void) {
     @return 1 if the RTC is running, 0 if not
 */
 /**************************************************************************/
-uint8_t RTC_PCF8563::isrunning() {
-  uint8_t ctlreg = read_i2c_register(PCF8563_ADDRESS, PCF8563_CONTROL_1);
+uint8_t PCF8563::isrunning() {
+  uint8_t ctlreg;
+  if (!i2c_->ReadRegister(PCF8563_ADDRESS, PCF8563_CONTROL_1, &ctlreg))
+    return false;
   return !((ctlreg >> 5) & 1);
 }
 
@@ -127,16 +154,10 @@ uint8_t RTC_PCF8563::isrunning() {
     @return CLKOUT pin mode as a #Pcf8563SqwPinMode enum
 */
 /**************************************************************************/
-Pcf8563SqwPinMode RTC_PCF8563::readSqwPinMode() {
-  int mode;
-
-  Wire.beginTransmission(PCF8563_ADDRESS);
-  Wire._I2C_WRITE(PCF8563_CLKOUTCONTROL);
-  Wire.endTransmission();
-
-  Wire.requestFrom((uint8_t)PCF8563_ADDRESS, (uint8_t)1);
-  mode = Wire._I2C_READ();
-
+Pcf8563SqwPinMode PCF8563::readSqwPinMode() {
+  uint8_t mode;
+  if (!i2c_->ReadRegister(PCF8563_ADDRESS, PCF8563_CLKOUTCONTROL, &mode))
+    return PCF8563_SquareWaveOFF;
   return static_cast<Pcf8563SqwPinMode>(mode & PCF8563_CLKOUT_MASK);
 }
 
@@ -146,11 +167,8 @@ Pcf8563SqwPinMode RTC_PCF8563::readSqwPinMode() {
     @param mode The mode to set, see the #Pcf8563SqwPinMode enum for options
 */
 /**************************************************************************/
-void RTC_PCF8563::writeSqwPinMode(Pcf8563SqwPinMode mode) {
-  Wire.beginTransmission(PCF8563_ADDRESS);
-  Wire._I2C_WRITE(PCF8563_CLKOUTCONTROL);
-  Wire._I2C_WRITE(mode);
-  Wire.endTransmission();
+bool PCF8563::writeSqwPinMode(Pcf8563SqwPinMode mode) {
+  return i2c_->WriteRegister(PCF8563_ADDRESS, PCF8563_CLKOUTCONTROL, mode);
 }
-// END RTC_PCF8563 implementation
-#endif
+
+}  // namespace rtc

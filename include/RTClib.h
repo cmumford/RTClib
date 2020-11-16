@@ -421,20 +421,22 @@ enum Pcf8563SqwPinMode {
 */
 /**************************************************************************/
 
-class RTC_PCF8563 {
+class PCF8563 {
  public:
+  PCF8563(std::unique_ptr<I2CMaster> i2c);
+
   bool begin(void);
   bool lostPower(void);
-  void adjust(const DateTime& dt);
-  static DateTime now();
-  void start(void);
-  void stop(void);
+  bool adjust(const DateTime& dt);
+  DateTime now();
+  bool start(void);
+  bool stop(void);
   uint8_t isrunning();
   Pcf8563SqwPinMode readSqwPinMode();
-  void writeSqwPinMode(Pcf8563SqwPinMode mode);
+  bool writeSqwPinMode(Pcf8563SqwPinMode mode);
 
  private:
-  I2CMaster* i2c_;
+  std::unique_ptr<I2CMaster> i2c_;
 };
 
 /**************************************************************************/

@@ -25,13 +25,6 @@ constexpr uint8_t PCF8523_TIMER_B_FRCTL = 0x12;  ///< Timer B source clock frequ
 constexpr uint8_t PCF8523_TIMER_B_VALUE = 0x13;  ///< Timer B value (number clock periods)
 constexpr uint8_t PCF8523_OFFSET = 0x0E;         ///< Offset register
 constexpr uint8_t PCF8523_STATUSREG = 0x03;      ///< Status register
-
-constexpr uint8_t PCF8563_ADDRESS = 0x51;        ///< I2C address for PCF8563
-constexpr uint8_t PCF8563_CLKOUTCONTROL = 0x0D;  ///< CLKOUT control register
-constexpr uint8_t PCF8563_CONTROL_1 = 0x00;      ///< Control and status register 1
-constexpr uint8_t PCF8563_CONTROL_2 = 0x01;      ///< Control and status register 2
-constexpr uint8_t PCF8563_VL_SECONDS = 0x02;     ///< register address for VL_SECONDS
-constexpr uint8_t PCF8563_CLKOUT_MASK = 0x83;    ///< bitmask for SqwPinMode on CLKOUT pin
 // clang-format on
 
 }  // anonymous namespace
