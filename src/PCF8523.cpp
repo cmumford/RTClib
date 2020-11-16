@@ -185,21 +185,12 @@ bool PCF8523::isrunning() {
 */
 /**************************************************************************/
 Pcf8523SqwPinMode PCF8523::readSqwPinMode() {
-  int mode;
-
-#if 0
-  Wire.beginTransmission(PCF8523_ADDRESS);
-  Wire._I2C_WRITE(PCF8523_CLKOUTCONTROL);
-  Wire.endTransmission();
-
-  Wire.requestFrom((uint8_t)PCF8523_ADDRESS, (uint8_t)1);
-  mode = Wire._I2C_READ();
+  uint8_t mode;
+  if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, &mode))
+    return PCF8523_OFF;
 
   mode >>= 3;
   mode &= 0x7;
-#else
-  mode = 0;
-#endif
 
   return static_cast<Pcf8523SqwPinMode>(mode);
 }
@@ -211,14 +202,7 @@ Pcf8523SqwPinMode PCF8523::readSqwPinMode() {
 */
 /**************************************************************************/
 bool PCF8523::writeSqwPinMode(Pcf8523SqwPinMode mode) {
-#if 1
-  return true;
-#else
-  Wire.beginTransmission(PCF8523_ADDRESS);
-  Wire._I2C_WRITE(PCF8523_CLKOUTCONTROL);
-  Wire._I2C_WRITE(mode << 3);  // disables other timers
-  Wire.endTransmission();
-#endif
+  return i2c_->WriteRegister(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, mode << 3);
 }
 
 /**************************************************************************/
@@ -228,19 +212,33 @@ bool PCF8523::writeSqwPinMode(Pcf8523SqwPinMode mode) {
 */
 /**************************************************************************/
 bool PCF8523::enableSecondTimer() {
-#if 1
-  return true;
-#else
-  // Leave compatible settings intact
-  uint8_t ctlreg = read_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1);
-  uint8_t clkreg = read_i2c_register(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL);
+  uint8_t ctlreg;
+  uint8_t clkreg;
 
+  {
+    auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, "enableSecondTimer:read");
+    op->WriteByte(PCF8523_CONTROL_1);
+    op->Restart(PCF8523_ADDRESS, OperationType::READ);
+    op->Read(&ctlreg, sizeof(ctlreg));
+
+    op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
+    op->WriteByte(PCF8523_CLKOUTCONTROL);
+    op->Restart(PCF8523_ADDRESS, OperationType::READ);
+    op->Read(&clkreg, sizeof(clkreg));
+    if (!op->Execute())
+      return false;
+  }
+
+  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, "enableSecondTimer:write");
   // TAM pulse int. mode (shared with Timer A), CLKOUT (aka SQW) disabled
-  write_i2c_register(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, clkreg | 0xB8);
+  op->WriteByte(PCF8523_CLKOUTCONTROL);
+  op->WriteByte(clkreg | 0xB8);
 
   // SIE Second timer int. enable
-  write_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1, ctlreg | (1 << 2));
-#endif
+  op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
+  op->WriteByte(PCF8523_CONTROL_1);
+  op->WriteByte(ctlreg | (1 << 2));
+  return op->Execute();
 }
 
 /**************************************************************************/
@@ -249,15 +247,14 @@ bool PCF8523::enableSecondTimer() {
 */
 /**************************************************************************/
 bool PCF8523::disableSecondTimer() {
-#if 1
-  return true;
-#else
   // Leave compatible settings intact
-  uint8_t ctlreg = read_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1);
+  uint8_t ctlreg;
+  if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1, &ctlreg))
+    return false;
 
   // SIE Second timer int. disable
-  write_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1, ctlreg & ~(1 << 2));
-#endif
+  return i2c_->WriteRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1,
+                             ctlreg & ~(1 << 2));
 }
 
 /**************************************************************************/
