@@ -9,7 +9,32 @@
 
 #include <RTClib.h>
 
-#if 0
+#include "RTC_util.h"
+namespace rtc {
+
+namespace {
+
+// clang-format off
+constexpr uint8_t PCF8523_ADDRESS = 0x68;        ///< I2C address for PCF8523
+
+constexpr uint8_t PCF8523_CLKOUTCONTROL = 0x0F;  ///< Timer and CLKOUT control register
+constexpr uint8_t PCF8523_CONTROL_1 = 0x00;      ///< Control and status register 1
+constexpr uint8_t PCF8523_CONTROL_2 = 0x01;      ///< Control and status register 2
+constexpr uint8_t PCF8523_CONTROL_3 = 0x02;      ///< Control and status register 3
+constexpr uint8_t PCF8523_TIMER_B_FRCTL = 0x12;  ///< Timer B source clock frequency control
+constexpr uint8_t PCF8523_TIMER_B_VALUE = 0x13;  ///< Timer B value (number clock periods)
+constexpr uint8_t PCF8523_OFFSET = 0x0E;         ///< Offset register
+constexpr uint8_t PCF8523_STATUSREG = 0x03;      ///< Status register
+
+constexpr uint8_t PCF8563_ADDRESS = 0x51;        ///< I2C address for PCF8563
+constexpr uint8_t PCF8563_CLKOUTCONTROL = 0x0D;  ///< CLKOUT control register
+constexpr uint8_t PCF8563_CONTROL_1 = 0x00;      ///< Control and status register 1
+constexpr uint8_t PCF8563_CONTROL_2 = 0x01;      ///< Control and status register 2
+constexpr uint8_t PCF8563_VL_SECONDS = 0x02;     ///< register address for VL_SECONDS
+constexpr uint8_t PCF8563_CLKOUT_MASK = 0x83;    ///< bitmask for SqwPinMode on CLKOUT pin
+// clang-format on
+
+}  // anonymous namespace
 
 /**************************************************************************/
 /*!
@@ -17,12 +42,8 @@
     @return True if Wire can find PCF8523 or false otherwise.
 */
 /**************************************************************************/
-boolean RTC_PCF8523::begin(void) {
-  Wire.begin();
-  Wire.beginTransmission(PCF8523_ADDRESS);
-  if (Wire.endTransmission() == 0)
-    return true;
-  return false;
+bool PCF8523::begin(void) {
+  return i2c_->Ping(PCF8523_ADDRESS);
 }
 
 /**************************************************************************/
@@ -36,8 +57,11 @@ boolean RTC_PCF8523::begin(void) {
    after the bit is cleared, for instance with adjust()
 */
 /**************************************************************************/
-boolean RTC_PCF8523::lostPower(void) {
-  return (read_i2c_register(PCF8523_ADDRESS, PCF8523_STATUSREG) >> 7);
+bool PCF8523::lostPower(void) {
+  uint8_t value;
+  if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_STATUSREG, &value))
+    return false;
+  return value >> 7;
 }
 
 /**************************************************************************/
@@ -47,14 +71,11 @@ boolean RTC_PCF8523::lostPower(void) {
     @return True if the PCF8523 has been set up, false if not
 */
 /**************************************************************************/
-boolean RTC_PCF8523::initialized(void) {
-  Wire.beginTransmission(PCF8523_ADDRESS);
-  Wire._I2C_WRITE((byte)PCF8523_CONTROL_3);
-  Wire.endTransmission();
-
-  Wire.requestFrom(PCF8523_ADDRESS, 1);
-  uint8_t ss = Wire._I2C_READ();
-  return ((ss & 0xE0) != 0xE0);  // 0xE0 = standby mode, set after power out
+bool PCF8523::initialized(void) {
+  uint8_t value;
+  if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_CONTROL_3, &value))
+    return false;
+  return ((value & 0xE0) != 0xE0);  // 0xE0 = standby mode, set after power out
 }
 
 /**************************************************************************/
@@ -63,23 +84,25 @@ boolean RTC_PCF8523::initialized(void) {
     @param dt DateTime to set
 */
 /**************************************************************************/
-void RTC_PCF8523::adjust(const DateTime& dt) {
-  Wire.beginTransmission(PCF8523_ADDRESS);
-  Wire._I2C_WRITE((byte)3);  // start at location 3
-  Wire._I2C_WRITE(bin2bcd(dt.second()));
-  Wire._I2C_WRITE(bin2bcd(dt.minute()));
-  Wire._I2C_WRITE(bin2bcd(dt.hour()));
-  Wire._I2C_WRITE(bin2bcd(dt.day()));
-  Wire._I2C_WRITE(bin2bcd(0));  // skip weekdays
-  Wire._I2C_WRITE(bin2bcd(dt.month()));
-  Wire._I2C_WRITE(bin2bcd(dt.year() - 2000U));
-  Wire.endTransmission();
+bool PCF8523::adjust(const DateTime& dt) {
+  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, "adjust");
+  if (!op)
+    return false;
+
+  op->WriteByte(0x3);  // start at location 3
+  op->WriteByte(bin2bcd(dt.second()));
+  op->WriteByte(bin2bcd(dt.minute()));
+  op->WriteByte(bin2bcd(dt.hour()));
+  op->WriteByte(bin2bcd(dt.day()));
+  op->WriteByte(0);  // skip day of week
+  op->WriteByte(bin2bcd(dt.month()));
+  op->WriteByte(bin2bcd(dt.year() - 2000U));
 
   // set to battery switchover mode
-  Wire.beginTransmission(PCF8523_ADDRESS);
-  Wire._I2C_WRITE((byte)PCF8523_CONTROL_3);
-  Wire._I2C_WRITE((byte)0x00);
-  Wire.endTransmission();
+  op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
+  op->WriteByte(PCF8523_CONTROL_3);
+  op->WriteByte(0x0);
+  return op->Execute();
 }
 
 /**************************************************************************/
@@ -88,19 +111,23 @@ void RTC_PCF8523::adjust(const DateTime& dt) {
     @return DateTime object containing the current date/time
 */
 /**************************************************************************/
-DateTime RTC_PCF8523::now() {
-  Wire.beginTransmission(PCF8523_ADDRESS);
-  Wire._I2C_WRITE((byte)3);
-  Wire.endTransmission();
+DateTime PCF8523::now() {
+  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, "now");
+  op->WriteByte(0x3);  // First time register address.
+  op->Restart(PCF8523_ADDRESS, OperationType::READ);
+  uint8_t values[7];  // for registers 0x00 - 0x06.
+  if (!op->Read(values, sizeof(values)))
+    return DateTime();
+  if (!op->Execute())
+    return DateTime();
 
-  Wire.requestFrom(PCF8523_ADDRESS, 7);
-  uint8_t ss = bcd2bin(Wire._I2C_READ() & 0x7F);
-  uint8_t mm = bcd2bin(Wire._I2C_READ());
-  uint8_t hh = bcd2bin(Wire._I2C_READ());
-  uint8_t d = bcd2bin(Wire._I2C_READ());
-  Wire._I2C_READ();  // skip 'weekdays'
-  uint8_t m = bcd2bin(Wire._I2C_READ());
-  uint16_t y = bcd2bin(Wire._I2C_READ()) + 2000U;
+  const uint8_t ss = bcd2bin(values[0] & 0x7F);
+  const uint8_t mm = bcd2bin(values[1]);
+  const uint8_t hh = bcd2bin(values[2]);
+  const uint8_t d = bcd2bin(values[3]);
+  // Skip day of week.
+  const uint8_t m = bcd2bin(values[5]);
+  const uint16_t y = bcd2bin(values[6]) + 2000U;
 
   return DateTime(y, m, d, hh, mm, ss);
 }
@@ -110,11 +137,15 @@ DateTime RTC_PCF8523::now() {
     @brief  Resets the STOP bit in register Control_1
 */
 /**************************************************************************/
-void RTC_PCF8523::start(void) {
-  uint8_t ctlreg = read_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1);
+bool PCF8523::start(void) {
+  uint8_t ctlreg;
+  if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1, &ctlreg))
+    return false;
   if (ctlreg & (1 << 5)) {
-    write_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1, ctlreg & ~(1 << 5));
+    return i2c_->WriteRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1,
+                               ctlreg & ~(1 << 5));
   }
+  return true;
 }
 
 /**************************************************************************/
@@ -122,11 +153,15 @@ void RTC_PCF8523::start(void) {
     @brief  Sets the STOP bit in register Control_1
 */
 /**************************************************************************/
-void RTC_PCF8523::stop(void) {
-  uint8_t ctlreg = read_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1);
+bool PCF8523::stop(void) {
+  uint8_t ctlreg;
+  if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1, &ctlreg))
+    return false;
   if (!(ctlreg & (1 << 5))) {
-    write_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1, ctlreg | (1 << 5));
+    return i2c_->WriteRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1,
+                               ctlreg | (1 << 5));
   }
+  return true;
 }
 
 /**************************************************************************/
@@ -135,8 +170,11 @@ void RTC_PCF8523::stop(void) {
     @return 1 if the RTC is running, 0 if not
 */
 /**************************************************************************/
-uint8_t RTC_PCF8523::isrunning() {
-  uint8_t ctlreg = read_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1);
+bool PCF8523::isrunning() {
+  uint8_t ctlreg;
+  if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1, &ctlreg))
+    return false;
+
   return !((ctlreg >> 5) & 1);
 }
 
@@ -146,9 +184,10 @@ uint8_t RTC_PCF8523::isrunning() {
     @return SQW pin mode as a #Pcf8523SqwPinMode enum
 */
 /**************************************************************************/
-Pcf8523SqwPinMode RTC_PCF8523::readSqwPinMode() {
+Pcf8523SqwPinMode PCF8523::readSqwPinMode() {
   int mode;
 
+#if 0
   Wire.beginTransmission(PCF8523_ADDRESS);
   Wire._I2C_WRITE(PCF8523_CLKOUTCONTROL);
   Wire.endTransmission();
@@ -158,6 +197,10 @@ Pcf8523SqwPinMode RTC_PCF8523::readSqwPinMode() {
 
   mode >>= 3;
   mode &= 0x7;
+#else
+  mode = 0;
+#endif
+
   return static_cast<Pcf8523SqwPinMode>(mode);
 }
 
@@ -167,11 +210,15 @@ Pcf8523SqwPinMode RTC_PCF8523::readSqwPinMode() {
     @param mode The mode to set, see the #Pcf8523SqwPinMode enum for options
 */
 /**************************************************************************/
-void RTC_PCF8523::writeSqwPinMode(Pcf8523SqwPinMode mode) {
+bool PCF8523::writeSqwPinMode(Pcf8523SqwPinMode mode) {
+#if 1
+  return true;
+#else
   Wire.beginTransmission(PCF8523_ADDRESS);
   Wire._I2C_WRITE(PCF8523_CLKOUTCONTROL);
   Wire._I2C_WRITE(mode << 3);  // disables other timers
   Wire.endTransmission();
+#endif
 }
 
 /**************************************************************************/
@@ -180,7 +227,10 @@ void RTC_PCF8523::writeSqwPinMode(Pcf8523SqwPinMode mode) {
     @details The INT/SQW pin will pull low for a brief pulse once per second.
 */
 /**************************************************************************/
-void RTC_PCF8523::enableSecondTimer() {
+bool PCF8523::enableSecondTimer() {
+#if 1
+  return true;
+#else
   // Leave compatible settings intact
   uint8_t ctlreg = read_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1);
   uint8_t clkreg = read_i2c_register(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL);
@@ -190,6 +240,7 @@ void RTC_PCF8523::enableSecondTimer() {
 
   // SIE Second timer int. enable
   write_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1, ctlreg | (1 << 2));
+#endif
 }
 
 /**************************************************************************/
@@ -197,12 +248,16 @@ void RTC_PCF8523::enableSecondTimer() {
     @brief  Disable the Second Timer (1Hz) Interrupt on the PCF8523.
 */
 /**************************************************************************/
-void RTC_PCF8523::disableSecondTimer() {
+bool PCF8523::disableSecondTimer() {
+#if 1
+  return true;
+#else
   // Leave compatible settings intact
   uint8_t ctlreg = read_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1);
 
   // SIE Second timer int. disable
   write_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1, ctlreg & ~(1 << 2));
+#endif
 }
 
 /**************************************************************************/
@@ -220,29 +275,59 @@ void RTC_PCF8523::disableSecondTimer() {
    low pulse. See the #PCF8523TimerIntPulse enum for options.
 */
 /**************************************************************************/
-void RTC_PCF8523::enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
-                                       uint8_t numPeriods,
-                                       uint8_t lowPulseWidth) {
+bool PCF8523::enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
+                                   uint8_t numPeriods,
+                                   uint8_t lowPulseWidth) {
   // Datasheet cautions against updating countdown value while it's running,
   // so disabling allows repeated calls with new values to set new countdowns
-  disableCountdownTimer();
+  if (!disableCountdownTimer())
+    return false;
 
   // Leave compatible settings intact
-  uint8_t ctlreg = read_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_2);
-  uint8_t clkreg = read_i2c_register(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL);
+  uint8_t ctlreg;
+  uint8_t clkreg;
+
+  {
+    auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, "enableCountdownTimer:read");
+    if (!op)
+      return false;
+    op->WriteByte(PCF8523_CONTROL_2);
+    op->Restart(PCF8523_ADDRESS, OperationType::READ);
+    op->Read(&ctlreg, sizeof(ctlreg));
+
+    op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
+    op->WriteByte(PCF8523_CLKOUTCONTROL);
+    op->Restart(PCF8523_ADDRESS, OperationType::READ);
+    op->Read(&clkreg, sizeof(clkreg));
+
+    if (!op->Execute())
+      return false;
+  }
+
+  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, "enableCountdownTimer:write");
+  if (!op)
+    return false;
 
   // CTBIE Countdown Timer B Interrupt Enabled
-  write_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_2, ctlreg |= 0x01);
+  op->WriteByte(PCF8523_CONTROL_2);
+  op->WriteByte(ctlreg |= 0x01);
 
   // Timer B source clock frequency, optionally int. low pulse width
-  write_i2c_register(PCF8523_ADDRESS, PCF8523_TIMER_B_FRCTL,
-                     lowPulseWidth << 4 | clkFreq);
+  op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
+  op->WriteByte(PCF8523_TIMER_B_FRCTL);
+  op->WriteByte(lowPulseWidth << 4 | clkFreq);
 
   // Timer B value (number of source clock periods)
-  write_i2c_register(PCF8523_ADDRESS, PCF8523_TIMER_B_VALUE, numPeriods);
+  op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
+  op->WriteByte(PCF8523_TIMER_B_VALUE);
+  op->WriteByte(numPeriods);
 
   // TBM Timer B pulse int. mode, CLKOUT (aka SQW) disabled, TBC start Timer B
-  write_i2c_register(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, clkreg | 0x79);
+  op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
+  op->WriteByte(PCF8523_CLKOUTCONTROL);
+  op->WriteByte(clkreg | 0x79);
+
+  return op->Execute();
 }
 
 /**************************************************************************/
@@ -254,9 +339,9 @@ void RTC_PCF8523::enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
     @param numPeriods The number of clkFreq periods (1-255) to count down.
 */
 /**************************************************************************/
-void RTC_PCF8523::enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
-                                       uint8_t numPeriods) {
-  enableCountdownTimer(clkFreq, numPeriods, 0);
+bool PCF8523::enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
+                                   uint8_t numPeriods) {
+  return enableCountdownTimer(clkFreq, numPeriods, 0);
 }
 
 /**************************************************************************/
@@ -272,12 +357,12 @@ void RTC_PCF8523::enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
         typically used for non-pulsed mode, user may wish to query this later.
 */
 /**************************************************************************/
-void RTC_PCF8523::disableCountdownTimer() {
-  // Leave compatible settings intact
-  uint8_t clkreg = read_i2c_register(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL);
-
-  // TBC disable to stop Timer B clock
-  write_i2c_register(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, ~1 & clkreg);
+bool PCF8523::disableCountdownTimer() {
+  uint8_t clkreg;
+  if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, &clkreg))
+    return false;
+  return i2c_->WriteRegister(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL,
+                             ~1 & clkreg);
 }
 
 /**************************************************************************/
@@ -287,12 +372,29 @@ void RTC_PCF8523::disableCountdownTimer() {
    square wave configured with writeSqwPinMode().
 */
 /**************************************************************************/
-void RTC_PCF8523::deconfigureAllTimers() {
+bool PCF8523::deconfigureAllTimers() {
   disableSecondTimer();  // Surgically clears CONTROL_1
-  write_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_2, 0);
-  write_i2c_register(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, 0);
-  write_i2c_register(PCF8523_ADDRESS, PCF8523_TIMER_B_FRCTL, 0);
-  write_i2c_register(PCF8523_ADDRESS, PCF8523_TIMER_B_VALUE, 0);
+
+  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, "deconfigureAllTimers");
+  if (!op)
+    return false;
+
+  op->WriteByte(PCF8523_CONTROL_2);
+  op->WriteByte(0);
+
+  op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
+  op->WriteByte(PCF8523_CLKOUTCONTROL);
+  op->WriteByte(0);
+
+  op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
+  op->WriteByte(PCF8523_TIMER_B_FRCTL);
+  op->WriteByte(0);
+
+  op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
+  op->WriteByte(PCF8523_TIMER_B_VALUE);
+  op->WriteByte(0);
+
+  return op->Execute();
 }
 
 /**************************************************************************/
@@ -327,14 +429,10 @@ void RTC_PCF8523::deconfigureAllTimers() {
       makes the clock slower.
 */
 /**************************************************************************/
-void RTC_PCF8523::calibrate(Pcf8523OffsetMode mode, int8_t offset) {
+bool PCF8523::calibrate(Pcf8523OffsetMode mode, int8_t offset) {
   uint8_t reg = (uint8_t)offset & 0x7F;
   reg |= mode;
-
-  Wire.beginTransmission(PCF8523_ADDRESS);
-  Wire._I2C_WRITE(PCF8523_OFFSET);
-  Wire._I2C_WRITE(reg);
-  Wire.endTransmission();
+  return i2c_->WriteRegister(PCF8523_ADDRESS, PCF8523_OFFSET, reg);
 }
 
-#endif
+}  // namespace rtc

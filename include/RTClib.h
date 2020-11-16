@@ -35,24 +35,6 @@ typedef char __FlashStringHelper;
 
 class TimeSpan;
 
-/** Registers */
-#define PCF8523_ADDRESS 0x68        ///< I2C address for PCF8523
-#define PCF8523_CLKOUTCONTROL 0x0F  ///< Timer and CLKOUT control register
-#define PCF8523_CONTROL_1 0x00      ///< Control and status register 1
-#define PCF8523_CONTROL_2 0x01      ///< Control and status register 2
-#define PCF8523_CONTROL_3 0x02      ///< Control and status register 3
-#define PCF8523_TIMER_B_FRCTL 0x12  ///< Timer B source clock frequency control
-#define PCF8523_TIMER_B_VALUE 0x13  ///< Timer B value (number clock periods)
-#define PCF8523_OFFSET 0x0E         ///< Offset register
-#define PCF8523_STATUSREG 0x03      ///< Status register
-
-#define PCF8563_ADDRESS 0x51        ///< I2C address for PCF8563
-#define PCF8563_CLKOUTCONTROL 0x0D  ///< CLKOUT control register
-#define PCF8563_CONTROL_1 0x00      ///< Control and status register 1
-#define PCF8563_CONTROL_2 0x01      ///< Control and status register 2
-#define PCF8563_VL_SECONDS 0x02     ///< register address for VL_SECONDS
-#define PCF8563_CLKOUT_MASK 0x83    ///< bitmask for SqwPinMode on CLKOUT pin
-
 /** Constants */
 #define SECONDS_PER_DAY 86400L  ///< 60 * 60 * 24
 #define SECONDS_FROM_1970_TO_2000 \
@@ -396,30 +378,32 @@ enum Pcf8523OffsetMode {
     @brief  RTC based on the PCF8523 chip connected via I2C and the Wire library
 */
 /**************************************************************************/
-class RTC_PCF8523 {
+class PCF8523 {
  public:
+  PCF8523(std::unique_ptr<I2CMaster> i2c);
+
   bool begin(void);
-  void adjust(const DateTime& dt);
+  bool adjust(const DateTime& dt);
   bool lostPower(void);
   bool initialized(void);
-  static DateTime now();
-  void start(void);
-  void stop(void);
-  uint8_t isrunning();
+  DateTime now();
+  bool start(void);
+  bool stop(void);
+  bool isrunning();
   Pcf8523SqwPinMode readSqwPinMode();
-  void writeSqwPinMode(Pcf8523SqwPinMode mode);
-  void enableSecondTimer(void);
-  void disableSecondTimer(void);
-  void enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
+  bool writeSqwPinMode(Pcf8523SqwPinMode mode);
+  bool enableSecondTimer(void);
+  bool disableSecondTimer(void);
+  bool enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
                             uint8_t numPeriods,
                             uint8_t lowPulseWidth);
-  void enableCountdownTimer(PCF8523TimerClockFreq clkFreq, uint8_t numPeriods);
-  void disableCountdownTimer(void);
-  void deconfigureAllTimers(void);
-  void calibrate(Pcf8523OffsetMode mode, int8_t offset);
+  bool enableCountdownTimer(PCF8523TimerClockFreq clkFreq, uint8_t numPeriods);
+  bool disableCountdownTimer(void);
+  bool deconfigureAllTimers(void);
+  bool calibrate(Pcf8523OffsetMode mode, int8_t offset);
 
  private:
-  I2CMaster* i2c_;
+  std::unique_ptr<I2CMaster> i2c_;
 };
 
 /** PCF8563 CLKOUT pin mode settings */
