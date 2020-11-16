@@ -42,7 +42,7 @@ constexpr uint8_t CONTROL_RS0      = 0b00000001;
 /**************************************************************************/
 /*!
     @brief  Start I2C for the DS1307 and test succesful connection
-    @return True if Wire can find DS1307 or false otherwise.
+    @return True if DS1307 is found, false otherwise.
 */
 /**************************************************************************/
 bool DS1307::begin(void) {

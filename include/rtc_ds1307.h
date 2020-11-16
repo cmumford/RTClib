@@ -39,7 +39,7 @@ enum Ds1307SqwPinMode {
 
 /**************************************************************************/
 /*!
-    @brief  RTC based on the DS1307 chip connected via I2C and the Wire library
+    @brief  RTC based on the DS1307 chip connected via I2C.
 */
 /**************************************************************************/
 class DS1307 {

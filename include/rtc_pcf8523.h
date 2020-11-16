@@ -72,7 +72,7 @@ enum Pcf8523OffsetMode {
 
 /**************************************************************************/
 /*!
-    @brief  RTC based on the PCF8523 chip connected via I2C and the Wire library
+    @brief  RTC based on the PCF8523 chip connected via I2C.
 */
 /**************************************************************************/
 class PCF8523 {

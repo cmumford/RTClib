@@ -39,7 +39,7 @@ enum Pcf8563SqwPinMode {
 
 /**************************************************************************/
 /*!
-    @brief  RTC based on the PCF8563 chip connected via I2C and the Wire library
+    @brief  RTC based on the PCF8563 chip connected via I2C.
 */
 /**************************************************************************/
 
