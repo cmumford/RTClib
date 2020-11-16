@@ -471,7 +471,7 @@ class RTC_Millis {
             approximately 71.6 minutes.
 */
 /**************************************************************************/
-class RTC_Micros {
+class Micros {
  public:
   /*!
       @brief  Start the RTC

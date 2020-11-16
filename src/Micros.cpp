@@ -15,11 +15,11 @@ namespace rtc {
 
 /** Number of microseconds reported by micros() per "true" (calibrated) second.
  */
-uint32_t RTC_Micros::microsPerSecond = 1000000;
+uint32_t Micros::microsPerSecond = 1000000;
 
 /** The timing logic is identical to RTC_Millis. */
-uint32_t RTC_Micros::lastMicros;
-uint32_t RTC_Micros::lastUnix;
+uint32_t Micros::lastMicros;
+uint32_t Micros::lastUnix;
 
 namespace {
 
@@ -36,7 +36,7 @@ uint32_t microsSinceStart() {
     @param dt DateTime object with the desired date and time
 */
 /**************************************************************************/
-void RTC_Micros::adjust(const DateTime& dt) {
+void Micros::adjust(const DateTime& dt) {
   lastMicros = microsSinceStart();
   lastUnix = dt.unixtime();
 }
@@ -48,7 +48,7 @@ void RTC_Micros::adjust(const DateTime& dt) {
 */
 /**************************************************************************/
 // A positive adjustment makes the clock faster.
-void RTC_Micros::adjustDrift(int ppm) {
+void Micros::adjustDrift(int ppm) {
   microsPerSecond = 1000000 - ppm;
 }
 
@@ -58,7 +58,7 @@ void RTC_Micros::adjustDrift(int ppm) {
     @return DateTime object containing the current date/time
 */
 /**************************************************************************/
-DateTime RTC_Micros::now() {
+DateTime Micros::now() {
   uint32_t elapsedSeconds = (microsSinceStart() - lastMicros) / microsPerSecond;
   lastMicros += elapsedSeconds * microsPerSecond;
   lastUnix += elapsedSeconds;
