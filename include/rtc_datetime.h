@@ -24,6 +24,10 @@
 
 namespace rtc {
 
+#if 1  // Do only when not Arduino.
+typedef char __FlashStringHelper;
+#endif
+
 class TimeSpan;
 
 /**************************************************************************/

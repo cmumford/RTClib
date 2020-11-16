@@ -31,10 +31,6 @@
 
 namespace rtc {
 
-#if 1  // Do only when not Arduino.
-typedef char __FlashStringHelper;
-#endif
-
 /** DS1307 SQW pin mode settings */
 enum Ds1307SqwPinMode {
   DS1307_SquareWaveOff = 0x0,          // Set SQW/OUT pin set to zero.
