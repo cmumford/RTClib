@@ -20,6 +20,9 @@
 #ifndef RTC_DATETIME_H_
 #define RTC_DATETIME_H_
 
+#include <cstdint>
+#include <string>
+
 #include "rtc_constants.h"
 
 namespace rtc {
