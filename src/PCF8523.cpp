@@ -7,8 +7,9 @@
   This version: MIT (see LICENSE)
 */
 
-#include <RTClib.h>
+#include <rtc_pcf8523.h>
 
+#include <rtc_i2c.h>
 #include "RTC_util.h"
 namespace rtc {
 

@@ -7,7 +7,7 @@
   This version: MIT (see LICENSE)
 */
 
-#include <RTClib.h>
+#include <rtc_micros.h>
 
 #include <cstdint>
 

@@ -7,10 +7,11 @@
   This version: MIT (see LICENSE)
 */
 
-#include <RTClib.h>
+#include <rtc_ds3231.h>
 
 #include <limits>
 
+#include <rtc_i2c.h>
 #include "RTC_util.h"
 
 namespace rtc {

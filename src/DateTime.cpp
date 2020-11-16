@@ -7,9 +7,11 @@
   This version: MIT (see LICENSE)
 */
 
-#include <RTClib.h>
+#include <rtc_datetime.h>
 
 #include <string.h>
+
+#include <rtc_timespan.h>
 
 namespace rtc {
 

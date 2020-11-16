@@ -1,7 +1,5 @@
 /**************************************************************************/
 /*!
-  @file     RTClib.h
-
   Original library by JeeLabs http://news.jeelabs.org/code/, released to the
   public domain
 
