@@ -445,7 +445,7 @@ class PCF8563 {
    use. NOTE: this is immune to millis() rollover events.
 */
 /**************************************************************************/
-class RTC_Millis {
+class Millis {
  public:
   /*!
       @brief  Start the RTC
@@ -465,7 +465,7 @@ class RTC_Millis {
 /**************************************************************************/
 /*!
     @brief  RTC using the internal micros() clock, has to be initialized before
-            use. Unlike RTC_Millis, this can be tuned in order to compensate for
+            use. Unlike Millis, this can be tuned in order to compensate for
             the natural drift of the system clock. Note that now() has to be
             called more frequently than the micros() rollover period, which is
             approximately 71.6 minutes.

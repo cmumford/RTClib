@@ -16,8 +16,8 @@ namespace rtc {
   rollover issues. Note that lastMillis is **not** the millis() value
   of the last call to now(): it's the millis() value corresponding to
   the last **full second** of Unix time. */
-uint32_t RTC_Millis::lastMillis;
-uint32_t RTC_Millis::lastUnix;
+uint32_t Millis::lastMillis;
+uint32_t Millis::lastUnix;
 
 namespace {
 
@@ -34,7 +34,7 @@ uint32_t millisSinceStart() {
     @param dt DateTime object with the desired date and time
 */
 /**************************************************************************/
-void RTC_Millis::adjust(const DateTime& dt) {
+void Millis::adjust(const DateTime& dt) {
   lastMillis = millisSinceStart();
   lastUnix = dt.unixtime();
 }
@@ -47,7 +47,7 @@ void RTC_Millis::adjust(const DateTime& dt) {
     @return DateTime object containing current time
 */
 /**************************************************************************/
-DateTime RTC_Millis::now() {
+DateTime Millis::now() {
   uint32_t elapsedSeconds = (millisSinceStart() - lastMillis) / 1000;
   lastMillis += elapsedSeconds * 1000;
   lastUnix += elapsedSeconds;
