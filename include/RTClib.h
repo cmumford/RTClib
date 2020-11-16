@@ -30,42 +30,10 @@
 #include "rtc_ds3231.h"
 #include "rtc_i2c.h"
 #include "rtc_pcf8523.h"
+#include "rtc_pcf8563.h"
 #include "rtc_timespan.h"
 
 namespace rtc {
-
-/** PCF8563 CLKOUT pin mode settings */
-enum Pcf8563SqwPinMode {
-  PCF8563_SquareWaveOFF = 0x00,  /**< Off */
-  PCF8563_SquareWave1Hz = 0x83,  /**< 1Hz square wave */
-  PCF8563_SquareWave32Hz = 0x82, /**< 32Hz square wave */
-  PCF8563_SquareWave1kHz = 0x81, /**< 1kHz square wave */
-  PCF8563_SquareWave32kHz = 0x80 /**< 32kHz square wave */
-};
-
-/**************************************************************************/
-/*!
-    @brief  RTC based on the PCF8563 chip connected via I2C and the Wire library
-*/
-/**************************************************************************/
-
-class PCF8563 {
- public:
-  PCF8563(std::unique_ptr<I2CMaster> i2c);
-
-  bool begin(void);
-  bool lostPower(void);
-  bool adjust(const DateTime& dt);
-  DateTime now();
-  bool start(void);
-  bool stop(void);
-  uint8_t isrunning();
-  Pcf8563SqwPinMode readSqwPinMode();
-  bool writeSqwPinMode(Pcf8563SqwPinMode mode);
-
- private:
-  std::unique_ptr<I2CMaster> i2c_;
-};
 
 /**************************************************************************/
 /*!
