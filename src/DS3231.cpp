@@ -36,14 +36,14 @@ constexpr uint8_t REGISTER_STATUS         = 0x0F;
 constexpr uint8_t REGISTER_TEMP_MSB       = 0x11;
 constexpr uint8_t REGISTER_TEMP_LSB       = 0x12;
 
-constexpr uint8_t CONTROL_EOSC  = 0b10000000;
-constexpr uint8_t CONTROL_BBSQW = 0b01000000;
-constexpr uint8_t CONTROL_CONV  = 0b00100000;
-constexpr uint8_t CONTROL_RS2   = 0b00010000;
-constexpr uint8_t CONTROL_RS1   = 0b00001000;
-constexpr uint8_t CONTROL_INTCN = 0b00000100;
-constexpr uint8_t CONTROL_A2IE  = 0b00000010;
-constexpr uint8_t CONTROL_A1IE  = 0b00000001;
+constexpr uint8_t CONTROL_EOSC  = 0b10000000; // Enable oscillator.
+constexpr uint8_t CONTROL_BBSQW = 0b01000000; // Battery backed square wave.
+constexpr uint8_t CONTROL_CONV  = 0b00100000; // Convert temperature.
+constexpr uint8_t CONTROL_RS2   = 0b00010000; // Rate select bit 2.
+constexpr uint8_t CONTROL_RS1   = 0b00001000; // Rate select bit 1.
+constexpr uint8_t CONTROL_INTCN = 0b00000100; // Interrupt control.
+constexpr uint8_t CONTROL_A2IE  = 0b00000010; // Alarm 2 interrupt enable.
+constexpr uint8_t CONTROL_A1IE  = 0b00000001; // Alarm 1 interrupt enable.
 
 constexpr uint8_t A1M1_ENABLE  = 0b10000000;
 constexpr uint8_t A1M1_SECONDS = 0b01111111;
