@@ -35,16 +35,15 @@ class I2CMaster;
 /**************************************************************************/
 class DS3231 {
  public:
- 
- /**
-  * @brief Square Wave pin mode.
-  */
-  enum SqwPinMode {
-    DS3231_OFF = 0b00100,            /**< Off */
-    DS3231_SquareWave1Hz = 0b00000,  /**<  1Hz square wave */
-    DS3231_SquareWave1kHz = 0b01000, /**<  1kHz square wave */
-    DS3231_SquareWave4kHz = 0b10000, /**<  4kHz square wave */
-    DS3231_SquareWave8kHz = 0b11000  /**<  8kHz square wave */
+  /**
+   * @brief Square Wave pin mode.
+   */
+  enum class SqwPinMode {
+    Alarm,     ///< Square wave disabled. Pin goes high during alarm.
+    Rate1Hz,   ///<  1Hz square wave.
+    Rate1kHz,  ///<  1kHz square wave.
+    Rate4kHz,  ///<  4kHz square wave.
+    Rate8kHz   ///<  8kHz square wave.
   };
 
   enum Alarm1Mode {

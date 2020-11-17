@@ -47,6 +47,11 @@ constexpr uint8_t CONTROL_A1IE  = 0b00000001;
 
 // clang-format on
 
+constexpr uint8_t kSquareWave1Hz = 0x0;
+constexpr uint8_t kSquareWave1kHz = CONTROL_RS1;
+constexpr uint8_t kSquareWave4kHz = CONTROL_RS2;
+constexpr uint8_t kSquareWave8kHz = CONTROL_RS2 | CONTROL_RS1;
+
 /**************************************************************************/
 /*!
     @brief  Convert the day of the week to a representation suitable for
@@ -155,10 +160,24 @@ DateTime DS3231::now() {
 DS3231::SqwPinMode DS3231::readSqwPinMode() {
   uint8_t value;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &value))
-    return DS3231_OFF;
+    return SqwPinMode::Alarm;
 
-  return static_cast<SqwPinMode>(
-      value & (CONTROL_RS2 | CONTROL_RS1 | CONTROL_INTCN));
+  if (value & CONTROL_INTCN)
+    return SqwPinMode::Alarm;
+
+  switch (value & (CONTROL_RS2 | CONTROL_RS1)) {
+    case kSquareWave1Hz:
+      return SqwPinMode::Rate1Hz;
+    case kSquareWave1kHz:
+      return SqwPinMode::Rate1kHz;
+    case kSquareWave4kHz:
+      return SqwPinMode::Rate4kHz;
+    case kSquareWave8kHz:
+      return SqwPinMode::Rate8kHz;
+  }
+
+  return static_cast<SqwPinMode>(value &
+                                 (CONTROL_RS2 | CONTROL_RS1 | CONTROL_INTCN));
 }
 
 /**************************************************************************/
@@ -173,7 +192,23 @@ bool DS3231::writeSqwPinMode(SqwPinMode mode) {
     return false;
 
   CLEAR_BITS(ctrl, CONTROL_RS2 | CONTROL_RS1 | CONTROL_INTCN);
-  SET_BITS(ctrl, mode);
+  switch (mode) {
+    case SqwPinMode::Alarm:
+      SET_BITS(ctrl, CONTROL_INTCN);
+      break;
+    case SqwPinMode::Rate1Hz:
+      SET_BITS(ctrl, kSquareWave1Hz);
+      break;
+    case SqwPinMode::Rate1kHz:
+      SET_BITS(ctrl, kSquareWave1kHz);
+      break;
+    case SqwPinMode::Rate4kHz:
+      SET_BITS(ctrl, kSquareWave4kHz);
+      break;
+    case SqwPinMode::Rate8kHz:
+      SET_BITS(ctrl, kSquareWave8kHz);
+      break;
+  }
 
   return i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, ctrl);
 }

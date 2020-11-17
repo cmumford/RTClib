@@ -80,25 +80,28 @@ void test_temperature() {
   TEST_ASSERT_GREATER_OR_EQUAL(0, temp);
 }
 
-void test_square_pin_mode() {
+void test_square_wave_pin_mode() {
   auto rtc = CreateClock();
   TEST_ASSERT_NOT_NULL(rtc);
   TEST_ASSERT_TRUE(rtc->begin());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::DS3231_OFF));
-  TEST_ASSERT_EQUAL(rtc::DS3231::DS3231_OFF, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::SqwPinMode::Alarm));
+  TEST_ASSERT_EQUAL(rtc::DS3231::SqwPinMode::Alarm, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::DS3231_SquareWave1Hz));
-  TEST_ASSERT_EQUAL(rtc::DS3231::DS3231_SquareWave1Hz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::SqwPinMode::Rate1Hz));
+  TEST_ASSERT_EQUAL(rtc::DS3231::SqwPinMode::Rate1Hz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::DS3231_SquareWave1kHz));
-  TEST_ASSERT_EQUAL(rtc::DS3231::DS3231_SquareWave1kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::SqwPinMode::Rate1kHz));
+  TEST_ASSERT_EQUAL(rtc::DS3231::SqwPinMode::Rate1kHz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::DS3231_SquareWave4kHz));
-  TEST_ASSERT_EQUAL(rtc::DS3231::DS3231_SquareWave4kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::SqwPinMode::Rate4kHz));
+  TEST_ASSERT_EQUAL(rtc::DS3231::SqwPinMode::Rate4kHz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::DS3231_SquareWave8kHz));
-  TEST_ASSERT_EQUAL(rtc::DS3231::DS3231_SquareWave8kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::SqwPinMode::Rate8kHz));
+  TEST_ASSERT_EQUAL(rtc::DS3231::SqwPinMode::Rate8kHz, rtc->readSqwPinMode());
+
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::SqwPinMode::Alarm));
+  TEST_ASSERT_EQUAL(rtc::DS3231::SqwPinMode::Alarm, rtc->readSqwPinMode());
 }
 
 void process() {
@@ -110,7 +113,7 @@ void process() {
   RUN_TEST(test_set_and_get_date);
   RUN_TEST(test_32k);
   RUN_TEST(test_temperature);
-  RUN_TEST(test_square_pin_mode);
+  RUN_TEST(test_square_wave_pin_mode);
 
   UNITY_END();
 }
