@@ -249,7 +249,7 @@ float DS3231::getTemperature() {
 bool DS3231::setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode) {
   uint8_t ctrl = 0;
   i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
-  if (!(ctrl & 0x04))
+  if (!(ctrl & CONTROL_INTCN))
     return false;
 
   uint8_t A1M1 = (alarm_mode & 0x01) << 7;  // Seconds bit 7.
@@ -289,7 +289,7 @@ bool DS3231::setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode) {
 bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
   uint8_t ctrl = 0;
   i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
-  if (!(ctrl & 0x04)) {
+  if (!(ctrl & CONTROL_INTCN)) {
     return false;
   }
 

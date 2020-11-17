@@ -40,8 +40,6 @@ esp_err_t InitializeI2C() {
   return i2c_driver_install(kRTCI2CPort, I2C_MODE_MASTER, 0, 0, 0);
 }
 
-}  // namespace
-
 void test_init_rtc() {
   // TODO: Move to setup().
   TEST_ASSERT_EQUAL(ESP_OK, InitializeI2C());
@@ -105,6 +103,22 @@ void test_square_wave_pin_mode() {
   TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Alarm, rtc->readSqwPinMode());
 }
 
+void test_alarm1() {
+  auto rtc = CreateClock();
+  TEST_ASSERT_NOT_NULL(rtc);
+  TEST_ASSERT_TRUE(rtc->begin());
+
+  // Enable square wave and very alarm set failure.
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate1Hz));
+
+  DateTime dt(2000, 0, 0, 0);
+  TEST_ASSERT_FALSE(rtc->setAlarm1(dt, DS3231::DS3231_A1_Date));
+
+  // Now set to alarm mode.
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Alarm));
+  TEST_ASSERT_TRUE(rtc->setAlarm1(dt, DS3231::DS3231_A1_Date));
+}
+
 void process() {
   g_i2c_mutex = xSemaphoreCreateMutex();
 
@@ -115,9 +129,12 @@ void process() {
   RUN_TEST(test_32k);
   RUN_TEST(test_temperature);
   RUN_TEST(test_square_wave_pin_mode);
+  RUN_TEST(test_alarm1);
 
   UNITY_END();
 }
+
+}  // namespace
 
 extern "C" void app_main() {
   process();
