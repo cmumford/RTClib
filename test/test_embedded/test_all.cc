@@ -135,6 +135,15 @@ void test_alarm2() {
   TEST_ASSERT_TRUE(rtc->setAlarm2(dt, DS3231::Alarm2Mode::Hour));
 }
 
+void test_agingOffset() {
+  auto rtc = CreateClock();
+  TEST_ASSERT_NOT_NULL(rtc);
+  TEST_ASSERT_TRUE(rtc->begin());
+
+  int8_t offset;
+  TEST_ASSERT_TRUE(rtc->getAgingOffset(&offset));
+}
+
 void process() {
   g_i2c_mutex = xSemaphoreCreateMutex();
 
@@ -147,6 +156,7 @@ void process() {
   RUN_TEST(test_square_wave_pin_mode);
   RUN_TEST(test_alarm1);
   RUN_TEST(test_alarm2);
+  RUN_TEST(test_agingOffset);
 
   UNITY_END();
 }

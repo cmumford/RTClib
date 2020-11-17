@@ -33,6 +33,7 @@ constexpr uint8_t REGISTER_ALARM1_SECONDS = 0x07;
 constexpr uint8_t REGISTER_ALARM2_MINUTES = 0x0B;
 constexpr uint8_t REGISTER_CONTROL        = 0x0E;
 constexpr uint8_t REGISTER_STATUS         = 0x0F;
+constexpr uint8_t REGISTER_AGING_OFFSET   = 0x10;
 constexpr uint8_t REGISTER_TEMP_MSB       = 0x11;
 constexpr uint8_t REGISTER_TEMP_LSB       = 0x12;
 
@@ -265,6 +266,11 @@ float DS3231::getTemperature() {
   const int16_t msb = static_cast<int16_t>(values[0]);
   const uint8_t lsb = (values[1] >> 6);
   return static_cast<float>(msb * 4 + lsb) * 0.25f;
+}
+
+bool DS3231::getAgingOffset(int8_t* val) {
+  return i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_AGING_OFFSET,
+                            reinterpret_cast<uint8_t*>(val));
 }
 
 /**************************************************************************/

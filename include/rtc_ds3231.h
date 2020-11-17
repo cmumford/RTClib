@@ -81,6 +81,7 @@ class DS3231 {
   void disable32K(void);
   bool isEnabled32K(void);
   float getTemperature();  // in Celcius degree
+  bool getAgingOffset(int8_t* val);
 
  private:
   std::unique_ptr<I2CMaster> const i2c_;
