@@ -45,6 +45,13 @@ constexpr uint8_t CONTROL_INTCN = 0b00000100; // Interrupt control.
 constexpr uint8_t CONTROL_A2IE  = 0b00000010; // Alarm 2 interrupt enable.
 constexpr uint8_t CONTROL_A1IE  = 0b00000001; // Alarm 1 interrupt enable.
 
+constexpr uint8_t STATUS_OSF     = 0b10000000; // Oscillator stop flag.
+constexpr uint8_t STATUS_UNUSED  = 0b01110000; // Unused register bits.
+constexpr uint8_t STATUS_EN32kHz = 0b00001000; // Enable 32kHz output.
+constexpr uint8_t STATUS_BSY     = 0b00000100; // Busy.
+constexpr uint8_t STATUS_A2F     = 0b00000010; // Alarm 2 flag.
+constexpr uint8_t STATUS_A1F     = 0b00000001; // Alarm 1 flag.
+
 constexpr uint8_t A1M1_ENABLE  = 0b10000000;
 constexpr uint8_t A1M1_SECONDS = 0b01111111;
 constexpr uint8_t A1M2_ENABLE  = 0b10000000;
@@ -112,7 +119,7 @@ bool DS3231::lostPower(void) {
   uint8_t reg_val;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &reg_val))
     return true;  // Can't read, assume true.
-  return reg_val >> 7;
+  return reg_val & STATUS_OSF;
 }
 
 /**************************************************************************/
@@ -142,7 +149,7 @@ bool DS3231::adjust(const DateTime& dt) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
     return false;
-  status &= ~0x80;  // flip OSF bit
+  status &= ~STATUS_OSF;  // flip OSF bit
   return i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
 }
 
@@ -356,9 +363,9 @@ bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
   SET_BITS(values[1], bin2bcd(dt.minute()) & A2M3_HOURS);
   SET_BITS(values[2], bin2bcd(dt.hour()) & A2M4_DATE);
   if (alarm_mode == Alarm2Mode::Day)
-    SET_BITS(values[3], bin2bcd(dt.dayOfTheWeek()) & A1M4_DATE);
+    SET_BITS(values[3], bin2bcd(dt.dayOfTheWeek()) & A2M4_DATE);
   else
-    SET_BITS(values[3], bin2bcd(dt.day()) & A1M4_DATE);
+    SET_BITS(values[3], bin2bcd(dt.day()) & A2M4_DATE);
 
   auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "setalm2");
   op->WriteByte(REGISTER_ALARM2_MINUTES);
@@ -381,7 +388,10 @@ bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
 void DS3231::disableAlarm(uint8_t alarm_num) {
   uint8_t ctrl = 0;
   i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
-  ctrl &= ~(1 << (alarm_num - 1));
+  if (alarm_num == 1)
+    CLEAR_BITS(ctrl, CONTROL_A1IE);
+  else
+    CLEAR_BITS(ctrl, CONTROL_A2IE);
   i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, ctrl);
 }
 
@@ -395,7 +405,10 @@ void DS3231::clearAlarm(uint8_t alarm_num) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
     return;
-  status &= ~(0x1 << (alarm_num - 1));
+  if (alarm_num == 1)
+    CLEAR_BITS(status, STATUS_A1F);
+  else
+    CLEAR_BITS(status, STATUS_A2F);
   i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
 }
 
@@ -410,7 +423,7 @@ bool DS3231::alarmFired(uint8_t alarm_num) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
     return false;
-  return (status >> (alarm_num - 1)) & 0x1;
+  return alarm_num == 1 ? status & STATUS_A1F : status & STATUS_A2F;
 }
 
 /**************************************************************************/
@@ -424,7 +437,7 @@ void DS3231::enable32K(void) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
     return;
-  status |= (0x1 << 0x03);
+  SET_BITS(status, STATUS_EN32kHz);
   i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
 }
 
@@ -437,7 +450,7 @@ void DS3231::disable32K(void) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
     return;
-  status &= ~(0x1 << 0x03);
+  CLEAR_BITS(status, STATUS_EN32kHz);
   i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
 }
 
@@ -451,7 +464,7 @@ bool DS3231::isEnabled32K(void) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
     return false;
-  return (status >> 0x03) & 0x1;
+  return status & STATUS_EN32kHz;
 }
 
 }  // namespace rtc
