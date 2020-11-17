@@ -57,6 +57,16 @@ constexpr uint8_t A1M4_ENABLE  = 0b10000000;
 constexpr uint8_t A1M4_DY_DT   = 0b01000000;
 constexpr uint8_t A1M4_DATE    = 0b00111111;
 
+constexpr uint8_t A2M2_ENABLE  = 0b10000000;
+constexpr uint8_t A2M2_MINUTES = 0b01111111;
+constexpr uint8_t A2M3_ENABLE  = 0b10000000;
+constexpr uint8_t A2M3_12_24   = 0b01000000;
+constexpr uint8_t A2M3_AM_PM   = 0b00100000;
+constexpr uint8_t A2M3_HOURS   = 0b00011111;
+constexpr uint8_t A2M4_ENABLE  = 0b10000000;
+constexpr uint8_t A2M4_DY_DT   = 0b01000000;
+constexpr uint8_t A2M4_DATE    = 0b00111111;
+
 // clang-format on
 
 constexpr uint8_t kSquareWave1Hz = 0x0;
@@ -317,33 +327,49 @@ bool DS3231::setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode) {
 */
 /**************************************************************************/
 bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
-  uint8_t ctrl = 0;
+  uint8_t ctrl;
   i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
-  if (!(ctrl & CONTROL_INTCN)) {
+  if (!(ctrl & CONTROL_INTCN))
     return false;
+
+  uint8_t values[3] = {0, 0, 0};
+
+  switch (alarm_mode) {
+    case Alarm2Mode::EveryMinute:
+      SET_BITS(values[0], A2M2_ENABLE);
+      // fallthrough.
+    case Alarm2Mode::Minute:
+      SET_BITS(values[1], A2M3_ENABLE);
+      // fallthrough.
+    case Alarm2Mode::Hour:
+      SET_BITS(values[2], A2M4_ENABLE);
+      break;
+    case Alarm2Mode::Date:
+      // Do nothing. All bits should be clear.
+      break;
+    case Alarm2Mode::Day:
+      SET_BITS(values[2], A2M4_DY_DT);
+      break;
   }
 
-  uint8_t A2M2 = (alarm_mode & 0x01) << 7;  // Minutes bit 7.
-  uint8_t A2M3 = (alarm_mode & 0x02) << 6;  // Hour bit 7.
-  uint8_t A2M4 = (alarm_mode & 0x04) << 5;  // Day/Date bit 7.
-  uint8_t DY_DT = (alarm_mode & 0x8)
-                  << 3;  // Day/Date bit 6. Date when 0, day of week when 1.
+  SET_BITS(values[0], bin2bcd(dt.second()) & A2M2_MINUTES);
+  SET_BITS(values[1], bin2bcd(dt.minute()) & A2M3_HOURS);
+  SET_BITS(values[2], bin2bcd(dt.hour()) & A2M4_DATE);
+  if (alarm_mode == Alarm2Mode::Day)
+    SET_BITS(values[3], bin2bcd(dt.dayOfTheWeek()) & A1M4_DATE);
+  else
+    SET_BITS(values[3], bin2bcd(dt.day()) & A1M4_DATE);
 
-  {
-    auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "setalm2");
-    op->WriteByte(REGISTER_ALARM2_MINUTES);
-    op->WriteByte(bin2bcd(dt.minute()) | A2M2);
-    op->WriteByte(bin2bcd(dt.hour()) | A2M3);
-    if (DY_DT)
-      op->WriteByte(bin2bcd(dowToDS3231(dt.dayOfTheWeek())) | A2M4 | DY_DT);
-    else
-      op->WriteByte(bin2bcd(dt.day()) | A2M4 | DY_DT);
-    if (!op->Execute())
-      return false;
-  }
+  auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "setalm2");
+  op->WriteByte(REGISTER_ALARM2_MINUTES);
+  op->Write(values, sizeof(values));
 
-  ctrl |= 0x02;  // AI2E
-  return i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, ctrl);
+  op->Restart(DS3231_I2C_ADDRESS, OperationType::WRITE);
+  op->WriteByte(REGISTER_CONTROL);
+  SET_BITS(ctrl, CONTROL_A2IE);
+  op->WriteByte(ctrl);
+
+  return op->Execute();
 }
 
 /**************************************************************************/

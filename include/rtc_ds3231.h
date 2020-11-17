@@ -56,15 +56,12 @@ class DS3231 {
     Day    ///< Alarm when day (day of week), hours, minutes and seconds match.
   };
 
-  enum Alarm2Mode {
-    DS3231_A2_PerMinute = 0x7, /**< Alarm once per minute
-                                    (whenever seconds are 0) */
-    DS3231_A2_Minute = 0x6,    /**< Alarm when minutes match */
-    DS3231_A2_Hour = 0x4,      /**< Alarm when hours and minutes match */
-    DS3231_A2_Date = 0x0,      /**< Alarm when date (day of month), hours
-                                    and minutes match */
-    DS3231_A2_Day = 0x8        /**< Alarm when day (day of week), hours
-                                    and minutes match */
+  enum class Alarm2Mode {
+    EveryMinute,  ///< Alarm once per minute (whenever seconds are 0).
+    Minute,       ///< Alarm when minutes match.
+    Hour,         ///< Alarm when hours and minutes match.
+    Date,  ///< Alarm when date (day of month), hours and minutes match */
+    Day    ///< Alarm when day (day of week), hours and minutes match.
   };
 
   DS3231(std::unique_ptr<I2CMaster> i2c);
