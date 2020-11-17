@@ -2,7 +2,6 @@
 
 #include <unity.h>
 
-constexpr i2c_port_t kRTCI2CPort = TUNER1_I2C_PORT;
 /**
  * The I2C bus speed when running tests.
  *
@@ -10,6 +9,7 @@ constexpr i2c_port_t kRTCI2CPort = TUNER1_I2C_PORT;
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2c.html#_CPPv4N12i2c_config_t9clk_speedE
  */
 constexpr int kI2CClockHz = 100000;
+constexpr i2c_port_t kRTCI2CPort = TEST_I2C_PORT1;
 
 SemaphoreHandle_t g_i2c_mutex;
 
