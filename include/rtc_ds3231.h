@@ -46,16 +46,14 @@ class DS3231 {
     Rate8kHz   ///<  8kHz square wave.
   };
 
-  enum Alarm1Mode {
-    DS3231_A1_PerSecond = 0x0F, /**< Alarm once per second */
-    DS3231_A1_Second = 0x0E,    /**< Alarm when seconds match */
-    DS3231_A1_Minute = 0x0C,    /**< Alarm when minutes and seconds match */
-    DS3231_A1_Hour = 0x08,      /**< Alarm when hours, minutes
-                                     and seconds match */
-    DS3231_A1_Date = 0x00,      /**< Alarm when date (day of month), hours,
-                                     minutes and seconds match */
-    DS3231_A1_Day = 0x10        /**< Alarm when day (day of week), hours,
-                                     minutes and seconds match */
+  enum class Alarm1Mode {
+    EverySecond,  ///< Alarm once / second.
+    Second,       ///< Alarm when seconds match.
+    Minute,       ///< Alarm when minutes and seconds match.
+    Hour,         ///< Alarm when hours, minutes and seconds match .
+    Date,  ///< Alarm when date (day of month), hours, minutes and seconds
+           ///< match.
+    Day    ///< Alarm when day (day of week), hours, minutes and seconds match.
   };
 
   enum Alarm2Mode {

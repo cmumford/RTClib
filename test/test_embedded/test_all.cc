@@ -108,15 +108,15 @@ void test_alarm1() {
   TEST_ASSERT_NOT_NULL(rtc);
   TEST_ASSERT_TRUE(rtc->begin());
 
-  // Enable square wave and very alarm set failure.
+  // Enable square wave and verify alarm set failure.
   TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate1Hz));
 
   DateTime dt(2000, 0, 0, 0);
-  TEST_ASSERT_FALSE(rtc->setAlarm1(dt, DS3231::DS3231_A1_Date));
+  TEST_ASSERT_FALSE(rtc->setAlarm1(dt, DS3231::Alarm1Mode::Hour));
 
   // Now set to alarm mode.
   TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Alarm));
-  TEST_ASSERT_TRUE(rtc->setAlarm1(dt, DS3231::DS3231_A1_Date));
+  TEST_ASSERT_TRUE(rtc->setAlarm1(dt, DS3231::Alarm1Mode::Hour));
 }
 
 void process() {
