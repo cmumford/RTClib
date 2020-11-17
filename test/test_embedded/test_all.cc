@@ -85,20 +85,20 @@ void test_square_pin_mode() {
   TEST_ASSERT_NOT_NULL(rtc);
   TEST_ASSERT_TRUE(rtc->begin());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231_OFF));
-  TEST_ASSERT_EQUAL(rtc::DS3231_OFF, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::DS3231_OFF));
+  TEST_ASSERT_EQUAL(rtc::DS3231::DS3231_OFF, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231_SquareWave1Hz));
-  TEST_ASSERT_EQUAL(rtc::DS3231_SquareWave1Hz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::DS3231_SquareWave1Hz));
+  TEST_ASSERT_EQUAL(rtc::DS3231::DS3231_SquareWave1Hz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231_SquareWave1kHz));
-  TEST_ASSERT_EQUAL(rtc::DS3231_SquareWave1kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::DS3231_SquareWave1kHz));
+  TEST_ASSERT_EQUAL(rtc::DS3231::DS3231_SquareWave1kHz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231_SquareWave4kHz));
-  TEST_ASSERT_EQUAL(rtc::DS3231_SquareWave4kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::DS3231_SquareWave4kHz));
+  TEST_ASSERT_EQUAL(rtc::DS3231::DS3231_SquareWave4kHz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231_SquareWave8kHz));
-  TEST_ASSERT_EQUAL(rtc::DS3231_SquareWave8kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::DS3231_SquareWave8kHz));
+  TEST_ASSERT_EQUAL(rtc::DS3231::DS3231_SquareWave8kHz, rtc->readSqwPinMode());
 }
 
 void process() {

@@ -152,12 +152,12 @@ DateTime DS3231::now() {
     @return Pin mode, see Ds3231SqwPinMode enum
 */
 /**************************************************************************/
-Ds3231SqwPinMode DS3231::readSqwPinMode() {
+DS3231::SqwPinMode DS3231::readSqwPinMode() {
   uint8_t value;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &value))
     return DS3231_OFF;
 
-  return static_cast<Ds3231SqwPinMode>(
+  return static_cast<SqwPinMode>(
       value & (CONTROL_RS2 | CONTROL_RS1 | CONTROL_INTCN));
 }
 
@@ -167,7 +167,7 @@ Ds3231SqwPinMode DS3231::readSqwPinMode() {
     @param mode Desired mode, see Ds3231SqwPinMode enum
 */
 /**************************************************************************/
-bool DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
+bool DS3231::writeSqwPinMode(SqwPinMode mode) {
   uint8_t ctrl;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl))
     return false;
@@ -211,7 +211,7 @@ float DS3231::getTemperature() {
     @return False if control register is not set, otherwise true
 */
 /**************************************************************************/
-bool DS3231::setAlarm1(const DateTime& dt, Ds3231Alarm1Mode alarm_mode) {
+bool DS3231::setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode) {
   uint8_t ctrl = 0;
   i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
   if (!(ctrl & 0x04))
@@ -251,7 +251,7 @@ bool DS3231::setAlarm1(const DateTime& dt, Ds3231Alarm1Mode alarm_mode) {
     @return False if control register is not set, otherwise true
 */
 /**************************************************************************/
-bool DS3231::setAlarm2(const DateTime& dt, Ds3231Alarm2Mode alarm_mode) {
+bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
   uint8_t ctrl = 0;
   i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
   if (!(ctrl & 0x04)) {
