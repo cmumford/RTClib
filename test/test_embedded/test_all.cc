@@ -13,12 +13,13 @@ constexpr i2c_port_t kRTCI2CPort = TEST_I2C_PORT1;
 
 SemaphoreHandle_t g_i2c_mutex;
 
+using namespace rtc;
+
 namespace {
 
-std::unique_ptr<rtc::DS3231> CreateClock() {
-  std::unique_ptr<rtc::I2CMaster> master(
-      new rtc::I2CMaster(kRTCI2CPort, g_i2c_mutex));
-  std::unique_ptr<rtc::DS3231> rtc(new rtc::DS3231(std::move(master)));
+std::unique_ptr<DS3231> CreateClock() {
+  std::unique_ptr<I2CMaster> master(new I2CMaster(kRTCI2CPort, g_i2c_mutex));
+  std::unique_ptr<DS3231> rtc(new DS3231(std::move(master)));
   return rtc;
 }
 
@@ -51,12 +52,12 @@ void test_set_and_get_date() {
   TEST_ASSERT_NOT_NULL(rtc);
   TEST_ASSERT_TRUE(rtc->begin());
 
-  const rtc::DateTime dt(2020, 11, 14, 21, 26, 59);
+  const DateTime dt(2020, 11, 14, 21, 26, 59);
   TEST_ASSERT_TRUE(rtc->adjust(dt));
 
   // This is a possible race condition as there is "daylight" between the set
   // and the get call, and the time could change.
-  const rtc::DateTime now = rtc->now();
+  const DateTime now = rtc->now();
   TEST_ASSERT_TRUE(dt.operator==(now));
 }
 
@@ -85,23 +86,23 @@ void test_square_wave_pin_mode() {
   TEST_ASSERT_NOT_NULL(rtc);
   TEST_ASSERT_TRUE(rtc->begin());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::SqwPinMode::Alarm));
-  TEST_ASSERT_EQUAL(rtc::DS3231::SqwPinMode::Alarm, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Alarm));
+  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Alarm, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::SqwPinMode::Rate1Hz));
-  TEST_ASSERT_EQUAL(rtc::DS3231::SqwPinMode::Rate1Hz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate1Hz));
+  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Rate1Hz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::SqwPinMode::Rate1kHz));
-  TEST_ASSERT_EQUAL(rtc::DS3231::SqwPinMode::Rate1kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate1kHz));
+  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Rate1kHz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::SqwPinMode::Rate4kHz));
-  TEST_ASSERT_EQUAL(rtc::DS3231::SqwPinMode::Rate4kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate4kHz));
+  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Rate4kHz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::SqwPinMode::Rate8kHz));
-  TEST_ASSERT_EQUAL(rtc::DS3231::SqwPinMode::Rate8kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate8kHz));
+  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Rate8kHz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(rtc::DS3231::SqwPinMode::Alarm));
-  TEST_ASSERT_EQUAL(rtc::DS3231::SqwPinMode::Alarm, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Alarm));
+  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Alarm, rtc->readSqwPinMode());
 }
 
 void process() {
