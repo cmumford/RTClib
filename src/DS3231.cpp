@@ -369,9 +369,9 @@ bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
   SET_BITS(values[1], bin2bcd(dt.minute()) & A2M3_HOURS);
   SET_BITS(values[2], bin2bcd(dt.hour()) & A2M4_DATE);
   if (alarm_mode == Alarm2Mode::Day)
-    SET_BITS(values[3], bin2bcd(dt.dayOfTheWeek()) & A2M4_DATE);
+    SET_BITS(values[2], bin2bcd(dt.dayOfTheWeek()) & A2M4_DATE);
   else
-    SET_BITS(values[3], bin2bcd(dt.day()) & A2M4_DATE);
+    SET_BITS(values[2], bin2bcd(dt.day()) & A2M4_DATE);
 
   auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "setalm2");
   op->WriteByte(REGISTER_ALARM2_MINUTES);
