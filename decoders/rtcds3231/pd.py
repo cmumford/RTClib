@@ -33,7 +33,7 @@ class Decoder(srd.Decoder):
     api_version = 3
     id = 'rtcds3231'
     name = 'DS3231'
-    longname = 'DS3231 RTC'
+    longname = 'Maxim DS3231'
     desc = 'Realtime clock module protocol.'
     license = 'gplv2+'
     inputs = ['i2c']
