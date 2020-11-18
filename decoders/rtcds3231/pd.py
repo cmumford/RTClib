@@ -32,7 +32,7 @@ def reg_list():
 class Decoder(srd.Decoder):
     api_version = 3
     id = 'rtcds3231'
-    name = 'RTC-DS3231'
+    name = 'DS3231'
     longname = 'DS3231 RTC'
     desc = 'Realtime clock module protocol.'
     license = 'gplv2+'
@@ -146,16 +146,30 @@ class Decoder(srd.Decoder):
         self.putd(7, 0, [4, ['Year: %d' % y, 'Y: %d' % y, 'Y']])
 
     def handle_reg_0x07(self, b):  # Alarm 1 seconds
-        pass
+        a1m1 = bcd2int(b & 0b10000000) >> 7
+        self.putd(7, 7, [4, ['A1M1: %d' % a1m1, 'A1: %d' % a1m1, 'A1']])
+        s = bcd2int(b & 0b01111111)
+        self.putd(6, 0, [4, ['Seconds: %d' % s, 'S: %d' % s, 'S']])
 
     def handle_reg_0x08(self, b):  # Alarm 1 minutes
-        pass
+        a1m2 = bcd2int(b & 0b10000000) >> 7
+        self.putd(7, 7, [4, ['A1M2: %d' % a1m2, 'A2: %d' % a1m2, 'A2']])
+        m = bcd2int(b & 0b01111111)
+        self.putd(6, 0, [4, ['Minutes: %d' % m, 'MM: %d' % m, 'M']])
 
     def handle_reg_0x09(self, b):  # Alarm 1 hours
-        pass
+        a1m3 = bcd2int(b & 0b10000000) >> 7
+        self.putd(7, 7, [4, ['A1M3: %d' % a1m3, 'A3: %d' % a1m3, 'A3']])
+        h = bcd2int(b & 0b01111111)
+        self.putd(6, 0, [4, ['Hours: %d' % h, 'HH: %d' % h, 'H']])
 
     def handle_reg_0x0a(self, b):  # Alarm 1 day/date
-        pass
+        a1m4 = bcd2int(b & 0b10000000) >> 7
+        self.putd(7, 7, [4, ['A1M4: %d' % a1m4, 'A1: %d' % a1m4, 'A4']])
+        dydt = 1 if bcd2int(b & 0b01000000) else 0
+        self.putd(6, 6, [4, ['DY/DT: %d' % dydt, 'DY: %d' % dydt, 'DY']])
+        date = bcd2int(b & 0b00111111)
+        self.putd(5, 0, [4, ['Day/date: %d' % date, 'D: %d' % date, 'D']])
 
     def handle_reg_0x0b(self, b):  # Alarm 2 minutes
         a2m2 = bcd2int(b & 0b10000000) >> 7
@@ -174,7 +188,12 @@ class Decoder(srd.Decoder):
         self.putd(4, 0, [4, ['Hour: %d' % hh, 'H: %d' % hh, 'H']])
 
     def handle_reg_0x0d(self, b):  # Alarm 2 Day/Date
-        pass
+        a2m4 = bcd2int(b & 0b10000000) >> 7
+        self.putd(7, 7, [4, ['A2M4: %d' % a2m4, 'A4: %d' % a2m4, 'A4']])
+        dydt = 1 if bcd2int(b & 0b01000000) else 0
+        self.putd(6, 6, [4, ['DY/DT: %d' % dydt, 'DY: %d' % dydt, 'DY']])
+        date = bcd2int(b & 0b00111111)
+        self.putd(5, 0, [4, ['Day/date: %d' % date, 'D: %d' % date, 'D']])
 
     def handle_reg_0x0e(self, b):  # Control register
         alarm1 = 1 if (b & (1 << 0)) else 0
