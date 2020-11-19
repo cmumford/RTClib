@@ -68,14 +68,17 @@ bool PCF8563::adjust(const DateTime& dt) {
   auto op = i2c_->CreateWriteOp(PCF8563_ADDRESS, "adjust");
   if (!op)
     return false;
-  op->WriteByte(PCF8563_VL_SECONDS);  // start at location 2, VL_SECONDS
-  op->WriteByte(bin2bcd(dt.second()));
-  op->WriteByte(bin2bcd(dt.minute()));
-  op->WriteByte(bin2bcd(dt.hour()));
-  op->WriteByte(bin2bcd(dt.day()));
-  op->WriteByte(0x0);  // skip weekdays
-  op->WriteByte(bin2bcd(dt.month()));
-  op->WriteByte(bin2bcd(dt.year() - 2000));
+  const uint8_t values[7] = {
+      bin2bcd(dt.second()),
+      bin2bcd(dt.minute()),
+      bin2bcd(dt.hour()),
+      bin2bcd(dt.day()),
+      0x0,
+      bin2bcd(dt.month()),
+      bin2bcd(dt.year() - 2000),
+  };
+  op->WriteByte(PCF8563_VL_SECONDS);
+  op->Write(values, sizeof(values));
   return op->Execute();
 }
 

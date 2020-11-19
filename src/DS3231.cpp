@@ -134,15 +134,14 @@ bool DS3231::adjust(const DateTime& dt) {
     auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "adjust");
     if (!op)
       return false;
+    const uint8_t values[7] = {
+        bin2bcd(dt.second()), bin2bcd(dt.minute()),
+        bin2bcd(dt.hour()),   bin2bcd(dowToDS3231(dt.dayOfTheWeek())),
+        bin2bcd(dt.day()),    bin2bcd(dt.year() - 2000U),
+    };
+
     op->WriteByte(REGISTER_TIME_SECONDS);  // First time register
-    op->WriteByte(bin2bcd(dt.second()));
-    op->WriteByte(bin2bcd(dt.minute()));
-    op->WriteByte(bin2bcd(dt.hour()));
-    // The RTC must know the day of the week for the weekly alarms to work.
-    op->WriteByte(bin2bcd(dowToDS3231(dt.dayOfTheWeek())));
-    op->WriteByte(bin2bcd(dt.day()));
-    op->WriteByte(bin2bcd(dt.month()));
-    op->WriteByte(bin2bcd(dt.year() - 2000U));
+    op->Write(values, sizeof(values));
     if (!op->Execute())
       return false;
   }

@@ -70,14 +70,19 @@ uint8_t DS1307::isrunning(void) {
 /**************************************************************************/
 bool DS1307::adjust(const DateTime& dt) {
   auto op = i2c_->CreateWriteOp(DS1307_ADDRESS, "adjust");
+  const uint8_t values[7] = {
+      bin2bcd(dt.second()),
+      bin2bcd(dt.minute()),
+      bin2bcd(dt.hour()),
+      0x0,  // Day of week
+      bin2bcd(dt.day()),
+      bin2bcd(dt.month()),
+      bin2bcd(dt.year() - 2000U),
+  };
+
   op->WriteByte(REGISTER_TIME_SECONDS);
-  op->WriteByte(bin2bcd(dt.second()));
-  op->WriteByte(bin2bcd(dt.minute()));
-  op->WriteByte(bin2bcd(dt.hour()));
-  op->WriteByte(0x0);  // Day of week
-  op->WriteByte(bin2bcd(dt.day()));
-  op->WriteByte(bin2bcd(dt.month()));
-  op->WriteByte(bin2bcd(dt.year() - 2000U));
+  op->Write(values, sizeof(values));
+
   return op->Execute();
 }
 

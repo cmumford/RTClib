@@ -83,14 +83,18 @@ bool PCF8523::adjust(const DateTime& dt) {
   if (!op)
     return false;
 
+  const uint8_t values[7] = {
+      bin2bcd(dt.second()),
+      bin2bcd(dt.minute()),
+      bin2bcd(dt.hour()),
+      bin2bcd(dt.day()),
+      0,  // day of week.
+      bin2bcd(dt.month()),
+      bin2bcd(dt.year() - 2000U),
+  };
+
   op->WriteByte(0x3);  // start at location 3
-  op->WriteByte(bin2bcd(dt.second()));
-  op->WriteByte(bin2bcd(dt.minute()));
-  op->WriteByte(bin2bcd(dt.hour()));
-  op->WriteByte(bin2bcd(dt.day()));
-  op->WriteByte(0);  // skip day of week
-  op->WriteByte(bin2bcd(dt.month()));
-  op->WriteByte(bin2bcd(dt.year() - 2000U));
+  op->Write(values, sizeof(values));
 
   // set to battery switchover mode
   op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
