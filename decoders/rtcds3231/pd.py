@@ -103,35 +103,25 @@ class Alarm1(object):
         self.dy_dt = -1
 
     def __str__(self):
-        str = ''
-
-        if self.hours != -1:
-            str += 'H=%02d' % self.hours
-        if self.minutes != -1:
-            str += ':M=%02d' % self.minutes
-        if self.seconds != -1:
-            str += ':S=%02d' % self.seconds
-        if self.dow != -1:
-            str += ':DOW=%d' % self.dow
-        elif self.dom != -1:
-            str += ':DOM=%d' % self.dom
-
         when = [self.m1, self.m2, self.m3, self.m4]
         if when == [1, 1, 1, 1]:
-            str += ' (once per second)'
+            str = 'once/sec.'
         elif when == [1, 1, 1, 0]:
-            str += ' (when secs match)'
+            str = 'when SS=%02d' % self.seconds
         elif when == [1, 1, 0, 0]:
-            str += ' (when min/secs match)'
+            str = 'when MM:SS=%02d:%02d' % (self.minutes, self.seconds)
         elif when == [1, 0, 0, 0]:
-            str += ' (when hr/min/secs match)'
+            str = 'when HH:MM:SS=%02d:%02d:%02d' % (
+                self.hours, self.minutes, self.seconds)
         elif when == [0, 0, 0, 0]:
             if self.dy_dt:
-                str += ' (when day/hr/min/secs match)'
+                str = 'when DY/HH:MM:SS=%d/%02d:%02d:%02d' % (
+                    self.dow, self.hours, self.minutes, self.seconds)
             else:
-                str += ' (when date/hr/min/secs match)'
+                str = 'when DT/HH:MM:SS=%02d/%02d:%02d:%02d' % (
+                    self.dom, self.hours, self.minutes, self.seconds)
         else:
-            str += ' (partial register read)'
+            str = ' (incomplete register set)'
         return str
 
     def isEmpty(self):
@@ -160,31 +150,23 @@ class Alarm2(object):
             self.dom == -1
 
     def __str__(self):
-        str = ''
-
-        if self.hours != -1:
-            str += 'H=%02d' % self.hours
-        if self.minutes != -1:
-            str += ':M=%02d' % self.minutes
-        if self.dow != -1:
-            str += ':DOW=%d' % self.dow
-        elif self.dom != -1:
-            str += ':DOM=%d' % self.dom
-
         when = [self.m2, self.m3, self.m4]
         if when == [1, 1, 1]:
-            str += ' (once per minute)'
+            str = 'once/min.'
         elif when == [1, 1, 0]:
-            str += ' (when mins match)'
+            str = 'when MM=%02d' % self.minutes
         elif when == [1, 0, 0]:
-            str += ' (when hrs/mins match)'
+            str = 'when HH:MM=%02d:%02d' % (self.hours, self.minutes)
         elif when == [0, 0, 0]:
             if self.dy_dt:
-                str += ' (when day/hr/min match)'
+                str = 'when DY/HH:MM=%d/%02d:%02d' % (
+                    self.dow, self.hours, self.minutes)
             else:
-                str += ' (when date/hr/min match)'
+                str = 'when DT/HH:MM=%02d/%02d:%02d' % (
+                    self.dom, self.hours, self.minutes)
         else:
-            str += ' (partial register read)'
+            str = 'DD/DT/HH:MM=%d/%d/%02d:%02d' % (
+                self.dom, self.dow, self.hours, self.minutes)
         return str
 
 
