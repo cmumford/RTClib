@@ -56,7 +56,7 @@ class I2COperation {
    * When this instance is created the operation is already started. This will
    * enqueue another start into this operation.
    */
-  bool Restart(uint8_t i2c_address, OperationType type);
+  bool Restart(uint8_t i2c_address, uint8_t reg, OperationType type);
 
   /**
    * Execute all queued tasks.

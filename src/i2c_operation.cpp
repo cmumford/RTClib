@@ -82,12 +82,27 @@ bool I2COperation::Execute() {
   return true;
 }
 
-bool I2COperation::Restart(uint8_t i2c_address, OperationType type) {
-  i2c_rw_t op =
-      type == OperationType::READ ? I2C_MASTER_READ : I2C_MASTER_WRITE;
+bool I2COperation::Restart(uint8_t slave_addr,
+                           uint8_t reg,
+                           OperationType type) {
   esp_err_t err = i2c_master_start(cmd_);
-  if (err == ESP_OK)
-    err = i2c_master_write_byte(cmd_, (i2c_address << 1) | op, ACK_CHECK_EN);
+  if (err != ESP_OK)
+    goto RESTART_DONE;
+  err = i2c_master_write_byte(cmd_, (slave_addr << 1) | I2C_MASTER_WRITE,
+                              ACK_CHECK_EN);
+  if (err != ESP_OK)
+    goto RESTART_DONE;
+  if (type == OperationType::WRITE) {
+    err = i2c_master_write_byte(cmd_, reg, ACK_CHECK_EN);
+  } else {
+    err = i2c_master_start(cmd_);
+    if (err != ESP_OK)
+      goto RESTART_DONE;
+    err = i2c_master_write_byte(cmd_, (slave_addr << 1) | I2C_MASTER_READ,
+                                ACK_CHECK_EN);
+  }
+
+RESTART_DONE:
   if (err != ESP_OK) {
     ESP_LOGE(TAG, "%s restart failed: %s", name_, esp_err_to_name(err));
     return false;

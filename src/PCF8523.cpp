@@ -96,8 +96,7 @@ bool PCF8523::adjust(const DateTime& dt) {
   op->Write(values, sizeof(values));
 
   // set to battery switchover mode
-  op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
-  op->WriteByte(PCF8523_CONTROL_3);
+  op->Restart(PCF8523_ADDRESS, PCF8523_CONTROL_3, OperationType::WRITE);
   op->WriteByte(0x0);
   return op->Execute();
 }
@@ -218,9 +217,7 @@ bool PCF8523::enableSecondTimer() {
     if (!op)
       return false;
     op->Read(&ctlreg, sizeof(ctlreg));
-    op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
-    op->WriteByte(PCF8523_CLKOUTCONTROL);
-    op->Restart(PCF8523_ADDRESS, OperationType::READ);
+    op->Restart(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, OperationType::READ);
     op->Read(&clkreg, sizeof(clkreg));
     if (!op->Execute())
       return false;
@@ -231,11 +228,10 @@ bool PCF8523::enableSecondTimer() {
   if (!op)
     return false;
   // TAM pulse int. mode (shared with Timer A), CLKOUT (aka SQW) disabled
-  op->WriteByte(PCF8523_CLKOUTCONTROL);
   op->WriteByte(clkreg | 0xB8);
 
   // SIE Second timer int. enable
-  op->WriteByte(PCF8523_CONTROL_1);
+  op->Restart(PCF8523_ADDRESS, PCF8523_CONTROL_1, OperationType::WRITE);
   op->WriteByte(ctlreg | (1 << 2));
   return op->Execute();
 }
@@ -290,9 +286,7 @@ bool PCF8523::enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
       return false;
     op->Read(&ctlreg, sizeof(ctlreg));
 
-    op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
-    op->WriteByte(PCF8523_CLKOUTCONTROL);
-    op->Restart(PCF8523_ADDRESS, OperationType::READ);
+    op->Restart(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, OperationType::READ);
     op->Read(&clkreg, sizeof(clkreg));
 
     if (!op->Execute())
@@ -308,18 +302,15 @@ bool PCF8523::enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
   op->WriteByte(ctlreg |= 0x01);
 
   // Timer B source clock frequency, optionally int. low pulse width
-  op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
-  op->WriteByte(PCF8523_TIMER_B_FRCTL);
+  op->Restart(PCF8523_ADDRESS, PCF8523_TIMER_B_FRCTL, OperationType::WRITE);
   op->WriteByte(lowPulseWidth << 4 | clkFreq);
 
   // Timer B value (number of source clock periods)
-  op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
-  op->WriteByte(PCF8523_TIMER_B_VALUE);
+  op->Restart(PCF8523_ADDRESS, PCF8523_TIMER_B_VALUE, OperationType::WRITE);
   op->WriteByte(numPeriods);
 
   // TBM Timer B pulse int. mode, CLKOUT (aka SQW) disabled, TBC start Timer B
-  op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
-  op->WriteByte(PCF8523_CLKOUTCONTROL);
+  op->Restart(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, OperationType::WRITE);
   op->WriteByte(clkreg | 0x79);
 
   return op->Execute();
@@ -377,16 +368,13 @@ bool PCF8523::deconfigureAllTimers() {
 
   op->WriteByte(0);
 
-  op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
-  op->WriteByte(PCF8523_CLKOUTCONTROL);
+  op->Restart(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, OperationType::WRITE);
   op->WriteByte(0);
 
-  op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
-  op->WriteByte(PCF8523_TIMER_B_FRCTL);
+  op->Restart(PCF8523_ADDRESS, PCF8523_TIMER_B_FRCTL, OperationType::WRITE);
   op->WriteByte(0);
 
-  op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
-  op->WriteByte(PCF8523_TIMER_B_VALUE);
+  op->Restart(PCF8523_ADDRESS, PCF8523_TIMER_B_VALUE, OperationType::WRITE);
   op->WriteByte(0);
 
   return op->Execute();

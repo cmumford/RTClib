@@ -322,8 +322,7 @@ bool DS3231::setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode) {
                                 "setalm1");
   op->Write(values, sizeof(values));
 
-  op->Restart(DS3231_I2C_ADDRESS, OperationType::WRITE);
-  op->WriteByte(REGISTER_CONTROL);
+  op->Restart(DS3231_I2C_ADDRESS, REGISTER_CONTROL, OperationType::WRITE);
   SET_BITS(ctrl, CONTROL_A1IE);
   op->WriteByte(ctrl);
 
@@ -376,8 +375,7 @@ bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
                                 "setalm2");
   op->Write(values, sizeof(values));
 
-  op->Restart(DS3231_I2C_ADDRESS, OperationType::WRITE);
-  op->WriteByte(REGISTER_CONTROL);
+  op->Restart(DS3231_I2C_ADDRESS, REGISTER_CONTROL, OperationType::WRITE);
   SET_BITS(ctrl, CONTROL_A2IE);
   op->WriteByte(ctrl);
 
