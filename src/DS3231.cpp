@@ -131,7 +131,8 @@ bool DS3231::lostPower(void) {
 /**************************************************************************/
 bool DS3231::adjust(const DateTime& dt) {
   {
-    auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "adjust");
+    auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, REGISTER_TIME_SECONDS,
+                                  "adjust");
     if (!op)
       return false;
     const uint8_t values[7] = {
@@ -140,7 +141,6 @@ bool DS3231::adjust(const DateTime& dt) {
         bin2bcd(dt.day()),    bin2bcd(dt.year() - 2000U),
     };
 
-    op->WriteByte(REGISTER_TIME_SECONDS);  // First time register
     op->Write(values, sizeof(values));
     if (!op->Execute())
       return false;
@@ -161,9 +161,10 @@ bool DS3231::adjust(const DateTime& dt) {
 /**************************************************************************/
 DateTime DS3231::now() {
   uint8_t values[7];  // for registers 0x00 - 0x06.
-  auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "now");
-  op->WriteByte(REGISTER_TIME_SECONDS);  // First time register address.
-  op->Restart(DS3231_I2C_ADDRESS, OperationType::READ);
+  auto op =
+      i2c_->CreateReadOp(DS3231_I2C_ADDRESS, REGISTER_TIME_SECONDS, "now");
+  if (!op)
+    return false;
   if (!op->Read(values, sizeof(values)))
     return DateTime();
   if (!op->Execute())
@@ -249,11 +250,10 @@ bool DS3231::writeSqwPinMode(SqwPinMode mode) {
 */
 /**************************************************************************/
 float DS3231::getTemperature() {
-  auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "getTemp");
+  auto op =
+      i2c_->CreateReadOp(DS3231_I2C_ADDRESS, REGISTER_TEMP_MSB, "getTemp");
   if (!op)
     return std::numeric_limits<int16_t>::max();
-  op->WriteByte(REGISTER_TEMP_MSB);
-  op->Restart(DS3231_I2C_ADDRESS, OperationType::READ);
   uint8_t values[2];  // MSB and LSB respectively.
   op->Read(&values, sizeof(values));
   if (!op->Execute())
@@ -318,8 +318,8 @@ bool DS3231::setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode) {
   else
     SET_BITS(values[3], bin2bcd(dt.day()) & A1M4_DATE);
 
-  auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "setalm1");
-  op->WriteByte(REGISTER_ALARM1_SECONDS);
+  auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, REGISTER_ALARM1_SECONDS,
+                                "setalm1");
   op->Write(values, sizeof(values));
 
   op->Restart(DS3231_I2C_ADDRESS, OperationType::WRITE);
@@ -372,8 +372,8 @@ bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
   else
     SET_BITS(values[2], bin2bcd(dt.day()) & A2M4_DATE);
 
-  auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, "setalm2");
-  op->WriteByte(REGISTER_ALARM2_MINUTES);
+  auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, REGISTER_ALARM2_MINUTES,
+                                "setalm2");
   op->Write(values, sizeof(values));
 
   op->Restart(DS3231_I2C_ADDRESS, OperationType::WRITE);

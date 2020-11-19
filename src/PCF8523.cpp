@@ -79,7 +79,7 @@ bool PCF8523::initialized(void) {
 */
 /**************************************************************************/
 bool PCF8523::adjust(const DateTime& dt) {
-  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, "adjust");
+  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, 0x3, "adjust");
   if (!op)
     return false;
 
@@ -93,7 +93,6 @@ bool PCF8523::adjust(const DateTime& dt) {
       bin2bcd(dt.year() - 2000U),
   };
 
-  op->WriteByte(0x3);  // start at location 3
   op->Write(values, sizeof(values));
 
   // set to battery switchover mode
@@ -110,9 +109,9 @@ bool PCF8523::adjust(const DateTime& dt) {
 */
 /**************************************************************************/
 DateTime PCF8523::now() {
-  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, "now");
-  op->WriteByte(0x3);  // First time register address.
-  op->Restart(PCF8523_ADDRESS, OperationType::READ);
+  auto op = i2c_->CreateReadOp(PCF8523_ADDRESS, 0x3, "now");
+  if (!op)
+    return false;
   uint8_t values[7];  // for registers 0x00 - 0x06.
   if (!op->Read(values, sizeof(values)))
     return DateTime();
@@ -214,11 +213,11 @@ bool PCF8523::enableSecondTimer() {
   uint8_t clkreg;
 
   {
-    auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, "enableSecondTimer:read");
-    op->WriteByte(PCF8523_CONTROL_1);
-    op->Restart(PCF8523_ADDRESS, OperationType::READ);
+    auto op = i2c_->CreateReadOp(PCF8523_ADDRESS, PCF8523_CONTROL_1,
+                                 "enableSecondTimer:read");
+    if (!op)
+      return false;
     op->Read(&ctlreg, sizeof(ctlreg));
-
     op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
     op->WriteByte(PCF8523_CLKOUTCONTROL);
     op->Restart(PCF8523_ADDRESS, OperationType::READ);
@@ -227,13 +226,15 @@ bool PCF8523::enableSecondTimer() {
       return false;
   }
 
-  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, "enableSecondTimer:write");
+  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL,
+                                "enableSecondTimer:write");
+  if (!op)
+    return false;
   // TAM pulse int. mode (shared with Timer A), CLKOUT (aka SQW) disabled
   op->WriteByte(PCF8523_CLKOUTCONTROL);
   op->WriteByte(clkreg | 0xB8);
 
   // SIE Second timer int. enable
-  op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
   op->WriteByte(PCF8523_CONTROL_1);
   op->WriteByte(ctlreg | (1 << 2));
   return op->Execute();
@@ -283,11 +284,10 @@ bool PCF8523::enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
   uint8_t clkreg;
 
   {
-    auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, "enableCountdownTimer:read");
+    auto op = i2c_->CreateReadOp(PCF8523_ADDRESS, PCF8523_CONTROL_2,
+                                 "enableCountdownTimer:read");
     if (!op)
       return false;
-    op->WriteByte(PCF8523_CONTROL_2);
-    op->Restart(PCF8523_ADDRESS, OperationType::READ);
     op->Read(&ctlreg, sizeof(ctlreg));
 
     op->Restart(PCF8523_ADDRESS, OperationType::WRITE);
@@ -299,12 +299,12 @@ bool PCF8523::enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
       return false;
   }
 
-  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, "enableCountdownTimer:write");
+  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, PCF8523_CONTROL_2,
+                                "enableCountdownTimer:write");
   if (!op)
     return false;
 
   // CTBIE Countdown Timer B Interrupt Enabled
-  op->WriteByte(PCF8523_CONTROL_2);
   op->WriteByte(ctlreg |= 0x01);
 
   // Timer B source clock frequency, optionally int. low pulse width
@@ -370,11 +370,11 @@ bool PCF8523::disableCountdownTimer() {
 bool PCF8523::deconfigureAllTimers() {
   disableSecondTimer();  // Surgically clears CONTROL_1
 
-  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, "deconfigureAllTimers");
+  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, PCF8523_CONTROL_2,
+                                "deconfigureAllTimers");
   if (!op)
     return false;
 
-  op->WriteByte(PCF8523_CONTROL_2);
   op->WriteByte(0);
 
   op->Restart(PCF8523_ADDRESS, OperationType::WRITE);

@@ -95,7 +95,8 @@ class I2CMaster {
    *
    * @return The operation pointer - null if error creating operation.
    */
-  std::unique_ptr<I2COperation> CreateWriteOp(uint8_t addr,
+  std::unique_ptr<I2COperation> CreateWriteOp(uint8_t slave_addr,
+                                              uint8_t reg,
                                               const char* op_name);
 
   /**
@@ -103,7 +104,9 @@ class I2CMaster {
    *
    * @return The operation pointer - null if error creating operation.
    */
-  std::unique_ptr<I2COperation> CreateReadOp(uint8_t addr, const char* op_name);
+  std::unique_ptr<I2COperation> CreateReadOp(uint8_t slave_addr,
+                                             uint8_t reg,
+                                             const char* op_name);
 
  private:
   i2c_port_t i2c_num_;

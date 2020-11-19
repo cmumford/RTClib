@@ -69,7 +69,8 @@ uint8_t DS1307::isrunning(void) {
 */
 /**************************************************************************/
 bool DS1307::adjust(const DateTime& dt) {
-  auto op = i2c_->CreateWriteOp(DS1307_ADDRESS, "adjust");
+  auto op =
+      i2c_->CreateWriteOp(DS1307_ADDRESS, REGISTER_TIME_SECONDS, "adjust");
   const uint8_t values[7] = {
       bin2bcd(dt.second()),
       bin2bcd(dt.minute()),
@@ -80,7 +81,6 @@ bool DS1307::adjust(const DateTime& dt) {
       bin2bcd(dt.year() - 2000U),
   };
 
-  op->WriteByte(REGISTER_TIME_SECONDS);
   op->Write(values, sizeof(values));
 
   return op->Execute();
@@ -93,10 +93,7 @@ bool DS1307::adjust(const DateTime& dt) {
 */
 /**************************************************************************/
 DateTime DS1307::now() {
-  auto op = i2c_->CreateWriteOp(DS1307_ADDRESS, "now");
-  op->WriteByte(REGISTER_TIME_SECONDS);  // First time register address.
-
-  op->Restart(DS1307_ADDRESS, OperationType::READ);
+  auto op = i2c_->CreateReadOp(DS1307_ADDRESS, REGISTER_TIME_SECONDS, "now");
 
   uint8_t values[7];  // for registers 0x00 - 0x06.
   if (!op->Read(values, sizeof(values)))
@@ -153,12 +150,9 @@ bool DS1307::writeSqwPinMode(Ds1307SqwPinMode mode) {
 */
 /**************************************************************************/
 bool DS1307::readnvram(uint8_t address, void* buf, size_t num_bytes) {
-  auto op = i2c_->CreateReadOp(DS1307_ADDRESS, "readnvram");
+  auto op =
+      i2c_->CreateReadOp(DS1307_ADDRESS, REGISTER_NVRAM + address, "readnvram");
   if (!op)
-    return false;
-  if (!op->WriteByte(REGISTER_NVRAM + address))
-    return false;
-  if (!op->Restart(DS1307_ADDRESS, OperationType::READ))
     return false;
   if (!op->Read(buf, num_bytes))
     return false;
@@ -174,10 +168,9 @@ bool DS1307::readnvram(uint8_t address, void* buf, size_t num_bytes) {
 */
 /**************************************************************************/
 bool DS1307::writenvram(uint8_t address, const void* buf, size_t num_bytes) {
-  auto op = i2c_->CreateWriteOp(DS1307_ADDRESS, "writenvram");
+  auto op = i2c_->CreateWriteOp(DS1307_ADDRESS, REGISTER_NVRAM + address,
+                                "writenvram");
   if (!op)
-    return false;
-  if (!op->WriteByte(REGISTER_NVRAM + address))
     return false;
   if (!op->Write(buf, num_bytes))
     return false;

@@ -120,14 +120,17 @@ void test_alarm1() {
 }
 
 void test_alarm2() {
-  auto rtc = CreateClock();
+  std::unique_ptr<I2CMaster> master(new I2CMaster(kRTCI2CPort, g_i2c_mutex));
+  I2CMaster* const i2c_master = master.get();
+  std::unique_ptr<DS3231> rtc(new DS3231(std::move(master)));
+
   TEST_ASSERT_NOT_NULL(rtc);
   TEST_ASSERT_TRUE(rtc->begin());
 
   // Enable square wave and verify alarm set failure.
   TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate1Hz));
 
-  DateTime dt(2000, 0, 0, 0);
+  const DateTime dt(2000, 1, 13, 8, 14, 32);
   TEST_ASSERT_FALSE(rtc->setAlarm2(dt, DS3231::Alarm2Mode::Hour));
 
   // Now set to alarm mode.

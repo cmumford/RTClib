@@ -65,7 +65,7 @@ bool PCF8563::lostPower() {
 */
 /**************************************************************************/
 bool PCF8563::adjust(const DateTime& dt) {
-  auto op = i2c_->CreateWriteOp(PCF8563_ADDRESS, "adjust");
+  auto op = i2c_->CreateWriteOp(PCF8563_ADDRESS, PCF8563_VL_SECONDS, "adjust");
   if (!op)
     return false;
   const uint8_t values[7] = {
@@ -77,7 +77,6 @@ bool PCF8563::adjust(const DateTime& dt) {
       bin2bcd(dt.month()),
       bin2bcd(dt.year() - 2000),
   };
-  op->WriteByte(PCF8563_VL_SECONDS);
   op->Write(values, sizeof(values));
   return op->Execute();
 }
@@ -90,11 +89,9 @@ bool PCF8563::adjust(const DateTime& dt) {
 /**************************************************************************/
 
 DateTime PCF8563::now() {
-  auto op = i2c_->CreateWriteOp(PCF8563_ADDRESS, "now");
+  auto op = i2c_->CreateReadOp(PCF8563_ADDRESS, PCF8563_VL_SECONDS, "now");
   if (!op)
     return false;
-  op->WriteByte(PCF8563_VL_SECONDS);
-  op->Restart(PCF8563_ADDRESS, OperationType::READ);
   uint8_t values[7];
   op->Read(values, sizeof(values));
   if (!op->Execute())
