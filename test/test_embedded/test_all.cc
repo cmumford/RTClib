@@ -135,7 +135,13 @@ void test_alarm2() {
 
   // Now set to alarm mode.
   TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Alarm));
-  TEST_ASSERT_TRUE(rtc->setAlarm2(dt, DS3231::Alarm2Mode::Hour));
+
+  auto op = i2c_master->CreateReadOp(0x68, 0x0b, "test_alarm2");
+  TEST_ASSERT_NOT_NULL(op);
+  uint8_t values[3];
+  op->Read(values, sizeof(values));
+  TEST_ASSERT_TRUE(op->Execute());
+  // TODO: Verify all register values once alarms are completed.
 }
 
 void test_agingOffset() {
