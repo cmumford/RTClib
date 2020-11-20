@@ -69,7 +69,7 @@ class DS3231 {
   bool adjust(const DateTime& dt);
   bool begin(void);
   bool lostPower(void);
-  DateTime now();
+  bool now(DateTime* dt);
   SqwPinMode readSqwPinMode();
   bool writeSqwPinMode(SqwPinMode mode);
   bool setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode);

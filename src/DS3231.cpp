@@ -154,32 +154,24 @@ bool DS3231::adjust(const DateTime& dt) {
   return i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
 }
 
-/**************************************************************************/
-/*!
-    @brief  Get the current date/time
-    @return DateTime object with the current date/time
-*/
-/**************************************************************************/
-DateTime DS3231::now() {
+bool DS3231::now(DateTime* dt) {
   uint8_t values[7];  // for registers 0x00 - 0x06.
   auto op =
       i2c_->CreateReadOp(DS3231_I2C_ADDRESS, REGISTER_TIME_SECONDS, "now");
   if (!op)
     return false;
   if (!op->Read(values, sizeof(values)))
-    return DateTime();
+    return false;
   if (!op->Execute())
-    return DateTime();
+    return false;
 
-  const uint8_t ss = bcd2bin(values[REGISTER_TIME_SECONDS]);
-  const uint8_t mm = bcd2bin(values[REGISTER_TIME_MINUTES]);
-  const uint8_t hh = bcd2bin(values[REGISTER_TIME_HOURS]);
-  // Skip day of week.
-  const uint8_t d = bcd2bin(values[REGISTER_TIME_DATE]);
-  const uint8_t m = bcd2bin(values[REGISTER_TIME_MONTH]);
-  const uint16_t y = bcd2bin(values[REGISTER_TIME_YEAR]);
-
-  return DateTime(y, m, d, hh, mm, ss);
+  // BUG: Correctly handle the DY/DT flag. This assumes always date.
+  *dt = DateTime(
+      bcd2bin(values[REGISTER_TIME_YEAR]), bcd2bin(values[REGISTER_TIME_MONTH]),
+      bcd2bin(values[REGISTER_TIME_DATE]), bcd2bin(values[REGISTER_TIME_HOURS]),
+      bcd2bin(values[REGISTER_TIME_MINUTES]),
+      bcd2bin(values[REGISTER_TIME_SECONDS]));
+  return true;
 }
 
 /**************************************************************************/
@@ -342,8 +334,7 @@ bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
 
   uint8_t values[3] = {
       bin2bcd(dt.minute()), bin2bcd(dt.hour()),
-      bin2bcd(alarm_mode == Alarm2Mode::Day ? dt.dayOfTheWeek() : dt.day())
-  };
+      bin2bcd(alarm_mode == Alarm2Mode::Day ? dt.dayOfTheWeek() : dt.day())};
 
   switch (alarm_mode) {
     case Alarm2Mode::EveryMinute:
