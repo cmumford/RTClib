@@ -286,7 +286,9 @@ bool DS3231::setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode) {
   if (!(ctrl & CONTROL_INTCN))
     return false;
 
-  uint8_t values[4] = {0, 0, 0, 0};
+  uint8_t values[4] = {
+      bin2bcd(dt.second()), bin2bcd(dt.minute()), bin2bcd(dt.hour()),
+      bin2bcd(alarm_mode == Alarm1Mode::Day ? dt.dayOfTheWeek() : dt.day())};
 
   // See table 2 in datasheet.
   switch (alarm_mode) {
@@ -310,16 +312,10 @@ bool DS3231::setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode) {
       break;
   }
 
-  SET_BITS(values[0], bin2bcd(dt.second()) & A1M1_SECONDS);
-  SET_BITS(values[1], bin2bcd(dt.minute()) & A1M2_MINUTES);
-  SET_BITS(values[2], bin2bcd(dt.hour()) & A1M3_HOURS);
-  if (alarm_mode == Alarm1Mode::Day)
-    SET_BITS(values[3], bin2bcd(dt.dayOfTheWeek()) & A1M4_DATE);
-  else
-    SET_BITS(values[3], bin2bcd(dt.day()) & A1M4_DATE);
-
   auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, REGISTER_ALARM1_SECONDS,
                                 "setalm1");
+  if (!op)
+    return false;
   op->Write(values, sizeof(values));
 
   op->Restart(DS3231_I2C_ADDRESS, REGISTER_CONTROL, OperationType::WRITE);
@@ -343,7 +339,10 @@ bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
   if (!(ctrl & CONTROL_INTCN))
     return false;
 
-  uint8_t values[3] = {0, 0, 0};
+  uint8_t values[3] = {
+      bin2bcd(dt.minute()), bin2bcd(dt.hour()),
+      bin2bcd(alarm_mode == Alarm2Mode::Day ? dt.dayOfTheWeek() : dt.day())
+  };
 
   switch (alarm_mode) {
     case Alarm2Mode::EveryMinute:
@@ -363,16 +362,10 @@ bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
       break;
   }
 
-  SET_BITS(values[0], bin2bcd(dt.second()) & A2M2_MINUTES);
-  SET_BITS(values[1], bin2bcd(dt.minute()) & A2M3_HOURS);
-  SET_BITS(values[2], bin2bcd(dt.hour()) & A2M4_DATE);
-  if (alarm_mode == Alarm2Mode::Day)
-    SET_BITS(values[2], bin2bcd(dt.dayOfTheWeek()) & A2M4_DATE);
-  else
-    SET_BITS(values[2], bin2bcd(dt.day()) & A2M4_DATE);
-
   auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, REGISTER_ALARM2_MINUTES,
                                 "setalm2");
+  if (!op)
+    return false;
   op->Write(values, sizeof(values));
 
   op->Restart(DS3231_I2C_ADDRESS, REGISTER_CONTROL, OperationType::WRITE);
