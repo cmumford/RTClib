@@ -51,12 +51,16 @@ void test_set_and_get_date() {
   TEST_ASSERT_TRUE(rtc->begin());
 
   const DateTime dt(2020, 11, 14, 21, 26, 59);
-  TEST_ASSERT_TRUE(rtc->adjust(dt));
+  DateTime(rtc->adjust(dt));
 
-  // This is a possible race condition as there is "daylight" between the set
-  // and the get call, and the time could change.
-  const DateTime now = rtc->now();
-  TEST_ASSERT_TRUE(dt.operator==(now));
+  // This is a possible flakey test, as there is "daylight" between the set
+  // and the get call, and the running clock could increment the time.
+  // Instead this test will measure the delta, and only fail if longer than
+  // a specified duration.
+  DateTime now;
+  TEST_ASSERT_TRUE(rtc->now(&now));
+  const TimeSpan delta = now - dt;
+  TEST_ASSERT_LESS_OR_EQUAL(2, std::abs(delta.totalseconds()));
 }
 
 void test_32k() {
@@ -104,33 +108,41 @@ void test_square_wave_pin_mode() {
 }
 
 void test_alarm1() {
-  auto rtc = CreateClock();
+  std::unique_ptr<I2CMaster> master(new I2CMaster(kRTCI2CPort, g_i2c_mutex));
+  I2CMaster* const i2c_master = master.get();
+  std::unique_ptr<DS3231> rtc(new DS3231(std::move(master)));
   TEST_ASSERT_NOT_NULL(rtc);
   TEST_ASSERT_TRUE(rtc->begin());
 
   // Enable square wave and verify alarm set failure.
   TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate1Hz));
 
-  DateTime dt(2000, 0, 0, 0);
+  const DateTime dt(2021, 1, 12, 7, 13, 31);
   TEST_ASSERT_FALSE(rtc->setAlarm1(dt, DS3231::Alarm1Mode::Hour));
 
   // Now set to alarm mode.
   TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Alarm));
   TEST_ASSERT_TRUE(rtc->setAlarm1(dt, DS3231::Alarm1Mode::Hour));
+
+  auto op = i2c_master->CreateReadOp(0x68, 0x07, "test_alarm1");
+  TEST_ASSERT_NOT_NULL(op);
+  uint8_t values[4];
+  op->Read(values, sizeof(values));
+  TEST_ASSERT_TRUE(op->Execute());
+  // TODO: Verify all register values once alarms are completed.
 }
 
 void test_alarm2() {
   std::unique_ptr<I2CMaster> master(new I2CMaster(kRTCI2CPort, g_i2c_mutex));
   I2CMaster* const i2c_master = master.get();
   std::unique_ptr<DS3231> rtc(new DS3231(std::move(master)));
-
   TEST_ASSERT_NOT_NULL(rtc);
   TEST_ASSERT_TRUE(rtc->begin());
 
   // Enable square wave and verify alarm set failure.
   TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate1Hz));
 
-  const DateTime dt(2000, 1, 13, 8, 14, 32);
+  const DateTime dt(2021, 2, 13, 8, 14, 32);
   TEST_ASSERT_FALSE(rtc->setAlarm2(dt, DS3231::Alarm2Mode::Hour));
 
   // Now set to alarm mode.
