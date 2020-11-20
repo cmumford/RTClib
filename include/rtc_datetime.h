@@ -116,7 +116,7 @@ class DateTime {
     TIMESTAMP_TIME,  //!< `hh:mm:ss`
     TIMESTAMP_DATE   //!< `YYYY-MM-DD`
   };
-  std::string timestamp(timestampOpt opt = TIMESTAMP_FULL);
+  std::string timestamp(timestampOpt opt = TIMESTAMP_FULL) const;
 
   DateTime operator+(const TimeSpan& span);
   DateTime operator-(const TimeSpan& span);

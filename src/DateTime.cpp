@@ -644,7 +644,7 @@ bool DateTime::operator==(const DateTime& right) const {
     @return Timestamp string, e.g. "2020-04-16T18:34:56".
 */
 /**************************************************************************/
-std::string DateTime::timestamp(timestampOpt opt) {
+std::string DateTime::timestamp(timestampOpt opt) const {
   char buffer[25];  // large enough for any DateTime, including invalid ones
 
   // Generate timestamp according to opt
