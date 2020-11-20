@@ -651,16 +651,16 @@ std::string DateTime::timestamp(timestampOpt opt) const {
   switch (opt) {
     case TIMESTAMP_TIME:
       // Only time
-      sprintf(buffer, "%02d:%02d:%02d", hh, mm, ss);
+      snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d", hh, mm, ss);
       break;
     case TIMESTAMP_DATE:
       // Only date
-      sprintf(buffer, "%u-%02d-%02d", 2000U + yOff, m, d);
+      snprintf(buffer, sizeof(buffer), "%u-%02d-%02d", 2000U + yOff, m, d);
       break;
     default:
       // Full
-      sprintf(buffer, "%u-%02d-%02dT%02d:%02d:%02d", 2000U + yOff, m, d, hh, mm,
-              ss);
+      snprintf(buffer, sizeof(buffer), "%u-%02d-%02dT%02d:%02d:%02d",
+               2000U + yOff, m, d, hh, mm, ss);
   }
   return std::string(buffer);
 }
