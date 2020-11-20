@@ -92,12 +92,13 @@ bool I2COperation::Restart(uint8_t slave_addr,
                               ACK_CHECK_EN);
   if (err != ESP_OK)
     goto RESTART_DONE;
-  if (type == OperationType::WRITE) {
-    err = i2c_master_write_byte(cmd_, reg, ACK_CHECK_EN);
-  } else {
-    err = i2c_master_start(cmd_);
-    if (err != ESP_OK)
-      goto RESTART_DONE;
+  err = i2c_master_write_byte(cmd_, reg, ACK_CHECK_EN);
+  if (err != ESP_OK)
+    goto RESTART_DONE;
+  if (type == OperationType::WRITE)
+    goto RESTART_DONE;
+  err = i2c_master_start(cmd_);
+  if (err == ESP_OK) {
     err = i2c_master_write_byte(cmd_, (slave_addr << 1) | I2C_MASTER_READ,
                                 ACK_CHECK_EN);
   }
