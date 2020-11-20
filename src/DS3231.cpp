@@ -183,10 +183,10 @@ bool DS3231::now(DateTime* dt) {
 DS3231::SqwPinMode DS3231::readSqwPinMode() {
   uint8_t value;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &value))
-    return SqwPinMode::Alarm;
+    return SqwPinMode::Off;
 
   if (value & CONTROL_INTCN)
-    return SqwPinMode::Alarm;
+    return SqwPinMode::Off;
 
   switch (value & (CONTROL_RS2 | CONTROL_RS1)) {
     case kSquareWave1Hz:
@@ -216,7 +216,7 @@ bool DS3231::writeSqwPinMode(SqwPinMode mode) {
 
   CLEAR_BITS(ctrl, CONTROL_RS2 | CONTROL_RS1 | CONTROL_INTCN);
   switch (mode) {
-    case SqwPinMode::Alarm:
+    case SqwPinMode::Off:
       SET_BITS(ctrl, CONTROL_INTCN);
       break;
     case SqwPinMode::Rate1Hz:

@@ -39,7 +39,7 @@ class DS3231 {
    * @brief Square Wave pin mode.
    */
   enum class SqwPinMode {
-    Alarm,     ///< Square wave disabled. Pin goes high during alarm.
+    Off,       ///< Square wave disabled. Pin goes high during alarm.
     Rate1Hz,   ///<  1Hz square wave.
     Rate1kHz,  ///<  1kHz square wave.
     Rate4kHz,  ///<  4kHz square wave.

@@ -88,8 +88,8 @@ void test_square_wave_pin_mode() {
   TEST_ASSERT_NOT_NULL(rtc);
   TEST_ASSERT_TRUE(rtc->begin());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Alarm));
-  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Alarm, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Off));
+  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Off, rtc->readSqwPinMode());
 
   TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate1Hz));
   TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Rate1Hz, rtc->readSqwPinMode());
@@ -103,8 +103,8 @@ void test_square_wave_pin_mode() {
   TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate8kHz));
   TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Rate8kHz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Alarm));
-  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Alarm, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Off));
+  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Off, rtc->readSqwPinMode());
 }
 
 void test_alarm1() {
@@ -121,7 +121,7 @@ void test_alarm1() {
   TEST_ASSERT_FALSE(rtc->setAlarm1(dt, DS3231::Alarm1Mode::Hour));
 
   // Now set to alarm mode.
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Alarm));
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Off));
   TEST_ASSERT_TRUE(rtc->setAlarm1(dt, DS3231::Alarm1Mode::Hour));
 
   auto op = i2c_master->CreateReadOp(0x68, 0x07, "test_alarm1");
@@ -146,7 +146,7 @@ void test_alarm2() {
   TEST_ASSERT_FALSE(rtc->setAlarm2(dt, DS3231::Alarm2Mode::Hour));
 
   // Now set to alarm mode.
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Alarm));
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Off));
 
   auto op = i2c_master->CreateReadOp(0x68, 0x0b, "test_alarm2");
   TEST_ASSERT_NOT_NULL(op);
