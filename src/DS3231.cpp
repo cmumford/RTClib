@@ -136,9 +136,10 @@ bool DS3231::adjust(const DateTime& dt) {
     if (!op)
       return false;
     const uint8_t values[7] = {
-        bin2bcd(dt.second()), bin2bcd(dt.minute()),
-        bin2bcd(dt.hour()),   bin2bcd(dowToDS3231(dt.dayOfTheWeek())),
-        bin2bcd(dt.day()),    bin2bcd(dt.year() - 2000U),
+        bin2bcd(dt.second()),       bin2bcd(dt.minute()),
+        bin2bcd(dt.hour()),         bin2bcd(dowToDS3231(dt.dayOfTheWeek())),
+        bin2bcd(dt.day()),          bin2bcd(dt.month()),
+        bin2bcd(dt.year() - 2000U),
     };
 
     op->Write(values, sizeof(values));
