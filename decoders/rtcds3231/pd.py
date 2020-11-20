@@ -519,13 +519,13 @@ class Decoder(srd.Decoder):
         eosc = 1 if (b & (1 << 7)) else 0
 
         if rs == 0b00:
-            rsn = '%d: (1Hz)' % rs
+            rsn = '1Hz'
         elif rs == 0b01:
-            rsn = '%d (1kHz)' % rs
+            rsn = '1kHz'
         elif rs == 0b10:
-            rsn = '%d (4kHz)' % rs
+            rsn = '4kHz'
         elif rs == 0b11:
-            rsn = '%d (8kHz)' % rs
+            rsn = '8kHz'
 
         if intcn == 0:
             intcnmsg = 'Alarm mode'
@@ -555,7 +555,7 @@ class Decoder(srd.Decoder):
                     'Interrupt control: %d (%s)' %
                     (intcn, intcnmsg), 'INTCN: %d' %
                     intcn, 'I']])
-        self.putd(4, 3, [Ann.BIT_RS, ['RS: %s' % rsn, 'RS: %d' % rs, 'R']])
+        self.putd(4, 3, [Ann.BIT_RS, ['RS: %s' % rsn, rsn, 'R']])
         self.putd(
             5, 5, [
                 Ann.BIT_CONV, [
@@ -573,7 +573,7 @@ class Decoder(srd.Decoder):
                 Ann.BIT_EOSC, [
                     'Enable oscillator: %d (%s)' %
                     (eosc, eoscmsg), 'EOSC: %d' %
-                    eosc, 'E']])
+                    eosc, 'O']])
         self.putd(7, 0, [Ann.REG_CONTROL, ['Control', 'Ctrl', 'C']])
         self.control = Control()
 
