@@ -759,7 +759,7 @@ class Decoder(srd.Decoder):
         elif self.state == 'WRITE RTC REGS':
             # If we see a Repeated Start here, it's an RTC read.
             if cmd == 'START REPEAT':
-                self.state = 'READ RTC REGS'
+                self.state = 'AWAIT RESTART ADDR'
                 return
             # Otherwise: Get data bytes until a STOP condition occurs.
             if cmd == 'DATA WRITE':
@@ -769,15 +769,20 @@ class Decoder(srd.Decoder):
                 self.state = 'IDLE'
             else:
                 pass  # TODO
-        elif self.state == 'READ RTC REGS':
+        elif self.state == 'AWAIT RESTART ADDR':
             # Wait for an address read operation.
-            if cmd != 'ADDRESS READ':
-                return
-            if not self.is_correct_chip(databyte):
-                self.state = 'IDLE'
-                return
-            self.state = 'READ RTC REGS2'
-        elif self.state == 'READ RTC REGS2':
+            if cmd == 'ADDRESS READ':
+                if not self.is_correct_chip(databyte):
+                    self.restart()
+                    return
+                self.state = 'READ RTC REGS'
+            elif cmd == 'ADDRESS WRITE':
+                if not self.is_correct_chip(databyte):
+                    self.restart()
+                    return
+                self.reg = databyte
+                self.state = 'GET REG ADDR'
+        elif self.state == 'READ RTC REGS':
             if cmd == 'DATA READ':
                 self.handle_reg(databyte)
             elif cmd == 'STOP':
