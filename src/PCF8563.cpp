@@ -23,7 +23,14 @@ constexpr uint8_t PCF8563_CLKOUTCONTROL = 0x0D;  ///< CLKOUT control register
 constexpr uint8_t PCF8563_CONTROL_1 = 0x00;      ///< Control and status register 1
 constexpr uint8_t PCF8563_CONTROL_2 = 0x01;      ///< Control and status register 2
 constexpr uint8_t PCF8563_VL_SECONDS = 0x02;     ///< register address for VL_SECONDS
-constexpr uint8_t PCF8563_CLKOUT_MASK = 0x83;    ///< bitmask for SqwPinMode on CLKOUT pin
+
+// Datasheet section 8.7:
+constexpr uint8_t kSquareWaveOff   = 0x0;
+constexpr uint8_t kSquareWave1Hz   = 0b10000011;
+constexpr uint8_t kSquareWave32Hz  = 0b10000010;
+constexpr uint8_t kSquareWave1kHz  = 0b10000001;
+constexpr uint8_t kSquareWave32kHz = 0b10000000;
+constexpr uint8_t kSquareWaveMask  = 0b10000011;
 // clang-format on
 
 }  // namespace
@@ -156,11 +163,24 @@ bool PCF8563::isrunning() {
     @return CLKOUT pin mode as a #Pcf8563SqwPinMode enum
 */
 /**************************************************************************/
-Pcf8563SqwPinMode PCF8563::readSqwPinMode() {
+PCF8563::SqwPinMode PCF8563::readSqwPinMode() {
   uint8_t mode;
   if (!i2c_->ReadRegister(PCF8563_ADDRESS, PCF8563_CLKOUTCONTROL, &mode))
-    return PCF8563_SquareWaveOFF;
-  return static_cast<Pcf8563SqwPinMode>(mode & PCF8563_CLKOUT_MASK);
+    return PCF8563::SqwPinMode::Off;
+  switch (mode & kSquareWaveMask) {
+    case kSquareWaveOff:
+      return SqwPinMode::Off;
+    case kSquareWave1Hz:
+      return SqwPinMode::Rate1Hz;
+    case kSquareWave32Hz:
+      return SqwPinMode::Rate32Hz;
+    case kSquareWave1kHz:
+      return SqwPinMode::Rate1kHz;
+    case kSquareWave32kHz:
+      return SqwPinMode::Rate32kHz;
+    default:
+      return SqwPinMode::Off;
+  }
 }
 
 /**************************************************************************/
@@ -169,8 +189,27 @@ Pcf8563SqwPinMode PCF8563::readSqwPinMode() {
     @param mode The mode to set, see the #Pcf8563SqwPinMode enum for options
 */
 /**************************************************************************/
-bool PCF8563::writeSqwPinMode(Pcf8563SqwPinMode mode) {
-  return i2c_->WriteRegister(PCF8563_ADDRESS, PCF8563_CLKOUTCONTROL, mode);
+bool PCF8563::writeSqwPinMode(SqwPinMode mode) {
+  uint8_t reg_value = kSquareWaveOff;
+  switch (mode) {
+    case SqwPinMode::Off:
+      reg_value = kSquareWaveOff;
+      break;
+    case SqwPinMode::Rate1Hz:
+      reg_value = kSquareWave1Hz;
+      break;
+    case SqwPinMode::Rate32Hz:
+      reg_value = kSquareWave32Hz;
+      break;
+    case SqwPinMode::Rate1kHz:
+      reg_value = kSquareWave1kHz;
+      break;
+    case SqwPinMode::Rate32kHz:
+      reg_value = kSquareWave32kHz;
+      break;
+  }
+  // Bits 6..2 are unused, setting to all zeros.
+  return i2c_->WriteRegister(PCF8563_ADDRESS, PCF8563_CLKOUTCONTROL, reg_value);
 }
 
 }  // namespace rtc

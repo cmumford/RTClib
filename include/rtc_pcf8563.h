@@ -28,15 +28,6 @@ namespace rtc {
 
 class I2CMaster;
 
-/** PCF8563 CLKOUT pin mode settings */
-enum Pcf8563SqwPinMode {
-  PCF8563_SquareWaveOFF = 0x00,  /**< Off */
-  PCF8563_SquareWave1Hz = 0x83,  /**< 1Hz square wave */
-  PCF8563_SquareWave32Hz = 0x82, /**< 32Hz square wave */
-  PCF8563_SquareWave1kHz = 0x81, /**< 1kHz square wave */
-  PCF8563_SquareWave32kHz = 0x80 /**< 32kHz square wave */
-};
-
 /**************************************************************************/
 /*!
     @brief  RTC based on the PCF8563 chip connected via I2C.
@@ -45,6 +36,14 @@ enum Pcf8563SqwPinMode {
 
 class PCF8563 {
  public:
+  enum class SqwPinMode {
+    Off,       ///< Off.
+    Rate1Hz,   ///< 1Hz square wave.
+    Rate32Hz,  ///< 32Hz square wave.
+    Rate1kHz,  ///< 1kHz square wave.
+    Rate32kHz  ///< 32kHz square wave.
+  };
+
   PCF8563(std::unique_ptr<I2CMaster> i2c);
 
   bool begin(void);
@@ -54,8 +53,8 @@ class PCF8563 {
   bool start(void);
   bool stop(void);
   bool isrunning();
-  Pcf8563SqwPinMode readSqwPinMode();
-  bool writeSqwPinMode(Pcf8563SqwPinMode mode);
+  SqwPinMode readSqwPinMode();
+  bool writeSqwPinMode(SqwPinMode mode);
 
  private:
   std::unique_ptr<I2CMaster> i2c_;

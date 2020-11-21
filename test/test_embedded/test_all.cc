@@ -54,23 +54,23 @@ void test_pcf8563_square_wave_pin_mode() {
   TEST_ASSERT_NOT_NULL(rtc);
   TEST_ASSERT_TRUE(rtc->begin());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563_SquareWaveOFF));
-  TEST_ASSERT_EQUAL(PCF8563_SquareWaveOFF, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563::SqwPinMode::Off));
+  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Off, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563_SquareWave1Hz));
-  TEST_ASSERT_EQUAL(PCF8563_SquareWave1Hz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563::SqwPinMode::Rate1Hz));
+  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Rate1Hz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563_SquareWave32Hz));
-  TEST_ASSERT_EQUAL(PCF8563_SquareWave32Hz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563::SqwPinMode::Rate32Hz));
+  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Rate32Hz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563_SquareWave1kHz));
-  TEST_ASSERT_EQUAL(PCF8563_SquareWave1kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563::SqwPinMode::Rate1kHz));
+  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Rate1kHz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563_SquareWave32kHz));
-  TEST_ASSERT_EQUAL(PCF8563_SquareWave32kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563::SqwPinMode::Rate32Hz));
+  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Rate32Hz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563_SquareWaveOFF));
-  TEST_ASSERT_EQUAL(PCF8563_SquareWaveOFF, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563::SqwPinMode::Off));
+  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Off, rtc->readSqwPinMode());
 }
 
 void test_ds3231_set_and_get_date() {
@@ -216,7 +216,7 @@ void process() {
 
 bool clear_ds3231_registers() {
   std::unique_ptr<I2CMaster> master(new I2CMaster(kRTCI2CPort, g_i2c_mutex));
-  uint8_t registers[1+0x12] = {0};
+  uint8_t registers[1 + 0x12] = {0};
   auto op = master->CreateWriteOp(DS3231_I2C_ADDRESS, 0x0, "clear_DS3231");
   if (!op)
     return false;
@@ -226,7 +226,7 @@ bool clear_ds3231_registers() {
 
 bool clear_pcf8563_registers() {
   std::unique_ptr<I2CMaster> master(new I2CMaster(kRTCI2CPort, g_i2c_mutex));
-  uint8_t registers[1+0x0f] = {0};
+  uint8_t registers[1 + 0x0f] = {0};
   auto op = master->CreateWriteOp(PCF8563_I2C_ADDRESS, 0x0, "clear_PCF8563");
   if (!op)
     return false;
