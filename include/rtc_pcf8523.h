@@ -83,7 +83,7 @@ class PCF8523 {
   bool adjust(const DateTime& dt);
   bool lostPower(void);
   bool initialized(void);
-  DateTime now();
+  bool now(DateTime* dt);
   bool start(void);
   bool stop(void);
   bool isrunning();

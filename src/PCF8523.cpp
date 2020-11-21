@@ -107,15 +107,15 @@ bool PCF8523::adjust(const DateTime& dt) {
     @return DateTime object containing the current date/time
 */
 /**************************************************************************/
-DateTime PCF8523::now() {
+bool PCF8523::now(DateTime* dt) {
   auto op = i2c_->CreateReadOp(PCF8523_ADDRESS, 0x3, "now");
   if (!op)
     return false;
   uint8_t values[7];  // for registers 0x00 - 0x06.
   if (!op->Read(values, sizeof(values)))
-    return DateTime();
+    return false;
   if (!op->Execute())
-    return DateTime();
+    return false;
 
   const uint8_t ss = bcd2bin(values[0] & 0x7F);
   const uint8_t mm = bcd2bin(values[1]);
@@ -125,7 +125,8 @@ DateTime PCF8523::now() {
   const uint8_t m = bcd2bin(values[5]);
   const uint16_t y = bcd2bin(values[6]) + 2000U;
 
-  return DateTime(y, m, d, hh, mm, ss);
+  *dt = DateTime(y, m, d, hh, mm, ss);
+  return true;
 }
 
 /**************************************************************************/
