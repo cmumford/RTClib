@@ -17,12 +17,12 @@ namespace rtc {
 namespace {
 
 // clang-format off
-constexpr uint8_t PCF8563_ADDRESS = 0x51;        ///< I2C address for PCF8563
+constexpr uint8_t PCF8563_I2C_ADDRESS = 0x51;
 
-constexpr uint8_t PCF8563_CLKOUTCONTROL = 0x0D;  ///< CLKOUT control register
-constexpr uint8_t PCF8563_CONTROL_1 = 0x00;      ///< Control and status register 1
-constexpr uint8_t PCF8563_CONTROL_2 = 0x01;      ///< Control and status register 2
-constexpr uint8_t PCF8563_VL_SECONDS = 0x02;     ///< register address for VL_SECONDS
+constexpr uint8_t REGISTER_CLKOUTCONTROL = 0x0D;
+constexpr uint8_t REGISTER_CONTROL_1     = 0x00;
+constexpr uint8_t REGISTER_CONTROL_2     = 0x01;
+constexpr uint8_t REGISTER_VL_SECONDS    = 0x02;
 
 // Datasheet section 8.7:
 constexpr uint8_t kSquareWaveOff   = 0x0;
@@ -43,7 +43,7 @@ PCF8563::PCF8563(std::unique_ptr<I2CMaster> i2c) : i2c_(std::move(i2c)) {}
 */
 /**************************************************************************/
 bool PCF8563::begin() {
-  return i2c_->Ping(PCF8563_ADDRESS);
+  return i2c_->Ping(PCF8563_I2C_ADDRESS);
 }
 
 /**************************************************************************/
@@ -60,7 +60,7 @@ bool PCF8563::begin() {
 
 bool PCF8563::lostPower() {
   uint8_t value;
-  if (!i2c_->ReadRegister(PCF8563_ADDRESS, PCF8563_VL_SECONDS, &value))
+  if (!i2c_->ReadRegister(PCF8563_I2C_ADDRESS, REGISTER_VL_SECONDS, &value))
     return false;
   return value >> 7;
 }
@@ -72,7 +72,8 @@ bool PCF8563::lostPower() {
 */
 /**************************************************************************/
 bool PCF8563::adjust(const DateTime& dt) {
-  auto op = i2c_->CreateWriteOp(PCF8563_ADDRESS, PCF8563_VL_SECONDS, "adjust");
+  auto op =
+      i2c_->CreateWriteOp(PCF8563_I2C_ADDRESS, REGISTER_VL_SECONDS, "adjust");
   if (!op)
     return false;
   const uint8_t values[7] = {
@@ -96,7 +97,7 @@ bool PCF8563::adjust(const DateTime& dt) {
 /**************************************************************************/
 
 bool PCF8563::now(DateTime* dt) {
-  auto op = i2c_->CreateReadOp(PCF8563_ADDRESS, PCF8563_VL_SECONDS, "now");
+  auto op = i2c_->CreateReadOp(PCF8563_I2C_ADDRESS, REGISTER_VL_SECONDS, "now");
   if (!op)
     return false;
   uint8_t values[7];
@@ -123,10 +124,10 @@ bool PCF8563::now(DateTime* dt) {
 /**************************************************************************/
 bool PCF8563::start() {
   uint8_t ctlreg;
-  if (!i2c_->ReadRegister(PCF8563_ADDRESS, PCF8563_CONTROL_1, &ctlreg))
+  if (!i2c_->ReadRegister(PCF8563_I2C_ADDRESS, REGISTER_CONTROL_1, &ctlreg))
     return false;
 
-  return i2c_->WriteRegister(PCF8563_ADDRESS, PCF8563_CONTROL_1,
+  return i2c_->WriteRegister(PCF8563_I2C_ADDRESS, REGISTER_CONTROL_1,
                              ctlreg & ~(1 << 5));
 }
 
@@ -137,10 +138,10 @@ bool PCF8563::start() {
 /**************************************************************************/
 bool PCF8563::stop() {
   uint8_t ctlreg;
-  if (!i2c_->ReadRegister(PCF8563_ADDRESS, PCF8563_CONTROL_1, &ctlreg))
+  if (!i2c_->ReadRegister(PCF8563_I2C_ADDRESS, REGISTER_CONTROL_1, &ctlreg))
     return false;
 
-  return i2c_->WriteRegister(PCF8563_ADDRESS, PCF8563_CONTROL_1,
+  return i2c_->WriteRegister(PCF8563_I2C_ADDRESS, REGISTER_CONTROL_1,
                              ctlreg | (1 << 5));
 }
 
@@ -152,7 +153,7 @@ bool PCF8563::stop() {
 /**************************************************************************/
 bool PCF8563::isrunning() {
   uint8_t ctlreg;
-  if (!i2c_->ReadRegister(PCF8563_ADDRESS, PCF8563_CONTROL_1, &ctlreg))
+  if (!i2c_->ReadRegister(PCF8563_I2C_ADDRESS, REGISTER_CONTROL_1, &ctlreg))
     return false;
   return !((ctlreg >> 5) & 1);
 }
@@ -165,7 +166,7 @@ bool PCF8563::isrunning() {
 /**************************************************************************/
 PCF8563::SqwPinMode PCF8563::readSqwPinMode() {
   uint8_t mode;
-  if (!i2c_->ReadRegister(PCF8563_ADDRESS, PCF8563_CLKOUTCONTROL, &mode))
+  if (!i2c_->ReadRegister(PCF8563_I2C_ADDRESS, REGISTER_CLKOUTCONTROL, &mode))
     return PCF8563::SqwPinMode::Off;
   switch (mode & kSquareWaveMask) {
     case kSquareWaveOff:
@@ -209,7 +210,8 @@ bool PCF8563::writeSqwPinMode(SqwPinMode mode) {
       break;
   }
   // Bits 6..2 are unused, setting to all zeros.
-  return i2c_->WriteRegister(PCF8563_ADDRESS, PCF8563_CLKOUTCONTROL, reg_value);
+  return i2c_->WriteRegister(PCF8563_I2C_ADDRESS, REGISTER_CLKOUTCONTROL,
+                             reg_value);
 }
 
 }  // namespace rtc
