@@ -143,7 +143,7 @@ bool PCF8563::stop() {
     @return 1 if the RTC is running, 0 if not
 */
 /**************************************************************************/
-uint8_t PCF8563::isrunning() {
+bool PCF8563::isrunning() {
   uint8_t ctlreg;
   if (!i2c_->ReadRegister(PCF8563_ADDRESS, PCF8563_CONTROL_1, &ctlreg))
     return false;

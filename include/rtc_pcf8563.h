@@ -53,7 +53,7 @@ class PCF8563 {
   bool now(DateTime* dt);
   bool start(void);
   bool stop(void);
-  uint8_t isrunning();
+  bool isrunning();
   Pcf8563SqwPinMode readSqwPinMode();
   bool writeSqwPinMode(Pcf8563SqwPinMode mode);
 
