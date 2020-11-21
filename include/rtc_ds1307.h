@@ -27,16 +27,6 @@ namespace rtc {
 
 class I2CMaster;
 
-/** DS1307 SQW pin mode settings */
-enum Ds1307SqwPinMode {
-  DS1307_SquareWaveOff = 0x0,          // Set SQW/OUT pin set to zero.
-  DS1307_SquareWaveOn = 0b10000000,    // Set SQW/OUT pin set to 1.
-  DS1307_SquareWave1Hz = 0b00010000,   // 1Hz square wave.
-  DS1307_SquareWave4kHz = 0b00010001,  // 4kHz square wave.
-  DS1307_SquareWave8kHz = 0b00010010,  // 8kHz square wave.
-  DS1307_SquareWave32kHz = 0b00010011  // 32kHz square wave.
-};
-
 /**************************************************************************/
 /*!
     @brief  RTC based on the DS1307 chip connected via I2C.
@@ -44,14 +34,23 @@ enum Ds1307SqwPinMode {
 /**************************************************************************/
 class DS1307 {
  public:
+  enum class SqwPinMode {
+    Off,       // Set SQW/OUT pin set to zero.
+    On,        // Set SQW/OUT pin set to 1.
+    Rate1Hz,   // 1Hz square wave.
+    Rate4kHz,  // 4kHz square wave.
+    Rate8kHz,  // 8kHz square wave.
+    Rate32kHz  // 32kHz square wave.
+  };
+
   DS1307(std::unique_ptr<I2CMaster> i2c);
 
   bool begin(void);
   bool adjust(const DateTime& dt);
   bool isrunning(void);
   bool now(DateTime* now);
-  Ds1307SqwPinMode readSqwPinMode();
-  bool writeSqwPinMode(Ds1307SqwPinMode mode);
+  SqwPinMode readSqwPinMode();
+  bool writeSqwPinMode(SqwPinMode mode);
   bool readnvram(uint8_t address, void* buf, size_t num_bytes);
   bool writenvram(uint8_t address, const void* buf, size_t num_bytes);
 

@@ -102,26 +102,26 @@ void test_ds1307_square_wave_pin_mode() {
   TEST_ASSERT_NOT_NULL(rtc);
   TEST_ASSERT_TRUE(rtc->begin());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307_SquareWaveOff));
-  TEST_ASSERT_EQUAL(DS1307_SquareWaveOff, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307::SqwPinMode::Off));
+  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Off, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307_SquareWaveOn));
-  TEST_ASSERT_EQUAL(DS1307_SquareWaveOn, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307::SqwPinMode::On));
+  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::On, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307_SquareWave1Hz));
-  TEST_ASSERT_EQUAL(DS1307_SquareWave1Hz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307::SqwPinMode::Rate1Hz));
+  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Rate1Hz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307_SquareWave4kHz));
-  TEST_ASSERT_EQUAL(DS1307_SquareWave4kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307::SqwPinMode::Rate4kHz));
+  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Rate4kHz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307_SquareWave8kHz));
-  TEST_ASSERT_EQUAL(DS1307_SquareWave8kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307::SqwPinMode::Rate8kHz));
+  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Rate8kHz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307_SquareWave32kHz));
-  TEST_ASSERT_EQUAL(DS1307_SquareWave32kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307::SqwPinMode::Rate32kHz));
+  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Rate32kHz, rtc->readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307_SquareWaveOff));
-  TEST_ASSERT_EQUAL(DS1307_SquareWaveOff, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307::SqwPinMode::Off));
+  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Off, rtc->readSqwPinMode());
 }
 
 void test_ds3231_set_and_get_date() {

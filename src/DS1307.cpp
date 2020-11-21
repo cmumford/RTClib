@@ -29,11 +29,25 @@ constexpr uint8_t REGISTER_TIME_YEAR    = 0x06;
 constexpr uint8_t REGISTER_CONTROL      = 0x07;
 constexpr uint8_t REGISTER_NVRAM        = 0x08; // NVRAM: 56 bytes, 0x08..0x3f.
 
+/**
+ * @brief controls the output level of the SQW/OUT pin when the square-wave
+ *        output is disabled.
+ * 
+ * If SQWE = 0, the logic level on the SQW/OUT pin is 1 if OUT = 1 
+ * and is 0 if OUT = 0.
+ */
 constexpr uint8_t CONTROL_OUT      = 0b10000000;
 constexpr uint8_t CONTROL_RESERVED = 0b01101100; // Unused register bits
-constexpr uint8_t CONTROL_SQ_WAVE  = 0b00010000;
+constexpr uint8_t CONTROL_SQWE     = 0b00010000;
 constexpr uint8_t CONTROL_RS1      = 0b00000010;
 constexpr uint8_t CONTROL_RS0      = 0b00000001;
+
+constexpr uint8_t CONTROL_SQW_OFF  = 0x0;
+constexpr uint8_t CONTROL_SQW_ON   = CONTROL_OUT;
+constexpr uint8_t CONTROL_SQW_1KH  = CONTROL_SQWE;
+constexpr uint8_t CONTROL_SQW_4KH  = CONTROL_SQWE | CONTROL_RS0;
+constexpr uint8_t CONTROL_SQW_8KH  = CONTROL_SQWE | CONTROL_RS1;
+constexpr uint8_t CONTROL_SQW_32KH = CONTROL_SQWE | CONTROL_RS0 | CONTROL_RS1;
 
 // clang-format on
 
@@ -121,16 +135,28 @@ bool DS1307::now(DateTime* dt) {
     @return Mode as Ds1307SqwPinMode enum
 */
 /**************************************************************************/
-Ds1307SqwPinMode DS1307::readSqwPinMode() {
+DS1307::SqwPinMode DS1307::readSqwPinMode() {
   uint8_t value;
   if (!i2c_->ReadRegister(DS1307_ADDRESS, REGISTER_CONTROL, &value))
-    return DS1307_SquareWaveOff;
+    return DS1307::SqwPinMode::Off;
 
-  if ((value & CONTROL_SQ_WAVE) == 0x0)
-    CLEAR_BITS(value, CONTROL_RS1 | CONTROL_RS0);
-
-  return static_cast<Ds1307SqwPinMode>(
-      value & (CONTROL_OUT | CONTROL_SQ_WAVE | CONTROL_RS1 | CONTROL_RS0));
+  if (value & CONTROL_SQWE) {
+    switch (value & (CONTROL_RS0 | CONTROL_RS1)) {
+      case 0x0:
+        return SqwPinMode::Rate1Hz;
+      case CONTROL_RS0:
+        return SqwPinMode::Rate4kHz;
+      case CONTROL_RS1:
+        return SqwPinMode::Rate8kHz;
+      case CONTROL_RS1 | CONTROL_RS0:
+        return SqwPinMode::Rate32kHz;
+      default:
+        // unreachable
+        return SqwPinMode::Off;
+    }
+  } else {
+    return value & CONTROL_OUT ? SqwPinMode::On : SqwPinMode::Off;
+  }
 }
 
 /**************************************************************************/
@@ -139,8 +165,29 @@ Ds1307SqwPinMode DS1307::readSqwPinMode() {
     @param mode The mode to use
 */
 /**************************************************************************/
-bool DS1307::writeSqwPinMode(Ds1307SqwPinMode mode) {
-  return i2c_->WriteRegister(DS1307_ADDRESS, REGISTER_CONTROL, mode);
+bool DS1307::writeSqwPinMode(SqwPinMode mode) {
+  uint8_t reg_value = 0x0;
+  switch (mode) {
+    case SqwPinMode::Off:
+      reg_value = CONTROL_SQW_OFF;
+      break;
+    case SqwPinMode::On:
+      reg_value = CONTROL_SQW_ON;
+      break;
+    case SqwPinMode::Rate1Hz:
+      reg_value = CONTROL_SQW_1KH;
+      break;
+    case SqwPinMode::Rate4kHz:
+      reg_value = CONTROL_SQW_4KH;
+      break;
+    case SqwPinMode::Rate8kHz:
+      reg_value = CONTROL_SQW_8KH;
+      break;
+    case SqwPinMode::Rate32kHz:
+      reg_value = CONTROL_SQW_32KH;
+      break;
+  }
+  return i2c_->WriteRegister(DS1307_ADDRESS, REGISTER_CONTROL, reg_value);
 }
 
 /**************************************************************************/
