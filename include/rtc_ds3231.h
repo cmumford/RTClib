@@ -151,7 +151,7 @@ class DS3231 {
   /**
    * Get alarm status.
    *
-   * @param @param 	alarm The alarm to retrieve status of.
+   * @param alarm The alarm to retrieve status of.
    * @return True if alarm has been fired otherwise false.
    */
   bool alarmFired(Alarm alarm);
