@@ -49,7 +49,7 @@ class DS1307 {
   bool begin(void);
   bool adjust(const DateTime& dt);
   uint8_t isrunning(void);
-  DateTime now();
+  bool now(DateTime* now);
   Ds1307SqwPinMode readSqwPinMode();
   bool writeSqwPinMode(Ds1307SqwPinMode mode);
   bool readnvram(uint8_t address, void* buf, size_t num_bytes);

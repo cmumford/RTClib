@@ -92,14 +92,14 @@ bool DS1307::adjust(const DateTime& dt) {
     @return DateTime object containing the current date and time
 */
 /**************************************************************************/
-DateTime DS1307::now() {
+bool DS1307::now(DateTime* dt) {
   auto op = i2c_->CreateReadOp(DS1307_ADDRESS, REGISTER_TIME_SECONDS, "now");
 
   uint8_t values[7];  // for registers 0x00 - 0x06.
   if (!op->Read(values, sizeof(values)))
-    return DateTime();
+    return false;
   if (!op->Execute())
-    return DateTime();
+    return false;
 
   const uint8_t ss = bcd2bin(values[REGISTER_TIME_SECONDS]);
   const uint8_t mm = bcd2bin(values[REGISTER_TIME_MINUTES]);
@@ -109,7 +109,8 @@ DateTime DS1307::now() {
   const uint8_t m = bcd2bin(values[REGISTER_TIME_MONTH]);
   const uint16_t y = bcd2bin(values[REGISTER_TIME_YEAR]);
 
-  return DateTime(y, m, d, hh, mm, ss);
+  *dt = DateTime(y, m, d, hh, mm, ss);
+  return true;
 }
 
 /**************************************************************************/
