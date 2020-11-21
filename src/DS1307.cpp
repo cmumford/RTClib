@@ -55,7 +55,7 @@ bool DS1307::begin(void) {
     @return 1 if the RTC is running, 0 if not
 */
 /**************************************************************************/
-uint8_t DS1307::isrunning(void) {
+bool DS1307::isrunning(void) {
   uint8_t value;
   if (!i2c_->ReadRegister(DS1307_ADDRESS, REGISTER_TIME_SECONDS, &value))
     return false;

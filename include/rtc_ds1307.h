@@ -48,7 +48,7 @@ class DS1307 {
 
   bool begin(void);
   bool adjust(const DateTime& dt);
-  uint8_t isrunning(void);
+  bool isrunning(void);
   bool now(DateTime* now);
   Ds1307SqwPinMode readSqwPinMode();
   bool writeSqwPinMode(Ds1307SqwPinMode mode);
