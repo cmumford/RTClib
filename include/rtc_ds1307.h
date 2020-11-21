@@ -45,13 +45,71 @@ class DS1307 {
 
   DS1307(std::unique_ptr<I2CMaster> i2c);
 
+  /**
+   * Start I2C for the DS1307 and test succesful connection.
+   *
+   * @return True if DS1307 is found, false otherwise.
+   */
   bool begin(void);
+
+  /**
+   * Set the date and time in the DS1307.
+   *
+   * @param dt DateTime object containing the desired date/time
+   * @return True if successful, false if not.
+   */
   bool adjust(const DateTime& dt);
+
+  /**
+   * Is the DS1307 running?
+   *
+   * Check the Clock Halt bit in register 0.
+   *
+   * @return true if running, false if not.
+   */
   bool isrunning(void);
+
+  /**
+   * Get the current date and time from the DS1307.
+   *
+   * @param now Address to write the current date/time.
+   * @return true if successful, false if not.
+   */
   bool now(DateTime* now);
+
+  /**
+   * Read the current mode of the SQW pin.
+   *
+   * @return The current square pin mode.
+   */
   SqwPinMode readSqwPinMode();
+
+  /**
+   * Change the SQW pin mode.
+   *
+   * @param mode The desired mode.
+   * @return true if successful, false if not.
+   */
   bool writeSqwPinMode(SqwPinMode mode);
+
+  /**
+   * Read data from the DS1307's NVRAM.
+   * @param buf Pointer to a buffer to store the data - make sure it's large
+   *            enough to hold size bytes
+   * @param num_bytes Number of bytes to read
+   * @param address Starting NVRAM address, from 0 to 55
+   * @return true if successful, false if not.
+   */
   bool readnvram(uint8_t address, void* buf, size_t num_bytes);
+
+  /**
+   * Write data to the DS1307 NVRAM.
+   *
+   * @param address Starting NVRAM address, from 0 to 55
+   * @param buf Pointer to buffer containing the data to write
+   * @param num_bytes Number of bytes in buf to write to NVRAM
+   * @return true if successful, false if not.
+   */
   bool writenvram(uint8_t address, const void* buf, size_t num_bytes);
 
  private:

@@ -55,22 +55,10 @@ constexpr uint8_t CONTROL_SQW_32KH = CONTROL_SQWE | CONTROL_RS0 | CONTROL_RS1;
 
 DS1307::DS1307(std::unique_ptr<I2CMaster> i2c) : i2c_(std::move(i2c)) {}
 
-/**************************************************************************/
-/*!
-    @brief  Start I2C for the DS1307 and test succesful connection
-    @return True if DS1307 is found, false otherwise.
-*/
-/**************************************************************************/
 bool DS1307::begin(void) {
   return i2c_->Ping(DS1307_ADDRESS);
 }
 
-/**************************************************************************/
-/*!
-    @brief  Is the DS1307 running? Check the Clock Halt bit in register 0
-    @return 1 if the RTC is running, 0 if not
-*/
-/**************************************************************************/
 bool DS1307::isrunning(void) {
   uint8_t value;
   if (!i2c_->ReadRegister(DS1307_ADDRESS, REGISTER_TIME_SECONDS, &value))
@@ -78,12 +66,6 @@ bool DS1307::isrunning(void) {
   return !(value >> 7);
 }
 
-/**************************************************************************/
-/*!
-    @brief  Set the date and time in the DS1307
-    @param dt DateTime object containing the desired date/time
-*/
-/**************************************************************************/
 bool DS1307::adjust(const DateTime& dt) {
   auto op =
       i2c_->CreateWriteOp(DS1307_ADDRESS, REGISTER_TIME_SECONDS, "adjust");
@@ -102,12 +84,6 @@ bool DS1307::adjust(const DateTime& dt) {
   return op->Execute();
 }
 
-/**************************************************************************/
-/*!
-    @brief  Get the current date and time from the DS1307
-    @return DateTime object containing the current date and time
-*/
-/**************************************************************************/
 bool DS1307::now(DateTime* dt) {
   auto op = i2c_->CreateReadOp(DS1307_ADDRESS, REGISTER_TIME_SECONDS, "now");
 
@@ -129,12 +105,6 @@ bool DS1307::now(DateTime* dt) {
   return true;
 }
 
-/**************************************************************************/
-/*!
-    @brief  Read the current mode of the SQW pin
-    @return Mode as Ds1307SqwPinMode enum
-*/
-/**************************************************************************/
 DS1307::SqwPinMode DS1307::readSqwPinMode() {
   uint8_t value;
   if (!i2c_->ReadRegister(DS1307_ADDRESS, REGISTER_CONTROL, &value))
@@ -159,12 +129,6 @@ DS1307::SqwPinMode DS1307::readSqwPinMode() {
   }
 }
 
-/**************************************************************************/
-/*!
-    @brief  Change the SQW pin mode
-    @param mode The mode to use
-*/
-/**************************************************************************/
 bool DS1307::writeSqwPinMode(SqwPinMode mode) {
   uint8_t reg_value = 0x0;
   switch (mode) {
@@ -190,15 +154,6 @@ bool DS1307::writeSqwPinMode(SqwPinMode mode) {
   return i2c_->WriteRegister(DS1307_ADDRESS, REGISTER_CONTROL, reg_value);
 }
 
-/**************************************************************************/
-/*!
-    @brief  Read data from the DS1307's NVRAM
-    @param buf Pointer to a buffer to store the data - make sure it's large
-   enough to hold size bytes
-    @param num_bytes Number of bytes to read
-    @param address Starting NVRAM address, from 0 to 55
-*/
-/**************************************************************************/
 bool DS1307::readnvram(uint8_t address, void* buf, size_t num_bytes) {
   auto op =
       i2c_->CreateReadOp(DS1307_ADDRESS, REGISTER_NVRAM + address, "readnvram");
@@ -209,14 +164,6 @@ bool DS1307::readnvram(uint8_t address, void* buf, size_t num_bytes) {
   return op->Execute();
 }
 
-/**************************************************************************/
-/*!
-    @brief  Write data to the DS1307 NVRAM
-    @param address Starting NVRAM address, from 0 to 55
-    @param buf Pointer to buffer containing the data to write
-    @param num_bytes Number of bytes in buf to write to NVRAM
-*/
-/**************************************************************************/
 bool DS1307::writenvram(uint8_t address, const void* buf, size_t num_bytes) {
   auto op = i2c_->CreateWriteOp(DS1307_ADDRESS, REGISTER_NVRAM + address,
                                 "writenvram");
