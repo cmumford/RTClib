@@ -10,6 +10,7 @@
  */
 constexpr int kI2CClockHz = 100000;
 constexpr i2c_port_t kRTCI2CPort = TEST_I2C_PORT1;
+constexpr uint8_t DS3231_I2C_ADDRESS = 0x68;
 
 SemaphoreHandle_t g_i2c_mutex;
 
@@ -24,6 +25,7 @@ std::unique_ptr<DS3231> CreateClock() {
 }
 
 esp_err_t InitializeI2C() {
+  // TODO: Move this into I2CMaster to make this test platform-agnostic.
   const i2c_config_t config = {
       .mode = I2C_MODE_MASTER,
       .sda_io_num = I2C_SDA_GPIO,
@@ -38,11 +40,6 @@ esp_err_t InitializeI2C() {
     return err;
 
   return i2c_driver_install(kRTCI2CPort, I2C_MODE_MASTER, 0, 0, 0);
-}
-
-void test_init_rtc() {
-  // TODO: Move to setup().
-  TEST_ASSERT_EQUAL(ESP_OK, InitializeI2C());
 }
 
 void test_set_and_get_date() {
@@ -167,10 +164,10 @@ void test_agingOffset() {
 
 void process() {
   g_i2c_mutex = xSemaphoreCreateMutex();
+  InitializeI2C();
 
   UNITY_BEGIN();
 
-  RUN_TEST(test_init_rtc);
   RUN_TEST(test_set_and_get_date);
   RUN_TEST(test_32k);
   RUN_TEST(test_temperature);
@@ -183,6 +180,15 @@ void process() {
 }
 
 }  // namespace
+
+// Called before each test.
+void setUp(void) {
+  std::unique_ptr<I2CMaster> master(new I2CMaster(kRTCI2CPort, g_i2c_mutex));
+  uint8_t registers[0x13] = {0};
+  auto op = master->CreateWriteOp(DS3231_I2C_ADDRESS, 0x0, "setUp");
+  op->Write(registers, sizeof(registers));
+  op->Execute();
+}
 
 extern "C" void app_main() {
   process();
