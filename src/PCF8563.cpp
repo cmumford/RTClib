@@ -34,6 +34,7 @@ constexpr uint8_t kSquareWaveMask  = 0b10000011;
 // clang-format on
 
 }  // namespace
+
 PCF8563::PCF8563(std::unique_ptr<I2CMaster> i2c) : i2c_(std::move(i2c)) {}
 
 bool PCF8563::begin() {
