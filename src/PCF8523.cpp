@@ -1,11 +1,12 @@
-/*!
-  @section license License
-
-  Original library by JeeLabs https://jeelabs.org/pub/docs/rtclib/, released to
-  the public domain.
-
-  This version: MIT (see LICENSE)
-*/
+/**
+ * @section license License
+ *
+ * This file is subject to the terms and conditions defined in
+ * file 'license.txt', which is part of this source code package.
+ *
+ * This is a fork of Adafruit's RTClib library.
+ * https://github.com/adafruit/RTClib
+ */
 
 #include <rtc_pcf8523.h>
 

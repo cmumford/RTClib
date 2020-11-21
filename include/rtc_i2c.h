@@ -1,3 +1,12 @@
+/**
+ * @section license License
+ *
+ * This file is subject to the terms and conditions defined in
+ * file 'license.txt', which is part of this source code package.
+ *
+ * This is a fork of Adafruit's RTClib library.
+ * https://github.com/adafruit/RTClib
+ */
 #include <cstdint>
 #include <memory>
 #include <string>
