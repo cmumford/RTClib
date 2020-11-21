@@ -64,6 +64,11 @@ class DS3231 {
     Day    ///< Alarm when day (day of week), hours and minutes match.
   };
 
+  enum class Alarm {
+    A1,  ///< Alarm 1.
+    A2   ///< Alarm 2.
+  };
+
   DS3231(std::unique_ptr<I2CMaster> i2c);
 
   /**
@@ -132,24 +137,24 @@ class DS3231 {
   /**
    * Disable the specified alarm.
    *
-   * @param alarm_num (1 or 2).
+   * @param alarm The alarm to disable.
    */
-  void disableAlarm(uint8_t alarm_num);
+  void disableAlarm(Alarm alarm);
 
   /**
    * Clear status the specified alarm.
    *
-   * @param alarm_num (1 or 2).
+   * @param alarm The alarm to clear.
    */
-  void clearAlarm(uint8_t alarm_num);
+  void clearAlarm(Alarm alarm);
 
   /**
    * Get alarm status.
    *
-   * @param @param 	alarm_num Alarm number to check status of.
+   * @param @param 	alarm The alarm to retrieve status of.
    * @return True if alarm has been fired otherwise false.
    */
-  bool alarmFired(uint8_t alarm_num);
+  bool alarmFired(Alarm alarm);
 
   /**
    * Enable 32KHz Output.

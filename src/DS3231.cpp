@@ -313,32 +313,32 @@ bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
   return op->Execute();
 }
 
-void DS3231::disableAlarm(uint8_t alarm_num) {
+void DS3231::disableAlarm(Alarm alarm) {
   uint8_t ctrl = 0;
   i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
-  if (alarm_num == 1)
+  if (alarm == Alarm::A1)
     CLEAR_BITS(ctrl, CONTROL_A1IE);
   else
     CLEAR_BITS(ctrl, CONTROL_A2IE);
   i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, ctrl);
 }
 
-void DS3231::clearAlarm(uint8_t alarm_num) {
+void DS3231::clearAlarm(Alarm alarm) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
     return;
-  if (alarm_num == 1)
+  if (alarm == Alarm::A1)
     CLEAR_BITS(status, STATUS_A1F);
   else
     CLEAR_BITS(status, STATUS_A2F);
   i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
 }
 
-bool DS3231::alarmFired(uint8_t alarm_num) {
+bool DS3231::alarmFired(Alarm alarm) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
     return false;
-  return alarm_num == 1 ? status & STATUS_A1F : status & STATUS_A2F;
+  return alarm == Alarm::A1 ? status & STATUS_A1F : status & STATUS_A2F;
 }
 
 void DS3231::enable32K(void) {
