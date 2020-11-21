@@ -23,3 +23,13 @@ back in the future.
 ```shell
 clang-format -i <source_file>`
 ```
+
+## Running Tests
+
+All tests run on hardware and expect to have the appropriate real-time
+clocks attached. See platformio.ini to learn the necessary GPIO pins
+for your hardware. Run the tests as follows:
+
+```sh
+make test
+```
