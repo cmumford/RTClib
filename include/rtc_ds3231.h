@@ -66,22 +66,126 @@ class DS3231 {
 
   DS3231(std::unique_ptr<I2CMaster> i2c);
 
+  /**
+   * Set the date and flip the Oscillator Stop Flag.
+   *
+   * @param dt DateTime object containing the date/time to set.
+   */
   bool adjust(const DateTime& dt);
+
+  /**
+   * Start I2C for the DS3231 and test succesful connection.
+   *
+   * @return True if Wire can find DS3231 or false otherwise.
+   */
   bool begin(void);
+
+  /**
+   * Check the status register Oscillator Stop Flag to see if the DS3231
+   * stopped due to power loss.
+   *
+   * @return True if the bit is set (oscillator stopped) or false if it is
+   * running.
+   */
   bool lostPower(void);
+
+  /**
+   * Retrieve the current time from the clock.
+   *
+   * @param dt location to write the current time.
+   * @return true if successful, false if not.
+   */
   bool now(DateTime* dt);
+
+  /**
+   * Read the SQW pin mode.
+   *
+   * @return Pin mode.
+   */
   SqwPinMode readSqwPinMode();
+
+  /**
+   * Set the SQW pin mode.
+   *
+   * @param mode Desired mode.
+   */
   bool writeSqwPinMode(SqwPinMode mode);
+
+  /**
+   * Set alarm 1.
+   *
+   * @param 	dt DateTime object
+   * @param 	alarm_mode Desired mode.
+   * @return True if successful, false if error.
+   */
   bool setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode);
+
+  /**
+   * Set alarm 2.
+   *
+   * @param 	dt DateTime object
+   * @param 	alarm_mode Desired mode.
+   * @return True if successful, false if error.
+   */
   bool setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode);
+
+  /**
+   * Disable the specified alarm.
+   *
+   * @param alarm_num (1 or 2).
+   */
   void disableAlarm(uint8_t alarm_num);
+
+  /**
+   * Clear status the specified alarm.
+   *
+   * @param alarm_num (1 or 2).
+   */
   void clearAlarm(uint8_t alarm_num);
+
+  /**
+   * Get alarm status.
+   *
+   * @param @param 	alarm_num Alarm number to check status of.
+   * @return True if alarm has been fired otherwise false.
+   */
   bool alarmFired(uint8_t alarm_num);
+
+  /**
+   * Enable 32KHz Output.
+   *
+   * @details The 32kHz output is enabled by default. It requires an external
+   * pull-up resistor to function correctly.
+   */
   void enable32K(void);
+
+  /**
+   * Disable 32KHz Output.
+   */
   void disable32K(void);
+
+  /**
+   * Get status of 32KHz Output.
+   *
+   * @return True if enabled otherwise false.
+   */
   bool isEnabled32K(void);
+
+  /**
+   * Get the current temperature from the DS3231's temperature sensor.
+   *
+   * @return Current temperature (degrees C).
+   */
   float getTemperature();  // in Celcius degree
-  bool getAgingOffset(int8_t* val);
+
+  /**
+   * @brief Get the Aging Offset.
+   *
+   * @param aging_offset Location to write aging offset.
+   *
+   * @return True if successfully retrieved, false upon error.
+   */
+  bool getAgingOffset(int8_t* aging_offset);
 
  private:
   std::unique_ptr<I2CMaster> const i2c_;

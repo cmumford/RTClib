@@ -98,24 +98,10 @@ uint8_t dowToDS3231(uint8_t d) {
 
 DS3231::DS3231(std::unique_ptr<I2CMaster> i2c) : i2c_(std::move(i2c)) {}
 
-/**************************************************************************/
-/*!
-    @brief  Start I2C for the DS3231 and test succesful connection
-    @return True if Wire can find DS3231 or false otherwise.
-*/
-/**************************************************************************/
 bool DS3231::begin(void) {
   return i2c_->Ping(DS3231_I2C_ADDRESS);
 }
 
-/**************************************************************************/
-/*!
-    @brief  Check the status register Oscillator Stop Flag to see if the DS3231
-   stopped due to power loss
-    @return True if the bit is set (oscillator stopped) or false if it is
-   running
-*/
-/**************************************************************************/
 bool DS3231::lostPower(void) {
   uint8_t reg_val;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &reg_val))
@@ -123,12 +109,6 @@ bool DS3231::lostPower(void) {
   return reg_val & STATUS_OSF;
 }
 
-/**************************************************************************/
-/*!
-    @brief  Set the date and flip the Oscillator Stop Flag
-    @param dt DateTime object containing the date/time to set
-*/
-/**************************************************************************/
 bool DS3231::adjust(const DateTime& dt) {
   {
     auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, REGISTER_TIME_SECONDS,
@@ -174,12 +154,6 @@ bool DS3231::now(DateTime* dt) {
   return true;
 }
 
-/**************************************************************************/
-/*!
-    @brief  Read the SQW pin mode
-    @return Pin mode, see Ds3231SqwPinMode enum
-*/
-/**************************************************************************/
 DS3231::SqwPinMode DS3231::readSqwPinMode() {
   uint8_t value;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &value))
@@ -203,12 +177,6 @@ DS3231::SqwPinMode DS3231::readSqwPinMode() {
                                  (CONTROL_RS2 | CONTROL_RS1 | CONTROL_INTCN));
 }
 
-/**************************************************************************/
-/*!
-    @brief  Set the SQW pin mode
-    @param mode Desired mode, see Ds3231SqwPinMode enum
-*/
-/**************************************************************************/
 bool DS3231::writeSqwPinMode(SqwPinMode mode) {
   uint8_t ctrl;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl))
@@ -236,12 +204,6 @@ bool DS3231::writeSqwPinMode(SqwPinMode mode) {
   return i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, ctrl);
 }
 
-/**************************************************************************/
-/*!
-    @brief  Get the current temperature from the DS3231's temperature sensor
-    @return Current temperature (float)
-*/
-/**************************************************************************/
 float DS3231::getTemperature() {
   auto op =
       i2c_->CreateReadOp(DS3231_I2C_ADDRESS, REGISTER_TEMP_MSB, "getTemp");
@@ -265,14 +227,6 @@ bool DS3231::getAgingOffset(int8_t* val) {
                             reinterpret_cast<uint8_t*>(val));
 }
 
-/**************************************************************************/
-/*!
-    @brief  Set alarm 1 for DS3231
-        @param 	dt DateTime object
-        @param 	alarm_mode Desired mode, see Ds3231Alarm1Mode enum
-    @return False if control register is not set, otherwise true
-*/
-/**************************************************************************/
 bool DS3231::setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode) {
   uint8_t ctrl;
   i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
@@ -318,14 +272,6 @@ bool DS3231::setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode) {
   return op->Execute();
 }
 
-/**************************************************************************/
-/*!
-    @brief  Set alarm 2 for DS3231
-        @param 	dt DateTime object
-        @param 	alarm_mode Desired mode, see Ds3231Alarm2Mode enum
-    @return False if control register is not set, otherwise true
-*/
-/**************************************************************************/
 bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
   uint8_t ctrl;
   i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
@@ -367,12 +313,6 @@ bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
   return op->Execute();
 }
 
-/**************************************************************************/
-/*!
-    @brief  Disable alarm
-        @param 	alarm_num Alarm number to disable
-*/
-/**************************************************************************/
 void DS3231::disableAlarm(uint8_t alarm_num) {
   uint8_t ctrl = 0;
   i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
@@ -383,12 +323,6 @@ void DS3231::disableAlarm(uint8_t alarm_num) {
   i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, ctrl);
 }
 
-/**************************************************************************/
-/*!
-    @brief  Clear status of alarm
-        @param 	alarm_num Alarm number to clear
-*/
-/**************************************************************************/
 void DS3231::clearAlarm(uint8_t alarm_num) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
@@ -400,13 +334,6 @@ void DS3231::clearAlarm(uint8_t alarm_num) {
   i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
 }
 
-/**************************************************************************/
-/*!
-    @brief  Get status of alarm
-        @param 	alarm_num Alarm number to check status of
-        @return True if alarm has been fired otherwise false
-*/
-/**************************************************************************/
 bool DS3231::alarmFired(uint8_t alarm_num) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
@@ -414,13 +341,6 @@ bool DS3231::alarmFired(uint8_t alarm_num) {
   return alarm_num == 1 ? status & STATUS_A1F : status & STATUS_A2F;
 }
 
-/**************************************************************************/
-/*!
-    @brief  Enable 32KHz Output
-    @details The 32kHz output is enabled by default. It requires an external
-    pull-up resistor to function correctly
-*/
-/**************************************************************************/
 void DS3231::enable32K(void) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
@@ -429,11 +349,6 @@ void DS3231::enable32K(void) {
   i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
 }
 
-/**************************************************************************/
-/*!
-    @brief  Disable 32KHz Output
-*/
-/**************************************************************************/
 void DS3231::disable32K(void) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
@@ -442,12 +357,6 @@ void DS3231::disable32K(void) {
   i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
 }
 
-/**************************************************************************/
-/*!
-    @brief  Get status of 32KHz Output
-    @return True if enabled otherwise false
-*/
-/**************************************************************************/
 bool DS3231::isEnabled32K(void) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
