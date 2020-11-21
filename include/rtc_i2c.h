@@ -82,6 +82,21 @@ class I2COperation {
  */
 class I2CMaster {
  public:
+  /**
+   * @brief Initialize the I2C bus.
+   *
+   * @param i2c_bus The I2C bus (or port).
+   * @param sda_gpio The SDA (AKA SDIO) gpio pin number.
+   * @param scl_gpio The SCL (AKA SDCL) gpio pin number.
+   * @param clk_speed The I2C clock speed.
+   *
+   * @return true when successful, false when not.
+   */
+  static bool Initialize(uint8_t i2c_bus,
+                         uint8_t sda_gpio,
+                         uint8_t scl_gpio,
+                         uint32_t clk_speed);
+
   I2CMaster(i2c_port_t i2c_num = I2C_NUM_0,
             SemaphoreHandle_t i2c_mutex = nullptr);
   ~I2CMaster();

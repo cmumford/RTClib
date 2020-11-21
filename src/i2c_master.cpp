@@ -17,6 +17,27 @@ constexpr bool ACK_CHECK_EN = true;
 constexpr TickType_t kI2CCmdWaitTicks = 1000 / portTICK_RATE_MS;
 }  // namespace
 
+// Static
+bool I2CMaster::Initialize(uint8_t i2c_bus,
+                           uint8_t sda_gpio,
+                           uint8_t scl_gpio,
+                           uint32_t clk_speed) {
+  const i2c_config_t config = {
+      .mode = I2C_MODE_MASTER,
+      .sda_io_num = sda_gpio,
+      .scl_io_num = scl_gpio,
+      .sda_pullup_en = GPIO_PULLUP_DISABLE,
+      .scl_pullup_en = GPIO_PULLUP_DISABLE,
+      .master = {.clk_speed = clk_speed},
+  };
+
+  esp_err_t err = i2c_param_config(i2c_bus, &config);
+  if (err != ESP_OK)
+    return false;
+
+  return i2c_driver_install(i2c_bus, I2C_MODE_MASTER, 0, 0, 0) == ESP_OK;
+}
+
 I2CMaster::I2CMaster(i2c_port_t i2c_num, SemaphoreHandle_t i2c_mutex)
     : i2c_num_(i2c_num), i2c_mutex_(i2c_mutex) {}
 

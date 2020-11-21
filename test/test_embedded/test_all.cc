@@ -24,24 +24,6 @@ std::unique_ptr<DS3231> CreateClock() {
   return rtc;
 }
 
-esp_err_t InitializeI2C() {
-  // TODO: Move this into I2CMaster to make this test platform-agnostic.
-  const i2c_config_t config = {
-      .mode = I2C_MODE_MASTER,
-      .sda_io_num = I2C_SDA_GPIO,
-      .scl_io_num = I2C_CLK_GPIO,
-      .sda_pullup_en = GPIO_PULLUP_DISABLE,
-      .scl_pullup_en = GPIO_PULLUP_DISABLE,
-      .master = {.clk_speed = kI2CClockHz},
-  };
-
-  esp_err_t err = i2c_param_config(kRTCI2CPort, &config);
-  if (err != ESP_OK)
-    return err;
-
-  return i2c_driver_install(kRTCI2CPort, I2C_MODE_MASTER, 0, 0, 0);
-}
-
 void test_set_and_get_date() {
   auto rtc = CreateClock();
   TEST_ASSERT_NOT_NULL(rtc);
@@ -164,7 +146,8 @@ void test_agingOffset() {
 
 void process() {
   g_i2c_mutex = xSemaphoreCreateMutex();
-  InitializeI2C();
+
+  I2CMaster::Initialize(kRTCI2CPort, I2C_SDA_GPIO, I2C_CLK_GPIO, kI2CClockHz);
 
   UNITY_BEGIN();
 
