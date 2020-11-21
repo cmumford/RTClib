@@ -39,6 +39,8 @@ constexpr uint8_t CONTROL_RS0      = 0b00000001;
 
 }  // namespace
 
+DS1307::DS1307(std::unique_ptr<I2CMaster> i2c) : i2c_(std::move(i2c)) {}
+
 /**************************************************************************/
 /*!
     @brief  Start I2C for the DS1307 and test succesful connection

@@ -10,6 +10,7 @@
  */
 constexpr int kI2CClockHz = 100000;
 constexpr uint8_t DS3231_I2C_ADDRESS = 0x68;
+constexpr uint8_t DS1307_I2C_ADDRESS = 0x68;
 constexpr uint8_t PCF8563_I2C_ADDRESS = 0x51;
 
 SemaphoreHandle_t g_i2c_mutex;
@@ -21,6 +22,12 @@ namespace {
 std::unique_ptr<DS3231> CreateDS3231() {
   std::unique_ptr<I2CMaster> master(new I2CMaster(TEST_I2C_PORT1, g_i2c_mutex));
   std::unique_ptr<DS3231> rtc(new DS3231(std::move(master)));
+  return rtc;
+}
+
+std::unique_ptr<DS1307> CreateDS1307() {
+  std::unique_ptr<I2CMaster> master(new I2CMaster(TEST_I2C_PORT2, g_i2c_mutex));
+  std::unique_ptr<DS1307> rtc(new DS1307(std::move(master)));
   return rtc;
 }
 
@@ -70,6 +77,51 @@ void test_pcf8563_square_wave_pin_mode() {
 
   TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563::SqwPinMode::Off));
   TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Off, rtc->readSqwPinMode());
+}
+
+void test_ds1307_set_and_get_date() {
+  auto rtc = CreateDS1307();
+  TEST_ASSERT_NOT_NULL(rtc);
+  TEST_ASSERT_TRUE(rtc->begin());
+
+  const DateTime dt(2020, 11, 14, 21, 26, 59);
+  DateTime(rtc->adjust(dt));
+
+  // This is a possible flakey test, as there is "daylight" between the set
+  // and the get call, and the running clock could increment the time.
+  // Instead this test will measure the delta, and only fail if longer than
+  // a specified duration.
+  DateTime now;
+  TEST_ASSERT_TRUE(rtc->now(&now));
+  const TimeSpan delta = now - dt;
+  TEST_ASSERT_LESS_OR_EQUAL(2, std::abs(delta.totalseconds()));
+}
+
+void test_ds1307_square_wave_pin_mode() {
+  auto rtc = CreateDS1307();
+  TEST_ASSERT_NOT_NULL(rtc);
+  TEST_ASSERT_TRUE(rtc->begin());
+
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307_SquareWaveOff));
+  TEST_ASSERT_EQUAL(DS1307_SquareWaveOff, rtc->readSqwPinMode());
+
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307_SquareWaveOn));
+  TEST_ASSERT_EQUAL(DS1307_SquareWaveOn, rtc->readSqwPinMode());
+
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307_SquareWave1Hz));
+  TEST_ASSERT_EQUAL(DS1307_SquareWave1Hz, rtc->readSqwPinMode());
+
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307_SquareWave4kHz));
+  TEST_ASSERT_EQUAL(DS1307_SquareWave4kHz, rtc->readSqwPinMode());
+
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307_SquareWave8kHz));
+  TEST_ASSERT_EQUAL(DS1307_SquareWave8kHz, rtc->readSqwPinMode());
+
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307_SquareWave32kHz));
+  TEST_ASSERT_EQUAL(DS1307_SquareWave32kHz, rtc->readSqwPinMode());
+
+  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307_SquareWaveOff));
+  TEST_ASSERT_EQUAL(DS1307_SquareWaveOff, rtc->readSqwPinMode());
 }
 
 void test_ds3231_set_and_get_date() {
@@ -198,6 +250,9 @@ void process() {
   I2CMaster::Initialize(TEST_I2C_PORT1, PORT_1_I2C_SDA_GPIO,
                         PORT_1_I2C_CLK_GPIO, kI2CClockHz);
 
+  I2CMaster::Initialize(TEST_I2C_PORT2, PORT_2_I2C_SDA_GPIO,
+                        PORT_2_I2C_CLK_GPIO, kI2CClockHz);
+
   UNITY_BEGIN();
 
   RUN_TEST(test_ds3231_set_and_get_date);
@@ -211,6 +266,9 @@ void process() {
   RUN_TEST(test_pcf8563_set_and_get_date);
   RUN_TEST(test_pcf8563_square_wave_pin_mode);
 
+  RUN_TEST(test_ds1307_set_and_get_date);
+  RUN_TEST(test_ds1307_square_wave_pin_mode);
+
   UNITY_END();
 }
 
@@ -218,6 +276,16 @@ bool clear_ds3231_registers() {
   std::unique_ptr<I2CMaster> master(new I2CMaster(TEST_I2C_PORT1, g_i2c_mutex));
   uint8_t registers[1 + 0x12] = {0};
   auto op = master->CreateWriteOp(DS3231_I2C_ADDRESS, 0x0, "clear_DS3231");
+  if (!op)
+    return false;
+  op->Write(registers, sizeof(registers));
+  return op->Execute();
+}
+
+bool clear_ds1307_registers() {
+  std::unique_ptr<I2CMaster> master(new I2CMaster(TEST_I2C_PORT2, g_i2c_mutex));
+  uint8_t registers[1 + 0x07] = {0};
+  auto op = master->CreateWriteOp(DS1307_I2C_ADDRESS, 0x0, "clear_DS1307");
   if (!op)
     return false;
   op->Write(registers, sizeof(registers));
@@ -239,6 +307,7 @@ bool clear_pcf8563_registers() {
 // Called before each test.
 void setUp(void) {
   clear_ds3231_registers();
+  clear_ds1307_registers();
   clear_pcf8563_registers();
 }
 
