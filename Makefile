@@ -8,9 +8,13 @@ format:
 	clang-format -i include/*.h src/*.{cpp,h} test/test_embedded/*.cc
 	${AUTOPEP8} --in-place --aggressive --aggressive decoders/rtcds3231/pd.py
 
+docs: doxygen.conf Makefile
+	doxygen doxygen.conf
+
 .PHONY: clean
 clean:
 	${PLATFORMIO} --caller vim run --target clean
+	rm -rf docs
 
 .PHONY: tags
 tags:
