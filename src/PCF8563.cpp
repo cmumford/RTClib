@@ -88,7 +88,7 @@ bool PCF8563::adjust(const DateTime& dt) {
 */
 /**************************************************************************/
 
-DateTime PCF8563::now() {
+bool PCF8563::now(DateTime* dt) {
   auto op = i2c_->CreateReadOp(PCF8563_ADDRESS, PCF8563_VL_SECONDS, "now");
   if (!op)
     return false;
@@ -105,7 +105,8 @@ DateTime PCF8563::now() {
   const uint8_t m = bcd2bin(values[5] & 0x1F);
   const uint16_t y = bcd2bin(values[6]) + 2000;
 
-  return DateTime(y, m, d, hh, mm, ss);
+  *dt = DateTime(y, m, d, hh, mm, ss);
+  return true;
 }
 
 /**************************************************************************/

@@ -50,7 +50,7 @@ class PCF8563 {
   bool begin(void);
   bool lostPower(void);
   bool adjust(const DateTime& dt);
-  DateTime now();
+  bool now(DateTime* dt);
   bool start(void);
   bool stop(void);
   uint8_t isrunning();
