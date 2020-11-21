@@ -36,27 +36,9 @@ constexpr uint8_t kSquareWaveMask  = 0b10000011;
 }  // namespace
 PCF8563::PCF8563(std::unique_ptr<I2CMaster> i2c) : i2c_(std::move(i2c)) {}
 
-/**************************************************************************/
-/*!
-    @brief  Start I2C for the PCF8563 and test succesful connection
-    @return True if Wire can find PCF8563 or false otherwise.
-*/
-/**************************************************************************/
 bool PCF8563::begin() {
   return i2c_->Ping(PCF8563_I2C_ADDRESS);
 }
-
-/**************************************************************************/
-/*!
-    @brief  Check the status of the VL bit in the VL_SECONDS register.
-    @details The PCF8563 has an on-chip voltage-low detector. When VDD drops
-     below Vlow, bit VL in the VL_seconds register is set to indicate that
-     the integrity of the clock information is no longer guaranteed.
-    @return True if the bit is set (VDD droped below Vlow) indicating that
-    the clock integrity is not guaranteed and false only after the bit is
-    cleared using adjust()
-*/
-/**************************************************************************/
 
 bool PCF8563::lostPower() {
   uint8_t value;
@@ -65,12 +47,6 @@ bool PCF8563::lostPower() {
   return value >> 7;
 }
 
-/**************************************************************************/
-/*!
-    @brief  Set the date and time
-    @param dt DateTime to set
-*/
-/**************************************************************************/
 bool PCF8563::adjust(const DateTime& dt) {
   auto op =
       i2c_->CreateWriteOp(PCF8563_I2C_ADDRESS, REGISTER_VL_SECONDS, "adjust");
@@ -88,13 +64,6 @@ bool PCF8563::adjust(const DateTime& dt) {
   op->Write(values, sizeof(values));
   return op->Execute();
 }
-
-/**************************************************************************/
-/*!
-    @brief  Get the current date/time
-    @return DateTime object containing the current date/time
-*/
-/**************************************************************************/
 
 bool PCF8563::now(DateTime* dt) {
   auto op = i2c_->CreateReadOp(PCF8563_I2C_ADDRESS, REGISTER_VL_SECONDS, "now");
@@ -117,11 +86,6 @@ bool PCF8563::now(DateTime* dt) {
   return true;
 }
 
-/**************************************************************************/
-/*!
-    @brief  Resets the STOP bit in register Control_1
-*/
-/**************************************************************************/
 bool PCF8563::start() {
   uint8_t ctlreg;
   if (!i2c_->ReadRegister(PCF8563_I2C_ADDRESS, REGISTER_CONTROL_1, &ctlreg))
@@ -131,11 +95,6 @@ bool PCF8563::start() {
                              ctlreg & ~(1 << 5));
 }
 
-/**************************************************************************/
-/*!
-    @brief  Sets the STOP bit in register Control_1
-*/
-/**************************************************************************/
 bool PCF8563::stop() {
   uint8_t ctlreg;
   if (!i2c_->ReadRegister(PCF8563_I2C_ADDRESS, REGISTER_CONTROL_1, &ctlreg))
@@ -145,12 +104,6 @@ bool PCF8563::stop() {
                              ctlreg | (1 << 5));
 }
 
-/**************************************************************************/
-/*!
-    @brief  Is the PCF8563 running? Check the STOP bit in register Control_1
-    @return 1 if the RTC is running, 0 if not
-*/
-/**************************************************************************/
 bool PCF8563::isrunning() {
   uint8_t ctlreg;
   if (!i2c_->ReadRegister(PCF8563_I2C_ADDRESS, REGISTER_CONTROL_1, &ctlreg))
@@ -158,12 +111,6 @@ bool PCF8563::isrunning() {
   return !((ctlreg >> 5) & 1);
 }
 
-/**************************************************************************/
-/*!
-    @brief  Read the mode of the CLKOUT pin on the PCF8563
-    @return CLKOUT pin mode as a #Pcf8563SqwPinMode enum
-*/
-/**************************************************************************/
 PCF8563::SqwPinMode PCF8563::readSqwPinMode() {
   uint8_t mode;
   if (!i2c_->ReadRegister(PCF8563_I2C_ADDRESS, REGISTER_CLKOUTCONTROL, &mode))
@@ -184,12 +131,6 @@ PCF8563::SqwPinMode PCF8563::readSqwPinMode() {
   }
 }
 
-/**************************************************************************/
-/*!
-    @brief  Set the CLKOUT pin mode on the PCF8563
-    @param mode The mode to set, see the #Pcf8563SqwPinMode enum for options
-*/
-/**************************************************************************/
 bool PCF8563::writeSqwPinMode(SqwPinMode mode) {
   uint8_t reg_value = kSquareWaveOff;
   switch (mode) {

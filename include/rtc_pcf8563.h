@@ -46,14 +46,77 @@ class PCF8563 {
 
   PCF8563(std::unique_ptr<I2CMaster> i2c);
 
+  /**
+   * Start I2C for the PCF8563 and test succesful connection.
+   *
+   * @return True if Wire can find PCF8563 or false otherwise.
+   */
   bool begin(void);
+
+  /**
+   * Check the status of the VL bit in the VL_SECONDS register.
+   *
+   * The PCF8563 has an on-chip voltage-low detector. When VDD drops
+   * below Vlow, bit VL in the VL_seconds register is set to indicate that
+   * the integrity of the clock information is no longer guaranteed.
+   *
+   * @return True if the bit is set (VDD droped below Vlow) indicating that
+   *         the clock integrity is not guaranteed and false only after the bit
+   *         is cleared using adjust().
+   */
   bool lostPower(void);
+
+  /**
+   * Set the date and time.
+   *
+   * @param dt DateTime to set
+   * @return True if set, false upon error.
+   */
   bool adjust(const DateTime& dt);
+
+  /**
+   * Get the current date/time.
+   *
+   * @param dt Location to receive current time.
+   * @return True of successfully retrieved, false upon error.
+   */
   bool now(DateTime* dt);
+
+  /**
+   * Resets the STOP bit in register Control_1.
+   *
+   * @return True if successful, false if error.
+   */
   bool start(void);
+
+  /**
+   * Sets the STOP bit in register Control_1.
+   *
+   * @return True if successful, false if error.
+   */
   bool stop(void);
+
+  /**
+   * Is the PCF8563 running?
+   *
+   * Check the STOP bit in register Control_1.
+   * @return True if successful, false if error.
+   */
   bool isrunning();
+
+  /**
+   * Read the mode of the CLKOUT pin on the PCF8563.
+   *
+   * @return The current square ware pin mode.
+   */
   SqwPinMode readSqwPinMode();
+
+  /**
+   * Set the CLKOUT pin mode on the PCF8563.
+   *
+   * @param mode The pin mode to set.
+   * @return True if successful, false if error.
+   */
   bool writeSqwPinMode(SqwPinMode mode);
 
  private:
