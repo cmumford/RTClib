@@ -16,6 +16,8 @@
 
 namespace rtc {
 
+namespace {
+
 #if 1  // Do only when not Arduino.
 typedef char __FlashStringHelper;
 #endif
@@ -45,7 +47,7 @@ const uint8_t daysInMonth[] PROGMEM = {31, 28, 31, 30, 31, 30,
  * @param d Day
  * @return Number of days
  */
-static uint16_t date2days(uint16_t y, uint8_t m, uint8_t d) {
+uint16_t date2days(uint16_t y, uint8_t m, uint8_t d) {
   if (y >= 2000U)
     y -= 2000U;
   uint16_t days = d;
@@ -66,9 +68,23 @@ static uint16_t date2days(uint16_t y, uint8_t m, uint8_t d) {
  * @param s Seconds
  * @return Number of seconds total
  */
-static uint32_t time2ulong(uint16_t days, uint8_t h, uint8_t m, uint8_t s) {
+uint32_t time2ulong(uint16_t days, uint8_t h, uint8_t m, uint8_t s) {
   return ((days * 24UL + h) * 60 + m) * 60 + s;
 }
+
+/**
+ * Convert a string containing two digits to uint8_t, e.g. "09" returns 9.
+ *
+ * @param p Pointer to a string containing two digits.
+ */
+uint8_t conv2d(const char* p) {
+  uint8_t v = 0;
+  if ('0' <= *p && *p <= '9')
+    v = *p - '0';
+  return 10 * v + *++p - '0';
+}
+
+}  // namespace
 
 /**
  * Constructor from [Unix time](https://en.wikipedia.org/wiki/Unix_time).
@@ -164,18 +180,6 @@ DateTime::DateTime(const DateTime& copy)
       hh(copy.hh),
       mm(copy.mm),
       ss(copy.ss) {}
-
-/**
- * Convert a string containing two digits to uint8_t, e.g. "09" returns 9.
- *
- * @param p Pointer to a string containing two digits.
- */
-static uint8_t conv2d(const char* p) {
-  uint8_t v = 0;
-  if ('0' <= *p && *p <= '9')
-    v = *p - '0';
-  return 10 * v + *++p - '0';
-}
 
 /**
  * Constructor for generating the build time.
