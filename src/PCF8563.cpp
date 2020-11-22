@@ -1,12 +1,3 @@
-/*!
-  @section license License
-
-  This is a fork of Adafruit's RTClib library.
-*/
-
-#include <pcf8563.h>
-
-#include <rtc_i2c.h>
 /**
  * @section license License
  *
@@ -16,6 +7,10 @@
  * This is a fork of Adafruit's RTClib library.
  * https://github.com/adafruit/RTClib
  */
+
+#include <pcf8563.h>
+
+#include <rtc_i2c.h>
 #include "RTC_util.h"
 
 namespace rtc {
