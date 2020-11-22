@@ -8,7 +8,7 @@
  * https://github.com/adafruit/RTClib
  */
 
-#include <rtc_ds3231.h>
+#include <ds3231.h>
 
 #include <limits>
 

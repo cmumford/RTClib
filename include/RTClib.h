@@ -11,14 +11,14 @@
 #ifndef _RTCLIB_H_
 #define _RTCLIB_H_
 
+#include "ds1307.h"
+#include "ds3231.h"
+#include "pcf8523.h"
+#include "pcf8563.h"
 #include "rtc_datetime.h"
-#include "rtc_ds1307.h"
-#include "rtc_ds3231.h"
 #include "rtc_i2c.h"
 #include "rtc_micros.h"
 #include "rtc_millis.h"
-#include "rtc_pcf8523.h"
-#include "rtc_pcf8563.h"
 #include "rtc_timespan.h"
 
 #endif  // _RTCLIB_H_

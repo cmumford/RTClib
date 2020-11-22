@@ -4,7 +4,7 @@
   This is a fork of Adafruit's RTClib library.
 */
 
-#include <rtc_pcf8563.h>
+#include <pcf8563.h>
 
 #include <rtc_i2c.h>
 /**
