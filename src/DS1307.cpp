@@ -165,9 +165,9 @@ bool DS1307::readnvram(uint8_t address, void* buf, size_t num_bytes) {
   return op->Execute();
 }
 
-bool DS1307::writenvram(uint8_t address, const void* buf, size_t num_bytes) {
+bool DS1307::writeNVRAM(uint8_t address, const void* buf, size_t num_bytes) {
   auto op = i2c_->CreateWriteOp(DS1307_ADDRESS, REGISTER_NVRAM + address,
-                                "writenvram");
+                                "writeNVRAM");
   if (!op)
     return false;
   if (!op->Write(buf, num_bytes))

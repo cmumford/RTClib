@@ -36,11 +36,11 @@ void setup () {
   // NOTE: You can only read and write from addresses 0 to 55 (i.e. 56 byte values).
   Serial.println("Writing NVRAM values.");
   // Example writing one byte at a time:
-  rtc.writenvram(0, 0xFE);
-  rtc.writenvram(1, 0xED);
+  rtc.writeNVRAM(0, 0xFE);
+  rtc.writeNVRAM(1, 0xED);
   // Example writing multiple bytes:
   uint8_t writeData[4] = { 0xBE, 0xEF, 0x01, 0x02 };
-  rtc.writenvram(2, writeData, 4);
+  rtc.writeNVRAM(2, writeData, 4);
 
   // Read bytes from non-volatile RAM storage.
   Serial.println("Reading NVRAM values:");

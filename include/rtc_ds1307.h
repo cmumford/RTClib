@@ -101,7 +101,7 @@ class DS1307 {
    * @param num_bytes Number of bytes in buf to write to NVRAM
    * @return true if successful, false if not.
    */
-  bool writenvram(uint8_t address, const void* buf, size_t num_bytes);
+  bool writeNVRAM(uint8_t address, const void* buf, size_t num_bytes);
 
  private:
   std::unique_ptr<I2CMaster> const i2c_;
