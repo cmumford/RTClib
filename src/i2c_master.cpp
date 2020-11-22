@@ -106,16 +106,11 @@ PING_DONE:
 std::unique_ptr<I2COperation> I2CMaster::CreateWriteOp(uint8_t slave_addr,
                                                        uint8_t reg,
                                                        const char* op_name) {
-  i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+  i2c_cmd_handle_t cmd = StartWriteCommand(slave_addr);
   if (!cmd)
     return nullptr;
-  esp_err_t err = i2c_master_start(cmd);
-  if (err != ESP_OK) {
-    i2c_cmd_link_delete(cmd);
-    return nullptr;
-  }
-  err = i2c_master_write_byte(cmd, (slave_addr << 1) | I2C_MASTER_WRITE,
-                              ACK_CHECK_EN);
+  esp_err_t err = i2c_master_write_byte(
+      cmd, (slave_addr << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
   if (err != ESP_OK) {
     i2c_cmd_link_delete(cmd);
     return nullptr;
@@ -132,17 +127,10 @@ std::unique_ptr<I2COperation> I2CMaster::CreateWriteOp(uint8_t slave_addr,
 std::unique_ptr<I2COperation> I2CMaster::CreateReadOp(uint8_t slave_addr,
                                                       uint8_t reg,
                                                       const char* op_name) {
-  i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+  i2c_cmd_handle_t cmd = StartWriteCommand(slave_addr);
   if (!cmd)
     return nullptr;
-  esp_err_t err = i2c_master_start(cmd);
-  if (err != ESP_OK)
-    goto READ_OP_DONE;
-  err = i2c_master_write_byte(cmd, (slave_addr << 1) | I2C_MASTER_WRITE,
-                              ACK_CHECK_EN);
-  if (err != ESP_OK)
-    goto READ_OP_DONE;
-  err = i2c_master_write_byte(cmd, reg, ACK_CHECK_EN);
+  esp_err_t err = i2c_master_write_byte(cmd, reg, ACK_CHECK_EN);
   if (err != ESP_OK)
     goto READ_OP_DONE;
   err = i2c_master_start(cmd);
