@@ -13,6 +13,11 @@
 namespace rtc {
 
 /**
+ * Number of seconds in an hour.
+ */
+#define SECONDS_PER_HOUR 3600
+
+/**
  * Number of seconds in a day: 60 * 60 * 24.
  */
 #define SECONDS_PER_DAY 86400L
