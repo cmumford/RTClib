@@ -135,7 +135,7 @@ class PCF8523 {
    *
    * @return True if running, false if not.
    */
-  bool isrunning();
+  bool isRunning();
 
   /**
    * Read the mode of the INT/SQW pin on the PCF8523.

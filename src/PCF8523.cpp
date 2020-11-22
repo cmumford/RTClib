@@ -116,7 +116,7 @@ bool PCF8523::stop(void) {
   return true;
 }
 
-bool PCF8523::isrunning() {
+bool PCF8523::isRunning() {
   uint8_t ctlreg;
   if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1, &ctlreg))
     return false;

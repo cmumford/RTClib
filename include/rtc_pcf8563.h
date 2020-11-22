@@ -93,7 +93,7 @@ class PCF8563 {
    * Check the STOP bit in register Control_1.
    * @return True if successful, false if error.
    */
-  bool isrunning();
+  bool isRunning();
 
   /**
    * Read the mode of the CLKOUT pin on the PCF8563.

@@ -58,7 +58,7 @@ class DS1307 {
    *
    * @return true if running, false if not.
    */
-  bool isrunning(void);
+  bool isRunning(void);
 
   /**
    * Get the current date and time from the DS1307.

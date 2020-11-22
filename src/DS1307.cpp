@@ -60,7 +60,7 @@ bool DS1307::begin(void) {
   return i2c_->Ping(DS1307_ADDRESS);
 }
 
-bool DS1307::isrunning(void) {
+bool DS1307::isRunning(void) {
   uint8_t value;
   if (!i2c_->ReadRegister(DS1307_ADDRESS, REGISTER_TIME_SECONDS, &value))
     return false;

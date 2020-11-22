@@ -111,7 +111,7 @@ bool PCF8563::stop() {
                              ctlreg | (1 << 5));
 }
 
-bool PCF8563::isrunning() {
+bool PCF8563::isRunning() {
   uint8_t ctlreg;
   if (!i2c_->ReadRegister(PCF8563_I2C_ADDRESS, REGISTER_CONTROL_1, &ctlreg))
     return false;
