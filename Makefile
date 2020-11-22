@@ -5,7 +5,7 @@ AUTOPEP8=autopep8
 
 .PHONY: format
 format:
-	clang-format -i include/*.h src/*.{cpp,h} test/test_embedded/*.cc
+	clang-format -i include/*.h src/*.cpp src/*.h test/test_embedded/*.cc
 	${AUTOPEP8} --in-place --aggressive --aggressive decoders/rtcds3231/pd.py
 
 docs: doxygen.conf Makefile

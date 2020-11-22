@@ -28,13 +28,33 @@ namespace rtc {
 /**************************************************************************/
 class Micros {
  public:
-  /*!
-      @brief  Start the RTC
-      @param dt DateTime object with the date/time to set
-  */
+  /**
+   * @brief  Start the RTC
+   *
+   * @param dt DateTime object with the date/time to set
+   */
   static void begin(const DateTime& dt) { adjust(dt); }
+
+  /**
+   * @brief  Set the current date/time of the RTC_Micros clock.
+   * @param dt DateTime object with the desired date and time
+   */
+  /**************************************************************************/
   static void adjust(const DateTime& dt);
+
+  /**
+   * Adjust the RTC_Micros clock to compensate for system clock drift
+   *
+   * @param ppm Adjustment to make. A positive adjustment makes the clock
+   * faster.
+   */
   static void adjustDrift(int ppm);
+
+  /**
+   * @brief  Get the current date/time from the RTC_Micros clock.
+   *
+   * @return DateTime object containing the current date/time
+   */
   static DateTime now();
 
  protected:
