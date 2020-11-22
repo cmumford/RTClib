@@ -12,6 +12,7 @@
 
 #include <limits>
 
+#include <rtclib/datetime.h>
 #include <rtclib/i2c.h>
 #include "RTC_util.h"
 

@@ -7,6 +7,7 @@
 
 #include <unity.h>
 
+#include <rtclib/datetime.h>
 #include <rtclib/ds1307.h>
 #include <rtclib/ds3231.h>
 #include <rtclib/i2c.h>

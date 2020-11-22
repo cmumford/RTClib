@@ -13,9 +13,9 @@
 
 #include <memory>
 
-#include "rtclib/datetime.h"
 namespace rtc {
 
+class DateTime;
 class I2CMaster;
 
 /**

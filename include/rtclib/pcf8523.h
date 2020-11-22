@@ -14,10 +14,9 @@
 #include <cstdint>
 #include <memory>
 
-#include "rtclib/datetime.h"
-
 namespace rtc {
 
+class DateTime;
 class I2CMaster;
 
 /** PCF8523 INT/SQW pin mode settings */

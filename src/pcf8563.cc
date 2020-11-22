@@ -10,6 +10,7 @@
 
 #include <rtclib/pcf8563.h>
 
+#include <rtclib/datetime.h>
 #include <rtclib/i2c.h>
 #include "RTC_util.h"
 
