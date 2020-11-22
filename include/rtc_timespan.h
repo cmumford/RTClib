@@ -109,7 +109,7 @@ class TimeSpan {
   TimeSpan operator-(const TimeSpan& right);
 
  protected:
-  int32_t _seconds;  ///< Actual TimeSpan value is stored as seconds.
+  const int32_t _seconds;  ///< Actual TimeSpan value is stored as seconds.
 };
 
 }  // namespace rtc

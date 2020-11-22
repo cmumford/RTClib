@@ -15,8 +15,9 @@ namespace rtc {
 TimeSpan::TimeSpan(int32_t seconds) : _seconds(seconds) {}
 
 TimeSpan::TimeSpan(int16_t days, int8_t hours, int8_t minutes, int8_t seconds)
-    : _seconds((int32_t)days * 86400L + (int32_t)hours * 3600 +
-               (int32_t)minutes * 60 + seconds) {}
+    : _seconds(static_cast<int32_t>(days) * 86400L +
+               static_cast<int32_t>(hours) * 3600 +
+               static_cast<int32_t>(minutes) * 60 + seconds) {}
 
 TimeSpan::TimeSpan(const TimeSpan& copy) : _seconds(copy._seconds) {}
 
