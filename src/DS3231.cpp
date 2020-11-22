@@ -335,7 +335,7 @@ void DS3231::clearAlarm(Alarm alarm) {
   i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
 }
 
-bool DS3231::alarmFired(Alarm alarm) {
+bool DS3231::isAlarmFired(Alarm alarm) {
   uint8_t status;
   if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
     return false;

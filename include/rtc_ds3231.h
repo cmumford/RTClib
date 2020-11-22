@@ -145,7 +145,7 @@ class DS3231 {
    * @param alarm The alarm to retrieve status of.
    * @return True if alarm has been fired otherwise false.
    */
-  bool alarmFired(Alarm alarm);
+  bool isAlarmFired(Alarm alarm);
 
   /**
    * Enable 32KHz Output.

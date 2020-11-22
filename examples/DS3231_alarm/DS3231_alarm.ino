@@ -70,16 +70,16 @@ void loop() {
     Serial.print(digitalRead(CLOCK_INTERRUPT_PIN));
     // whether a alarm happened happened
     Serial.print(" Alarm1: ");
-    Serial.print(rtc.alarmFired(1));
+    Serial.print(rtc.isAlarmFired(1));
     // Serial.print(" Alarm2: ");
-    // Serial.println(rtc.alarmFired(2));
+    // Serial.println(rtc.isAlarmFired(2));
     // control register values (see https://datasheets.maximintegrated.com/en/ds/DS3231.pdf page 13)
     // Serial.print(" Control: 0b");
     // Serial.println(read_i2c_register(DS3231_ADDRESS, DS3231_CONTROL), BIN);
     
     // resetting SQW and alarm 1 flag
     // using setAlarm1, the next alarm could now be configurated
-    if(rtc.alarmFired(1)) {
+    if(rtc.isAlarmFired(1)) {
         rtc.clearAlarm(1);
         Serial.println("Alarm cleared");
     }
