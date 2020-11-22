@@ -61,11 +61,9 @@ enum Pcf8523OffsetMode {
   PCF8523_OneMinute = 0x80 /**< Offset made every minute */
 };
 
-/**************************************************************************/
-/*!
-    @brief  RTC based on the PCF8523 chip connected via I2C.
-*/
-/**************************************************************************/
+/**
+ * RTC based on the PCF8523 chip connected via I2C.
+ */
 class PCF8523 {
  public:
   PCF8523(std::unique_ptr<I2CMaster> i2c);

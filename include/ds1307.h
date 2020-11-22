@@ -18,11 +18,9 @@ namespace rtc {
 
 class I2CMaster;
 
-/**************************************************************************/
-/*!
-    @brief  RTC based on the DS1307 chip connected via I2C.
-*/
-/**************************************************************************/
+/**
+ * RTC based on the DS1307 chip connected via I2C.
+ */
 class DS1307 {
  public:
   enum class SqwPinMode {

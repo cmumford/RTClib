@@ -19,12 +19,9 @@ namespace rtc {
 
 class I2CMaster;
 
-/**************************************************************************/
-/*!
-    @brief  RTC based on the PCF8563 chip connected via I2C.
-*/
-/**************************************************************************/
-
+/**
+ * RTC based on the PCF8563 chip connected via I2C.
+ */
 class PCF8563 {
  public:
   enum class SqwPinMode {

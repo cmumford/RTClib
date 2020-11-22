@@ -17,26 +17,24 @@
 
 namespace rtc {
 
-/**************************************************************************/
-/*!
-    @brief  RTC using the internal micros() clock, has to be initialized before
-            use. Unlike Millis, this can be tuned in order to compensate for
-            the natural drift of the system clock. Note that now() has to be
-            called more frequently than the micros() rollover period, which is
-            approximately 71.6 minutes.
-*/
-/**************************************************************************/
+/**
+ * RTC using the internal micros() clock, has to be initialized before use.
+ *
+ * Unlike Millis, this can be tuned in order to compensate for the natural
+ * drift of the system clock. Note that now() has to be called more frequently
+ * than the micros() rollover period, which is approximately 71.6 minutes.
+ */
 class Micros {
  public:
   /**
-   * @brief  Start the RTC
+   * Start the RTC
    *
    * @param dt DateTime object with the date/time to set
    */
   static void begin(const DateTime& dt) { adjust(dt); }
 
   /**
-   * @brief  Set the current date/time of the RTC_Micros clock.
+   * Set the current date/time of the RTC_Micros clock.
    * @param dt DateTime object with the desired date and time
    */
   /**************************************************************************/
@@ -51,7 +49,7 @@ class Micros {
   static void adjustDrift(int ppm);
 
   /**
-   * @brief  Get the current date/time from the RTC_Micros clock.
+   * Get the current date/time from the RTC_Micros clock.
    *
    * @return DateTime object containing the current date/time
    */

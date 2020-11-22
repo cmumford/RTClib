@@ -17,12 +17,11 @@
 
 namespace rtc {
 
-/**************************************************************************/
-/*!
-    @brief  RTC using the internal millis() clock, has to be initialized before
-   use. NOTE: this is immune to millis() rollover events.
-*/
-/**************************************************************************/
+/**
+ * RTC using the internal millis() clock, has to be initialized before  use.
+ *
+ * NOTE: this is immune to millis() rollover events.
+ */
 class Millis {
  public:
   /**

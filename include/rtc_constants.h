@@ -12,8 +12,14 @@
 
 namespace rtc {
 
-#define SECONDS_PER_DAY 86400L  ///< 60 * 60 * 24
-#define SECONDS_FROM_1970_TO_2000 \
-  946684800  ///< Unixtime for 2000-01-01 00:00:00, useful for initialization
+/**
+ * Number of seconds in a day: 60 * 60 * 24.
+ */
+#define SECONDS_PER_DAY 86400L
+
+/**
+ * Unixtime for 2000-01-01 00:00:00, useful for initialization.
+ */
+#define SECONDS_FROM_1970_TO_2000 946684800
 
 }  // namespace rtc

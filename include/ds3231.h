@@ -19,11 +19,9 @@ namespace rtc {
 
 class I2CMaster;
 
-/**************************************************************************/
-/*!
-    @brief  RTC based on the DS3231 chip connected via I2C.
-*/
-/**************************************************************************/
+/**
+ * RTC based on the DS3231 chip connected via I2C.
+ */
 class DS3231 {
  public:
   /**
