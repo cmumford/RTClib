@@ -7,10 +7,11 @@
 
 #include <unity.h>
 
+#include <i2clib/master.h>
+#include <i2clib/operation.h>
 #include <rtclib/datetime.h>
 #include <rtclib/ds1307.h>
 #include <rtclib/ds3231.h>
-#include <rtclib/i2c.h>
 #include <rtclib/pcf8523.h>
 #include <rtclib/pcf8563.h>
 #include <rtclib/timespan.h>
@@ -33,19 +34,22 @@ using namespace rtc;
 namespace {
 
 std::unique_ptr<DS3231> CreateDS3231() {
-  std::unique_ptr<I2CMaster> master(new I2CMaster(TEST_I2C_PORT1, g_i2c_mutex));
+  std::unique_ptr<i2c::Master> master(
+      new i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
   std::unique_ptr<DS3231> rtc(new DS3231(std::move(master)));
   return rtc;
 }
 
 std::unique_ptr<DS1307> CreateDS1307() {
-  std::unique_ptr<I2CMaster> master(new I2CMaster(TEST_I2C_PORT2, g_i2c_mutex));
+  std::unique_ptr<i2c::Master> master(
+      new i2c::Master(TEST_I2C_PORT2, g_i2c_mutex));
   std::unique_ptr<DS1307> rtc(new DS1307(std::move(master)));
   return rtc;
 }
 
 std::unique_ptr<PCF8563> CreatePCF8563() {
-  std::unique_ptr<I2CMaster> master(new I2CMaster(TEST_I2C_PORT1, g_i2c_mutex));
+  std::unique_ptr<i2c::Master> master(
+      new i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
   std::unique_ptr<PCF8563> rtc(new PCF8563(std::move(master)));
   return rtc;
 }
@@ -200,8 +204,9 @@ void test_ds3231_square_wave_pin_mode() {
 }
 
 void test_ds3231_alarm1() {
-  std::unique_ptr<I2CMaster> master(new I2CMaster(TEST_I2C_PORT1, g_i2c_mutex));
-  I2CMaster* const i2c_master = master.get();
+  std::unique_ptr<i2c::Master> master(
+      new i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
+  i2c::Master* const i2c_master = master.get();
   std::unique_ptr<DS3231> rtc(new DS3231(std::move(master)));
   TEST_ASSERT_NOT_NULL(rtc);
   TEST_ASSERT_TRUE(rtc->begin());
@@ -225,8 +230,9 @@ void test_ds3231_alarm1() {
 }
 
 void test_ds3231_alarm2() {
-  std::unique_ptr<I2CMaster> master(new I2CMaster(TEST_I2C_PORT1, g_i2c_mutex));
-  I2CMaster* const i2c_master = master.get();
+  std::unique_ptr<i2c::Master> master(
+      new i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
+  i2c::Master* const i2c_master = master.get();
   std::unique_ptr<DS3231> rtc(new DS3231(std::move(master)));
   TEST_ASSERT_NOT_NULL(rtc);
   TEST_ASSERT_TRUE(rtc->begin());
@@ -260,11 +266,11 @@ void test_ds3231_agingOffset() {
 void process() {
   g_i2c_mutex = xSemaphoreCreateMutex();
 
-  I2CMaster::Initialize(TEST_I2C_PORT1, PORT_1_I2C_SDA_GPIO,
-                        PORT_1_I2C_CLK_GPIO, kI2CClockHz);
+  i2c::Master::Initialize(TEST_I2C_PORT1, PORT_1_I2C_SDA_GPIO,
+                          PORT_1_I2C_CLK_GPIO, kI2CClockHz);
 
-  I2CMaster::Initialize(TEST_I2C_PORT2, PORT_2_I2C_SDA_GPIO,
-                        PORT_2_I2C_CLK_GPIO, kI2CClockHz);
+  i2c::Master::Initialize(TEST_I2C_PORT2, PORT_2_I2C_SDA_GPIO,
+                          PORT_2_I2C_CLK_GPIO, kI2CClockHz);
 
   UNITY_BEGIN();
 
@@ -286,7 +292,8 @@ void process() {
 }
 
 bool clear_ds3231_registers() {
-  std::unique_ptr<I2CMaster> master(new I2CMaster(TEST_I2C_PORT1, g_i2c_mutex));
+  std::unique_ptr<i2c::Master> master(
+      new i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
   uint8_t registers[1 + 0x12] = {0};
   auto op = master->CreateWriteOp(DS3231_I2C_ADDRESS, 0x0, "clear_DS3231");
   if (!op)
@@ -296,7 +303,8 @@ bool clear_ds3231_registers() {
 }
 
 bool clear_ds1307_registers() {
-  std::unique_ptr<I2CMaster> master(new I2CMaster(TEST_I2C_PORT2, g_i2c_mutex));
+  std::unique_ptr<i2c::Master> master(
+      new i2c::Master(TEST_I2C_PORT2, g_i2c_mutex));
   uint8_t registers[1 + 0x07] = {0};
   auto op = master->CreateWriteOp(DS1307_I2C_ADDRESS, 0x0, "clear_DS1307");
   if (!op)
@@ -306,7 +314,8 @@ bool clear_ds1307_registers() {
 }
 
 bool clear_pcf8563_registers() {
-  std::unique_ptr<I2CMaster> master(new I2CMaster(TEST_I2C_PORT1, g_i2c_mutex));
+  std::unique_ptr<i2c::Master> master(
+      new i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
   uint8_t registers[1 + 0x0f] = {0};
   auto op = master->CreateWriteOp(PCF8563_I2C_ADDRESS, 0x0, "clear_PCF8563");
   if (!op)

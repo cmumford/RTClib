@@ -14,10 +14,13 @@
 #include <cstdint>
 #include <memory>
 
+namespace i2c {
+class Master;
+}
+
 namespace rtc {
 
 class DateTime;
-class I2CMaster;
 
 /** PCF8523 INT/SQW pin mode settings */
 enum Pcf8523SqwPinMode {
@@ -65,7 +68,7 @@ enum Pcf8523OffsetMode {
  */
 class PCF8523 {
  public:
-  PCF8523(std::unique_ptr<I2CMaster> i2c);
+  PCF8523(std::unique_ptr<i2c::Master> i2c);
 
   /**
    * Start I2C for the PCF8523 and test succesful connection.
@@ -257,7 +260,7 @@ class PCF8523 {
   bool calibrate(Pcf8523OffsetMode mode, int8_t offset);
 
  private:
-  std::unique_ptr<I2CMaster> i2c_;
+  std::unique_ptr<i2c::Master> i2c_;
 };
 
 }  // namespace rtc

@@ -14,10 +14,13 @@
 #include <cstdint>
 #include <memory>
 
+namespace i2c {
+class Master;
+}
+
 namespace rtc {
 
 class DateTime;
-class I2CMaster;
 
 /**
  * RTC based on the PCF8563 chip connected via I2C.
@@ -32,7 +35,7 @@ class PCF8563 {
     Rate32kHz  ///< 32kHz square wave.
   };
 
-  PCF8563(std::unique_ptr<I2CMaster> i2c);
+  PCF8563(std::unique_ptr<i2c::Master> i2c);
 
   /**
    * Start I2C for the PCF8563 and test succesful connection.
@@ -108,7 +111,7 @@ class PCF8563 {
   bool writeSqwPinMode(SqwPinMode mode);
 
  private:
-  std::unique_ptr<I2CMaster> i2c_;
+  std::unique_ptr<i2c::Master> i2c_;
 };
 
 }  // namespace rtc

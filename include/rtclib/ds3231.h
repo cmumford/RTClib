@@ -13,10 +13,13 @@
 
 #include <memory>
 
+namespace i2c {
+class Master;
+}
+
 namespace rtc {
 
 class DateTime;
-class I2CMaster;
 
 /**
  * RTC based on the DS3231 chip connected via I2C.
@@ -57,7 +60,7 @@ class DS3231 {
     A2   ///< Alarm 2.
   };
 
-  DS3231(std::unique_ptr<I2CMaster> i2c);
+  DS3231(std::unique_ptr<i2c::Master> i2c);
 
   /**
    * Set the date and flip the Oscillator Stop Flag.
@@ -181,7 +184,7 @@ class DS3231 {
   bool getAgingOffset(int8_t* aging_offset);
 
  private:
-  std::unique_ptr<I2CMaster> const i2c_;
+  std::unique_ptr<i2c::Master> const i2c_;
 };
 
 }  // namespace rtc

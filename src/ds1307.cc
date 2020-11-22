@@ -10,8 +10,9 @@
 
 #include <rtclib/ds1307.h>
 
+#include <i2clib/master.h>
+#include <i2clib/operation.h>
 #include <rtclib/datetime.h>
-#include <rtclib/i2c.h>
 #include "RTC_util.h"
 
 namespace rtc {
@@ -55,7 +56,7 @@ constexpr uint8_t CONTROL_SQW_32KH = CONTROL_SQWE | CONTROL_RS0 | CONTROL_RS1;
 
 }  // namespace
 
-DS1307::DS1307(std::unique_ptr<I2CMaster> i2c) : i2c_(std::move(i2c)) {}
+DS1307::DS1307(std::unique_ptr<i2c::Master> i2c) : i2c_(std::move(i2c)) {}
 
 bool DS1307::begin(void) {
   return i2c_->Ping(DS1307_ADDRESS);

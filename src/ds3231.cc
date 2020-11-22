@@ -12,8 +12,9 @@
 
 #include <limits>
 
+#include <i2clib/master.h>
+#include <i2clib/operation.h>
 #include <rtclib/datetime.h>
-#include <rtclib/i2c.h>
 #include "RTC_util.h"
 
 namespace rtc {
@@ -97,7 +98,7 @@ uint8_t dowToDS3231(uint8_t d) {
 
 }  // anonymous namespace
 
-DS3231::DS3231(std::unique_ptr<I2CMaster> i2c) : i2c_(std::move(i2c)) {}
+DS3231::DS3231(std::unique_ptr<i2c::Master> i2c) : i2c_(std::move(i2c)) {}
 
 bool DS3231::begin(void) {
   return i2c_->Ping(DS3231_I2C_ADDRESS);
@@ -266,7 +267,7 @@ bool DS3231::setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode) {
     return false;
   op->Write(values, sizeof(values));
 
-  op->Restart(DS3231_I2C_ADDRESS, REGISTER_CONTROL, OperationType::WRITE);
+  op->Restart(DS3231_I2C_ADDRESS, REGISTER_CONTROL, i2c::OperationType::WRITE);
   SET_BITS(ctrl, CONTROL_A1IE);
   op->WriteByte(ctrl);
 
@@ -307,7 +308,7 @@ bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
     return false;
   op->Write(values, sizeof(values));
 
-  op->Restart(DS3231_I2C_ADDRESS, REGISTER_CONTROL, OperationType::WRITE);
+  op->Restart(DS3231_I2C_ADDRESS, REGISTER_CONTROL, i2c::OperationType::WRITE);
   SET_BITS(ctrl, CONTROL_A2IE);
   op->WriteByte(ctrl);
 

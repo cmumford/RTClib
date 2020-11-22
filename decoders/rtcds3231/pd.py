@@ -537,18 +537,26 @@ class Decoder(srd.Decoder):
         else:
             eoscmsg = 'Off when on Vbat'
 
-        self.putd(
-            0, 0, [
-                Ann.BIT_ALM1, [
-                    'Alarm 1: %d' %
-                    alarm1, 'ALM1: %d' %
-                    alarm1, 'A']])
-        self.putd(
-            1, 1, [
-                Ann.BIT_ALM2, [
-                    'Alarm 2: %d' %
-                    alarm2, 'ALM2: %d' %
-                    alarm2, 'A']])
+        if alarm1:
+            self.putd(
+                0, 0, [
+                    Ann.BIT_ALM1, [
+                        'Alarm 1 enabled', 'AL1 EN', 'A1e']])
+        else:
+            self.putd(
+                0, 0, [
+                    Ann.BIT_ALM1, [
+                        'Alarm 1 disabled', 'AL1 DI', 'A1d']])
+        if alarm2:
+            self.putd(
+                1, 1, [
+                    Ann.BIT_ALM2, [
+                        'Alarm 2 enabled', 'AL2 EN', 'A2e']])
+        else:
+            self.putd(
+                1, 1, [
+                    Ann.BIT_ALM2, [
+                        'Alarm 2 disabled', 'AL2 DI', 'A2d']])
         self.putd(
             2, 2, [
                 Ann.BIT_INTCN, [

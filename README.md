@@ -22,11 +22,11 @@ from the RTC:
 using namespace rtc;
 
 // Initialize I2C.
-I2CMaster::Initialize(I2C_PORT, I2C_SDA_GPIO,
-                      I2C_CLK_GPIO, I2C_CLOCK_SPEED);
+i2c::Master::Initialize(I2C_PORT, I2C_SDA_GPIO,
+                        I2C_CLK_GPIO, I2C_CLOCK_SPEED);
 
 // Create an I2C master to do all the I2C stuff.
-std::unique_ptr<I2CMaster> master(new I2CMaster(I2C_PORT, nullptr));
+std::unique_ptr<i2c::Master> master(new i2c::Master(I2C_PORT, nullptr));
 
 // Allocate an DS3231 RTC object.
 std::unique_ptr<DS3231> rtc(new DS3231(std::move(master)));

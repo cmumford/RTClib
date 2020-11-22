@@ -13,10 +13,13 @@
 
 #include <memory>
 
+namespace i2c {
+class Master;
+}
+
 namespace rtc {
 
 class DateTime;
-class I2CMaster;
 
 /**
  * RTC based on the DS1307 chip connected via I2C.
@@ -32,7 +35,7 @@ class DS1307 {
     Rate32kHz  // 32kHz square wave.
   };
 
-  DS1307(std::unique_ptr<I2CMaster> i2c);
+  DS1307(std::unique_ptr<i2c::Master> i2c);
 
   /**
    * Start I2C for the DS1307 and test succesful connection.
@@ -102,7 +105,7 @@ class DS1307 {
   bool writeNVRAM(uint8_t address, const void* buf, size_t num_bytes);
 
  private:
-  std::unique_ptr<I2CMaster> const i2c_;
+  std::unique_ptr<i2c::Master> const i2c_;
 };
 
 }  // namespace rtc

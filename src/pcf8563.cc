@@ -10,8 +10,9 @@
 
 #include <rtclib/pcf8563.h>
 
+#include <i2clib/master.h>
+#include <i2clib/operation.h>
 #include <rtclib/datetime.h>
-#include <rtclib/i2c.h>
 #include "RTC_util.h"
 
 namespace rtc {
@@ -37,7 +38,7 @@ constexpr uint8_t kSquareWaveMask  = 0b10000011;
 
 }  // namespace
 
-PCF8563::PCF8563(std::unique_ptr<I2CMaster> i2c) : i2c_(std::move(i2c)) {}
+PCF8563::PCF8563(std::unique_ptr<i2c::Master> i2c) : i2c_(std::move(i2c)) {}
 
 bool PCF8563::begin() {
   return i2c_->Ping(PCF8563_I2C_ADDRESS);
