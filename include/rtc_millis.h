@@ -25,12 +25,28 @@ namespace rtc {
 /**************************************************************************/
 class Millis {
  public:
-  /*!
-      @brief  Start the RTC
-      @param dt DateTime object with the date/time to set
-  */
+  /**
+   * Start the RTC
+   *
+   * @param dt DateTime object with the date/time to set
+   */
   static void begin(const DateTime& dt) { adjust(dt); }
+
+  /**
+   * Set the current date/time of the RTC_Millis clock.
+   *
+   * @param dt DateTime object with the desired date and time
+   */
   static void adjust(const DateTime& dt);
+
+  /**
+   *  Return a DateTime object containing the current date/time.
+   *
+   * Note that computing (millis() - lastMillis) is rollover-safe as
+   * long as this method is called at least once every 49.7 days.
+   *
+   * @return DateTime object containing current time
+   */
   static DateTime now();
 
  protected:
