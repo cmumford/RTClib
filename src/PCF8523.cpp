@@ -8,9 +8,9 @@
  * https://github.com/adafruit/RTClib
  */
 
-#include <pcf8523.h>
+#include <rtclib/pcf8523.h>
 
-#include <rtc_i2c.h>
+#include <rtclib/i2c.h>
 #include "RTC_util.h"
 namespace rtc {
 

@@ -8,11 +8,11 @@
  * https://github.com/adafruit/RTClib
  */
 
-#include <ds3231.h>
+#include <rtclib/ds3231.h>
 
 #include <limits>
 
-#include <rtc_i2c.h>
+#include <rtclib/i2c.h>
 #include "RTC_util.h"
 
 namespace rtc {

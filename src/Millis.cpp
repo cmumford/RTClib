@@ -8,9 +8,9 @@
  * https://github.com/adafruit/RTClib
  */
 
-#include <rtc_millis.h>
+#include <rtclib/millis.h>
 
-#include <rtc_system_clock.h>
+#include <rtclib/system_clock.h>
 
 namespace rtc {
 

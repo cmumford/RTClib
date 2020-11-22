@@ -8,9 +8,9 @@
  * https://github.com/adafruit/RTClib
  */
 
-#include <rtc_timespan.h>
+#include <rtclib/timespan.h>
 
-#include <rtc_constants.h>
+#include <rtclib/constants.h>
 
 namespace rtc {
 

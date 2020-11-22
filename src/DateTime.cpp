@@ -8,11 +8,11 @@
  * https://github.com/adafruit/RTClib
  */
 
-#include <rtc_datetime.h>
+#include <rtclib/datetime.h>
 
 #include <string.h>
 
-#include <rtc_timespan.h>
+#include <rtclib/timespan.h>
 
 namespace rtc {
 

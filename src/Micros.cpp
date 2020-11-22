@@ -8,11 +8,11 @@
  * https://github.com/adafruit/RTClib
  */
 
-#include <rtc_micros.h>
+#include <rtclib/micros.h>
 
 #include <cstdint>
 
-#include <rtc_system_clock.h>
+#include <rtclib/system_clock.h>
 
 namespace rtc {
 

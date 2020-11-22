@@ -5,9 +5,14 @@
  * file 'license.txt', which is part of this source code package.
  */
 
-#include <RTClib.h>
-
 #include <unity.h>
+
+#include <rtclib/ds1307.h>
+#include <rtclib/ds3231.h>
+#include <rtclib/i2c.h>
+#include <rtclib/pcf8523.h>
+#include <rtclib/pcf8563.h>
+#include <rtclib/timespan.h>
 
 /**
  * The I2C bus speed when running tests.

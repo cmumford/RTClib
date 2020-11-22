@@ -5,7 +5,7 @@
  * file 'license.txt', which is part of this source code package.
  */
 
-#include <rtc_i2c.h>
+#include <rtclib/i2c.h>
 
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include <esp_log.h>

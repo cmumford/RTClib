@@ -8,7 +8,7 @@
  * https://github.com/adafruit/RTClib
  */
 
-#include <rtc_system_clock.h>
+#include <rtclib/system_clock.h>
 
 #include <cstdint>
 
