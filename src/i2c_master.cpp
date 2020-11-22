@@ -109,10 +109,7 @@ std::unique_ptr<I2COperation> I2CMaster::CreateWriteOp(uint8_t slave_addr,
   i2c_cmd_handle_t cmd = StartWriteCommand(slave_addr);
   if (!cmd)
     return nullptr;
-  esp_err_t err = i2c_master_write_byte(
-      cmd, (slave_addr << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
-  if (err == ESP_OK)
-    err = i2c_master_write_byte(cmd, reg, ACK_CHECK_EN);
+  esp_err_t err = i2c_master_write_byte(cmd, reg, ACK_CHECK_EN);
 
   if (err != ESP_OK) {
     ESP_LOGE(TAG, "%s CreateWriteOp failed: %s", op_name, esp_err_to_name(err));
