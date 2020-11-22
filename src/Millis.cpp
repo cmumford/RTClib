@@ -10,6 +10,8 @@
 
 #include <rtc_millis.h>
 
+#include <rtc_system_clock.h>
+
 namespace rtc {
 
 /** Alignment between the milis() timescale and the Unix timescale. These
@@ -20,22 +22,14 @@ namespace rtc {
 uint32_t Millis::lastMillis;
 uint32_t Millis::lastUnix;
 
-namespace {
-
-uint32_t millisSinceStart() {
-  // TODO: Implement me.
-  return 0;
-}
-
-}  // anonymous namespace
-
 void Millis::adjust(const DateTime& dt) {
-  lastMillis = millisSinceStart();
+  lastMillis = SystemClock::millisSinceStart();
   lastUnix = dt.unixtime();
 }
 
 DateTime Millis::now() {
-  uint32_t elapsedSeconds = (millisSinceStart() - lastMillis) / 1000;
+  const uint32_t elapsedSeconds =
+      (SystemClock::millisSinceStart() - lastMillis) / 1000;
   lastMillis += elapsedSeconds * 1000;
   lastUnix += elapsedSeconds;
   return lastUnix;

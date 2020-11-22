@@ -12,6 +12,8 @@
 
 #include <cstdint>
 
+#include <rtc_system_clock.h>
+
 namespace rtc {
 
 /**
@@ -25,17 +27,8 @@ uint32_t Micros::microsPerSecond = 1000000;
 uint32_t Micros::lastMicros;
 uint32_t Micros::lastUnix;
 
-namespace {
-
-uint32_t microsSinceStart() {
-  // TODO: Implement me.
-  return 0;
-}
-
-}  // anonymous namespace
-
 void Micros::adjust(const DateTime& dt) {
-  lastMicros = microsSinceStart();
+  lastMicros = SystemClock::microsSinceStart();
   lastUnix = dt.unixtime();
 }
 
@@ -44,7 +37,8 @@ void Micros::adjustDrift(int ppm) {
 }
 
 DateTime Micros::now() {
-  uint32_t elapsedSeconds = (microsSinceStart() - lastMicros) / microsPerSecond;
+  const uint32_t elapsedSeconds =
+      (SystemClock::microsSinceStart() - lastMicros) / microsPerSecond;
   lastMicros += elapsedSeconds * microsPerSecond;
   lastUnix += elapsedSeconds;
   return lastUnix;
