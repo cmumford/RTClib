@@ -4,7 +4,7 @@ in turn, is a fork of JeeLab's real time clock library for Arduino.
 The primary reason for this fork is to port to
 [ESP-IDF](https://docs.espressif.com/projects/esp-idf).
 
-Addionally:
+Additionally:
 
 1. Return values (usually boolean) indicate success/failure
    of most calls.
@@ -15,23 +15,31 @@ Addionally:
 
 This is currently a [PlatformIO](https://platformio.org/) library.
 
+This library depends on the [i2clib](https://github.com/cmumford/i2clib) library.
+
 Here is a simple example of retrieving the current time
 from the RTC:
 
 ```c++
+#include <i2clib/master.h>
+#include <rtclib/datetime.h>
+#include <rtclib/ds3231.h>
+
 using namespace rtc;
 
-// Initialize I2C.
+// Initialize I2C - this needs to be done only once.
 i2c::Master::Initialize(I2C_PORT, I2C_SDA_GPIO,
                         I2C_CLK_GPIO, I2C_CLOCK_SPEED);
 
-// Create an I2C master to do all the I2C stuff.
+// Create an I2C master for the RTC object so that
+// it can communicate via the I2C bus.
 std::unique_ptr<i2c::Master> master(new i2c::Master(I2C_PORT, nullptr));
 
-// Allocate an DS3231 RTC object.
+// Allocate an DS3231 RTC object - giving it the I2C master.
 std::unique_ptr<DS3231> rtc(new DS3231(std::move(master)));
 rtc->begin();
 
+// Retrieve the current time.
 DateTime now;
 rtc->now(&now);
 ```
