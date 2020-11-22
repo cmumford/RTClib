@@ -83,14 +83,13 @@ constexpr uint8_t kSquareWave1kHz = CONTROL_RS1;
 constexpr uint8_t kSquareWave4kHz = CONTROL_RS2;
 constexpr uint8_t kSquareWave8kHz = CONTROL_RS2 | CONTROL_RS1;
 
-/**************************************************************************/
-/*!
-    @brief  Convert the day of the week to a representation suitable for
-            storing in the DS3231: from 1 (Monday) to 7 (Sunday).
-    @param  d Day of the week as represented by the library:
-            from 0 (Sunday) to 6 (Saturday).
-*/
-/**************************************************************************/
+/**
+ * Convert the day of the week to a representation suitable for
+ * storing in the DS3231: from 1 (Monday) to 7 (Sunday).
+ *
+ * @param  d Day of the week as represented by the library:
+ *           from 0 (Sunday) to 6 (Saturday).
+ */
 uint8_t dowToDS3231(uint8_t d) {
   return d == 0 ? 7 : d;
 }
