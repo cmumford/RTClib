@@ -33,195 +33,175 @@ using namespace rtc;
 
 namespace {
 
-std::unique_ptr<DS3231> CreateDS3231() {
-  std::unique_ptr<i2c::Master> master(
-      new i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
-  std::unique_ptr<DS3231> rtc(new DS3231(std::move(master)));
-  return rtc;
+DS3231 CreateDS3231() {
+  return DS3231(i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
 }
 
-std::unique_ptr<DS1307> CreateDS1307() {
-  std::unique_ptr<i2c::Master> master(
-      new i2c::Master(TEST_I2C_PORT2, g_i2c_mutex));
-  std::unique_ptr<DS1307> rtc(new DS1307(std::move(master)));
-  return rtc;
+DS1307 CreateDS1307() {
+  return DS1307(i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
 }
 
-std::unique_ptr<PCF8563> CreatePCF8563() {
-  std::unique_ptr<i2c::Master> master(
-      new i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
-  std::unique_ptr<PCF8563> rtc(new PCF8563(std::move(master)));
-  return rtc;
+PCF8563 CreatePCF8563() {
+  return PCF8563(i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
 }
 
 void test_pcf8563_set_and_get_date() {
   auto rtc = CreatePCF8563();
-  TEST_ASSERT_NOT_NULL(rtc);
-  TEST_ASSERT_TRUE(rtc->begin());
+  TEST_ASSERT_TRUE(rtc.begin());
 
   const DateTime dt(2020, 11, 14, 21, 26, 59);
-  DateTime(rtc->adjust(dt));
+  DateTime(rtc.adjust(dt));
 
   // This is a possible flakey test, as there is "daylight" between the set
   // and the get call, and the running clock could increment the time.
   // Instead this test will measure the delta, and only fail if longer than
   // a specified duration.
   DateTime now;
-  TEST_ASSERT_TRUE(rtc->now(&now));
+  TEST_ASSERT_TRUE(rtc.now(&now));
   const TimeSpan delta = now - dt;
   TEST_ASSERT_LESS_OR_EQUAL(2, std::abs(delta.totalseconds()));
 }
 
 void test_pcf8563_square_wave_pin_mode() {
   auto rtc = CreatePCF8563();
-  TEST_ASSERT_NOT_NULL(rtc);
-  TEST_ASSERT_TRUE(rtc->begin());
+  TEST_ASSERT_TRUE(rtc.begin());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563::SqwPinMode::Off));
-  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Off, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8563::SqwPinMode::Off));
+  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Off, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563::SqwPinMode::Rate1Hz));
-  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Rate1Hz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8563::SqwPinMode::Rate1Hz));
+  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Rate1Hz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563::SqwPinMode::Rate32Hz));
-  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Rate32Hz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8563::SqwPinMode::Rate32Hz));
+  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Rate32Hz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563::SqwPinMode::Rate1kHz));
-  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Rate1kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8563::SqwPinMode::Rate1kHz));
+  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Rate1kHz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563::SqwPinMode::Rate32Hz));
-  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Rate32Hz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8563::SqwPinMode::Rate32Hz));
+  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Rate32Hz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(PCF8563::SqwPinMode::Off));
-  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Off, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8563::SqwPinMode::Off));
+  TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Off, rtc.readSqwPinMode());
 }
 
 void test_ds1307_set_and_get_date() {
   auto rtc = CreateDS1307();
-  TEST_ASSERT_NOT_NULL(rtc);
-  TEST_ASSERT_TRUE(rtc->begin());
+  TEST_ASSERT_TRUE(rtc.begin());
 
   const DateTime dt(2020, 11, 14, 21, 26, 59);
-  DateTime(rtc->adjust(dt));
+  DateTime(rtc.adjust(dt));
 
   // This is a possible flakey test, as there is "daylight" between the set
   // and the get call, and the running clock could increment the time.
   // Instead this test will measure the delta, and only fail if longer than
   // a specified duration.
   DateTime now;
-  TEST_ASSERT_TRUE(rtc->now(&now));
+  TEST_ASSERT_TRUE(rtc.now(&now));
   const TimeSpan delta = now - dt;
   TEST_ASSERT_LESS_OR_EQUAL(2, std::abs(delta.totalseconds()));
 }
 
 void test_ds1307_square_wave_pin_mode() {
   auto rtc = CreateDS1307();
-  TEST_ASSERT_NOT_NULL(rtc);
-  TEST_ASSERT_TRUE(rtc->begin());
+  TEST_ASSERT_TRUE(rtc.begin());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307::SqwPinMode::Off));
-  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Off, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS1307::SqwPinMode::Off));
+  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Off, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307::SqwPinMode::On));
-  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::On, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS1307::SqwPinMode::On));
+  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::On, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307::SqwPinMode::Rate1Hz));
-  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Rate1Hz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS1307::SqwPinMode::Rate1Hz));
+  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Rate1Hz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307::SqwPinMode::Rate4kHz));
-  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Rate4kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS1307::SqwPinMode::Rate4kHz));
+  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Rate4kHz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307::SqwPinMode::Rate8kHz));
-  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Rate8kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS1307::SqwPinMode::Rate8kHz));
+  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Rate8kHz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307::SqwPinMode::Rate32kHz));
-  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Rate32kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS1307::SqwPinMode::Rate32kHz));
+  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Rate32kHz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS1307::SqwPinMode::Off));
-  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Off, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS1307::SqwPinMode::Off));
+  TEST_ASSERT_EQUAL(DS1307::SqwPinMode::Off, rtc.readSqwPinMode());
 }
 
 void test_ds3231_set_and_get_date() {
   auto rtc = CreateDS3231();
-  TEST_ASSERT_NOT_NULL(rtc);
-  TEST_ASSERT_TRUE(rtc->begin());
+  TEST_ASSERT_TRUE(rtc.begin());
 
   const DateTime dt(2020, 11, 14, 21, 26, 59);
-  DateTime(rtc->adjust(dt));
+  DateTime(rtc.adjust(dt));
 
   // This is a possible flakey test, as there is "daylight" between the set
   // and the get call, and the running clock could increment the time.
   // Instead this test will measure the delta, and only fail if longer than
   // a specified duration.
   DateTime now;
-  TEST_ASSERT_TRUE(rtc->now(&now));
+  TEST_ASSERT_TRUE(rtc.now(&now));
   const TimeSpan delta = now - dt;
   TEST_ASSERT_LESS_OR_EQUAL(2, std::abs(delta.totalseconds()));
 }
 
 void test_ds3231_32k() {
   auto rtc = CreateDS3231();
-  TEST_ASSERT_NOT_NULL(rtc);
-  TEST_ASSERT_TRUE(rtc->begin());
+  TEST_ASSERT_TRUE(rtc.begin());
 
-  rtc->enable32K();
-  TEST_ASSERT_TRUE(rtc->isEnabled32K());
-  rtc->disable32K();
-  TEST_ASSERT_FALSE(rtc->isEnabled32K());
+  rtc.enable32K();
+  TEST_ASSERT_TRUE(rtc.isEnabled32K());
+  rtc.disable32K();
+  TEST_ASSERT_FALSE(rtc.isEnabled32K());
 }
 
 void test_ds3231_temperature() {
   auto rtc = CreateDS3231();
-  TEST_ASSERT_NOT_NULL(rtc);
-  TEST_ASSERT_TRUE(rtc->begin());
+  TEST_ASSERT_TRUE(rtc.begin());
 
-  const float temp = rtc->getTemperature();
+  const float temp = rtc.getTemperature();
   TEST_ASSERT_GREATER_OR_EQUAL(0, temp);
 }
 
 void test_ds3231_square_wave_pin_mode() {
   auto rtc = CreateDS3231();
-  TEST_ASSERT_NOT_NULL(rtc);
-  TEST_ASSERT_TRUE(rtc->begin());
+  TEST_ASSERT_TRUE(rtc.begin());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Off));
-  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Off, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS3231::SqwPinMode::Off));
+  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Off, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate1Hz));
-  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Rate1Hz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS3231::SqwPinMode::Rate1Hz));
+  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Rate1Hz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate1kHz));
-  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Rate1kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS3231::SqwPinMode::Rate1kHz));
+  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Rate1kHz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate4kHz));
-  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Rate4kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS3231::SqwPinMode::Rate4kHz));
+  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Rate4kHz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate8kHz));
-  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Rate8kHz, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS3231::SqwPinMode::Rate8kHz));
+  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Rate8kHz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Off));
-  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Off, rtc->readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS3231::SqwPinMode::Off));
+  TEST_ASSERT_EQUAL(DS3231::SqwPinMode::Off, rtc.readSqwPinMode());
 }
 
 void test_ds3231_alarm1() {
-  std::unique_ptr<i2c::Master> master(
-      new i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
-  i2c::Master* const i2c_master = master.get();
-  std::unique_ptr<DS3231> rtc(new DS3231(std::move(master)));
-  TEST_ASSERT_NOT_NULL(rtc);
-  TEST_ASSERT_TRUE(rtc->begin());
+  DS3231 rtc(i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
+  TEST_ASSERT_TRUE(rtc.begin());
 
   // Enable square wave and verify alarm set failure.
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate1Hz));
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS3231::SqwPinMode::Rate1Hz));
 
   const DateTime dt(2021, 1, 12, 7, 13, 31);
-  TEST_ASSERT_FALSE(rtc->setAlarm1(dt, DS3231::Alarm1Mode::Hour));
+  TEST_ASSERT_FALSE(rtc.setAlarm1(dt, DS3231::Alarm1Mode::Hour));
 
   // Now set to alarm mode.
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Off));
-  TEST_ASSERT_TRUE(rtc->setAlarm1(dt, DS3231::Alarm1Mode::Hour));
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS3231::SqwPinMode::Off));
+  TEST_ASSERT_TRUE(rtc.setAlarm1(dt, DS3231::Alarm1Mode::Hour));
 
-  auto op = i2c_master->CreateReadOp(0x68, 0x07, "test_ds3231_alarm1");
+  i2c::Master master(TEST_I2C_PORT1, g_i2c_mutex);
+  auto op = master.CreateReadOp(0x68, 0x07, "test_ds3231_alarm1");
   TEST_ASSERT_NOT_NULL(op);
   uint8_t values[4];
   op->Read(values, sizeof(values));
@@ -230,23 +210,20 @@ void test_ds3231_alarm1() {
 }
 
 void test_ds3231_alarm2() {
-  std::unique_ptr<i2c::Master> master(
-      new i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
-  i2c::Master* const i2c_master = master.get();
-  std::unique_ptr<DS3231> rtc(new DS3231(std::move(master)));
-  TEST_ASSERT_NOT_NULL(rtc);
-  TEST_ASSERT_TRUE(rtc->begin());
+  DS3231 rtc(i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
+  TEST_ASSERT_TRUE(rtc.begin());
 
   // Enable square wave and verify alarm set failure.
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Rate1Hz));
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS3231::SqwPinMode::Rate1Hz));
 
   const DateTime dt(2021, 2, 13, 8, 14, 32);
-  TEST_ASSERT_FALSE(rtc->setAlarm2(dt, DS3231::Alarm2Mode::Hour));
+  TEST_ASSERT_FALSE(rtc.setAlarm2(dt, DS3231::Alarm2Mode::Hour));
 
   // Now set to alarm mode.
-  TEST_ASSERT_TRUE(rtc->writeSqwPinMode(DS3231::SqwPinMode::Off));
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS3231::SqwPinMode::Off));
 
-  auto op = i2c_master->CreateReadOp(0x68, 0x0b, "test_ds3231_alarm2");
+  i2c::Master master(TEST_I2C_PORT1, g_i2c_mutex);
+  auto op = master.CreateReadOp(0x68, 0x0b, "test_ds3231_alarm2");
   TEST_ASSERT_NOT_NULL(op);
   uint8_t values[3];
   op->Read(values, sizeof(values));
@@ -256,11 +233,10 @@ void test_ds3231_alarm2() {
 
 void test_ds3231_agingOffset() {
   auto rtc = CreateDS3231();
-  TEST_ASSERT_NOT_NULL(rtc);
-  TEST_ASSERT_TRUE(rtc->begin());
+  TEST_ASSERT_TRUE(rtc.begin());
 
   int8_t offset;
-  TEST_ASSERT_TRUE(rtc->getAgingOffset(&offset));
+  TEST_ASSERT_TRUE(rtc.getAgingOffset(&offset));
 }
 
 void process() {

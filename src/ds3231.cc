@@ -98,23 +98,23 @@ uint8_t dowToDS3231(uint8_t d) {
 
 }  // anonymous namespace
 
-DS3231::DS3231(std::unique_ptr<i2c::Master> i2c) : i2c_(std::move(i2c)) {}
+DS3231::DS3231(i2c::Master i2c) : i2c_(std::move(i2c)) {}
 
 bool DS3231::begin(void) {
-  return i2c_->Ping(DS3231_I2C_ADDRESS);
+  return i2c_.Ping(DS3231_I2C_ADDRESS);
 }
 
 bool DS3231::lostPower(void) {
   uint8_t reg_val;
-  if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &reg_val))
+  if (!i2c_.ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &reg_val))
     return true;  // Can't read, assume true.
   return reg_val & STATUS_OSF;
 }
 
 bool DS3231::adjust(const DateTime& dt) {
   {
-    auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, REGISTER_TIME_SECONDS,
-                                  "adjust");
+    auto op =
+        i2c_.CreateWriteOp(DS3231_I2C_ADDRESS, REGISTER_TIME_SECONDS, "adjust");
     if (!op)
       return false;
     const uint8_t values[7] = {
@@ -130,16 +130,15 @@ bool DS3231::adjust(const DateTime& dt) {
   }
 
   uint8_t status;
-  if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
+  if (!i2c_.ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
     return false;
   status &= ~STATUS_OSF;  // flip OSF bit
-  return i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
+  return i2c_.WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
 }
 
 bool DS3231::now(DateTime* dt) {
   uint8_t values[7];  // for registers 0x00 - 0x06.
-  auto op =
-      i2c_->CreateReadOp(DS3231_I2C_ADDRESS, REGISTER_TIME_SECONDS, "now");
+  auto op = i2c_.CreateReadOp(DS3231_I2C_ADDRESS, REGISTER_TIME_SECONDS, "now");
   if (!op)
     return false;
   if (!op->Read(values, sizeof(values)))
@@ -158,7 +157,7 @@ bool DS3231::now(DateTime* dt) {
 
 DS3231::SqwPinMode DS3231::readSqwPinMode() {
   uint8_t value;
-  if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &value))
+  if (!i2c_.ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &value))
     return SqwPinMode::Off;
 
   if (value & CONTROL_INTCN)
@@ -181,7 +180,7 @@ DS3231::SqwPinMode DS3231::readSqwPinMode() {
 
 bool DS3231::writeSqwPinMode(SqwPinMode mode) {
   uint8_t ctrl;
-  if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl))
+  if (!i2c_.ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl))
     return false;
 
   CLEAR_BITS(ctrl, CONTROL_RS2 | CONTROL_RS1 | CONTROL_INTCN);
@@ -203,12 +202,11 @@ bool DS3231::writeSqwPinMode(SqwPinMode mode) {
       break;
   }
 
-  return i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, ctrl);
+  return i2c_.WriteRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, ctrl);
 }
 
 float DS3231::getTemperature() {
-  auto op =
-      i2c_->CreateReadOp(DS3231_I2C_ADDRESS, REGISTER_TEMP_MSB, "getTemp");
+  auto op = i2c_.CreateReadOp(DS3231_I2C_ADDRESS, REGISTER_TEMP_MSB, "getTemp");
   if (!op)
     return std::numeric_limits<int16_t>::max();
   uint8_t values[2];  // MSB and LSB respectively.
@@ -225,13 +223,13 @@ float DS3231::getTemperature() {
 }
 
 bool DS3231::getAgingOffset(int8_t* val) {
-  return i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_AGING_OFFSET,
-                            reinterpret_cast<uint8_t*>(val));
+  return i2c_.ReadRegister(DS3231_I2C_ADDRESS, REGISTER_AGING_OFFSET,
+                           reinterpret_cast<uint8_t*>(val));
 }
 
 bool DS3231::setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode) {
   uint8_t ctrl;
-  i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
+  i2c_.ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
   if (!(ctrl & CONTROL_INTCN))
     return false;
 
@@ -261,8 +259,8 @@ bool DS3231::setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode) {
       break;
   }
 
-  auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, REGISTER_ALARM1_SECONDS,
-                                "setalm1");
+  auto op = i2c_.CreateWriteOp(DS3231_I2C_ADDRESS, REGISTER_ALARM1_SECONDS,
+                               "setalm1");
   if (!op)
     return false;
   op->Write(values, sizeof(values));
@@ -276,7 +274,7 @@ bool DS3231::setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode) {
 
 bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
   uint8_t ctrl;
-  i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
+  i2c_.ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
   if (!(ctrl & CONTROL_INTCN))
     return false;
 
@@ -302,8 +300,8 @@ bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
       break;
   }
 
-  auto op = i2c_->CreateWriteOp(DS3231_I2C_ADDRESS, REGISTER_ALARM2_MINUTES,
-                                "setalm2");
+  auto op = i2c_.CreateWriteOp(DS3231_I2C_ADDRESS, REGISTER_ALARM2_MINUTES,
+                               "setalm2");
   if (!op)
     return false;
   op->Write(values, sizeof(values));
@@ -317,51 +315,51 @@ bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
 
 void DS3231::disableAlarm(Alarm alarm) {
   uint8_t ctrl = 0;
-  i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
+  i2c_.ReadRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, &ctrl);
   if (alarm == Alarm::A1)
     CLEAR_BITS(ctrl, CONTROL_A1IE);
   else
     CLEAR_BITS(ctrl, CONTROL_A2IE);
-  i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, ctrl);
+  i2c_.WriteRegister(DS3231_I2C_ADDRESS, REGISTER_CONTROL, ctrl);
 }
 
 void DS3231::clearAlarm(Alarm alarm) {
   uint8_t status;
-  if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
+  if (!i2c_.ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
     return;
   if (alarm == Alarm::A1)
     CLEAR_BITS(status, STATUS_A1F);
   else
     CLEAR_BITS(status, STATUS_A2F);
-  i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
+  i2c_.WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
 }
 
 bool DS3231::isAlarmFired(Alarm alarm) {
   uint8_t status;
-  if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
+  if (!i2c_.ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
     return false;
   return alarm == Alarm::A1 ? status & STATUS_A1F : status & STATUS_A2F;
 }
 
 void DS3231::enable32K(void) {
   uint8_t status;
-  if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
+  if (!i2c_.ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
     return;
   SET_BITS(status, STATUS_EN32kHz);
-  i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
+  i2c_.WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
 }
 
 void DS3231::disable32K(void) {
   uint8_t status;
-  if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
+  if (!i2c_.ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
     return;
   CLEAR_BITS(status, STATUS_EN32kHz);
-  i2c_->WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
+  i2c_.WriteRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, status);
 }
 
 bool DS3231::isEnabled32K(void) {
   uint8_t status;
-  if (!i2c_->ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
+  if (!i2c_.ReadRegister(DS3231_I2C_ADDRESS, REGISTER_STATUS, &status))
     return false;
   return status & STATUS_EN32kHz;
 }

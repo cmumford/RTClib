@@ -12,11 +12,8 @@
 #define RTC_PCF8523_H_
 
 #include <cstdint>
-#include <memory>
 
-namespace i2c {
-class Master;
-}
+#include <i2clib/master.h>
 
 namespace rtc {
 
@@ -68,7 +65,7 @@ enum Pcf8523OffsetMode {
  */
 class PCF8523 {
  public:
-  PCF8523(std::unique_ptr<i2c::Master> i2c);
+  PCF8523(i2c::Master i2c);
 
   /**
    * Start I2C for the PCF8523 and test succesful connection.
@@ -260,7 +257,7 @@ class PCF8523 {
   bool calibrate(Pcf8523OffsetMode mode, int8_t offset);
 
  private:
-  std::unique_ptr<i2c::Master> i2c_;
+  i2c::Master i2c_;
 };
 
 }  // namespace rtc

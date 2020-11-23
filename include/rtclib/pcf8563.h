@@ -12,11 +12,8 @@
 #define RTC_PCF8563_H_
 
 #include <cstdint>
-#include <memory>
 
-namespace i2c {
-class Master;
-}
+#include <i2clib/master.h>
 
 namespace rtc {
 
@@ -35,7 +32,7 @@ class PCF8563 {
     Rate32kHz  ///< 32kHz square wave.
   };
 
-  PCF8563(std::unique_ptr<i2c::Master> i2c);
+  PCF8563(i2c::Master i2c);
 
   /**
    * Start I2C for the PCF8563 and test succesful connection.
@@ -111,7 +108,7 @@ class PCF8563 {
   bool writeSqwPinMode(SqwPinMode mode);
 
  private:
-  std::unique_ptr<i2c::Master> i2c_;
+  i2c::Master i2c_;
 };
 
 }  // namespace rtc

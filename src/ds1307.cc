@@ -56,22 +56,21 @@ constexpr uint8_t CONTROL_SQW_32KH = CONTROL_SQWE | CONTROL_RS0 | CONTROL_RS1;
 
 }  // namespace
 
-DS1307::DS1307(std::unique_ptr<i2c::Master> i2c) : i2c_(std::move(i2c)) {}
+DS1307::DS1307(i2c::Master i2c) : i2c_(std::move(i2c)) {}
 
 bool DS1307::begin(void) {
-  return i2c_->Ping(DS1307_ADDRESS);
+  return i2c_.Ping(DS1307_ADDRESS);
 }
 
 bool DS1307::isRunning(void) {
   uint8_t value;
-  if (!i2c_->ReadRegister(DS1307_ADDRESS, REGISTER_TIME_SECONDS, &value))
+  if (!i2c_.ReadRegister(DS1307_ADDRESS, REGISTER_TIME_SECONDS, &value))
     return false;
   return !(value >> 7);
 }
 
 bool DS1307::adjust(const DateTime& dt) {
-  auto op =
-      i2c_->CreateWriteOp(DS1307_ADDRESS, REGISTER_TIME_SECONDS, "adjust");
+  auto op = i2c_.CreateWriteOp(DS1307_ADDRESS, REGISTER_TIME_SECONDS, "adjust");
   const uint8_t values[7] = {
       bin2bcd(dt.second()),
       bin2bcd(dt.minute()),
@@ -88,7 +87,7 @@ bool DS1307::adjust(const DateTime& dt) {
 }
 
 bool DS1307::now(DateTime* dt) {
-  auto op = i2c_->CreateReadOp(DS1307_ADDRESS, REGISTER_TIME_SECONDS, "now");
+  auto op = i2c_.CreateReadOp(DS1307_ADDRESS, REGISTER_TIME_SECONDS, "now");
 
   uint8_t values[7];  // for registers 0x00 - 0x06.
   if (!op->Read(values, sizeof(values)))
@@ -110,7 +109,7 @@ bool DS1307::now(DateTime* dt) {
 
 DS1307::SqwPinMode DS1307::readSqwPinMode() {
   uint8_t value;
-  if (!i2c_->ReadRegister(DS1307_ADDRESS, REGISTER_CONTROL, &value))
+  if (!i2c_.ReadRegister(DS1307_ADDRESS, REGISTER_CONTROL, &value))
     return DS1307::SqwPinMode::Off;
 
   if (value & CONTROL_SQWE) {
@@ -154,12 +153,12 @@ bool DS1307::writeSqwPinMode(SqwPinMode mode) {
       reg_value = CONTROL_SQW_32KH;
       break;
   }
-  return i2c_->WriteRegister(DS1307_ADDRESS, REGISTER_CONTROL, reg_value);
+  return i2c_.WriteRegister(DS1307_ADDRESS, REGISTER_CONTROL, reg_value);
 }
 
 bool DS1307::readnvram(uint8_t address, void* buf, size_t num_bytes) {
   auto op =
-      i2c_->CreateReadOp(DS1307_ADDRESS, REGISTER_NVRAM + address, "readnvram");
+      i2c_.CreateReadOp(DS1307_ADDRESS, REGISTER_NVRAM + address, "readnvram");
   if (!op)
     return false;
   if (!op->Read(buf, num_bytes))
@@ -168,8 +167,8 @@ bool DS1307::readnvram(uint8_t address, void* buf, size_t num_bytes) {
 }
 
 bool DS1307::writeNVRAM(uint8_t address, const void* buf, size_t num_bytes) {
-  auto op = i2c_->CreateWriteOp(DS1307_ADDRESS, REGISTER_NVRAM + address,
-                                "writeNVRAM");
+  auto op = i2c_.CreateWriteOp(DS1307_ADDRESS, REGISTER_NVRAM + address,
+                               "writeNVRAM");
   if (!op)
     return false;
   if (!op->Write(buf, num_bytes))

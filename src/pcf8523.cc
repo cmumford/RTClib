@@ -35,25 +35,25 @@ constexpr uint8_t PCF8523_STATUSREG = 0x03;      ///< Status register
 }  // anonymous namespace
 
 bool PCF8523::begin(void) {
-  return i2c_->Ping(PCF8523_ADDRESS);
+  return i2c_.Ping(PCF8523_ADDRESS);
 }
 
 bool PCF8523::lostPower(void) {
   uint8_t value;
-  if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_STATUSREG, &value))
+  if (!i2c_.ReadRegister(PCF8523_ADDRESS, PCF8523_STATUSREG, &value))
     return false;
   return value >> 7;
 }
 
 bool PCF8523::initialized(void) {
   uint8_t value;
-  if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_CONTROL_3, &value))
+  if (!i2c_.ReadRegister(PCF8523_ADDRESS, PCF8523_CONTROL_3, &value))
     return false;
   return ((value & 0xE0) != 0xE0);  // 0xE0 = standby mode, set after power out
 }
 
 bool PCF8523::adjust(const DateTime& dt) {
-  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, 0x3, "adjust");
+  auto op = i2c_.CreateWriteOp(PCF8523_ADDRESS, 0x3, "adjust");
   if (!op)
     return false;
 
@@ -76,7 +76,7 @@ bool PCF8523::adjust(const DateTime& dt) {
 }
 
 bool PCF8523::now(DateTime* dt) {
-  auto op = i2c_->CreateReadOp(PCF8523_ADDRESS, 0x3, "now");
+  auto op = i2c_.CreateReadOp(PCF8523_ADDRESS, 0x3, "now");
   if (!op)
     return false;
   uint8_t values[7];  // for registers 0x00 - 0x06.
@@ -99,29 +99,29 @@ bool PCF8523::now(DateTime* dt) {
 
 bool PCF8523::start(void) {
   uint8_t ctlreg;
-  if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1, &ctlreg))
+  if (!i2c_.ReadRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1, &ctlreg))
     return false;
   if (ctlreg & (1 << 5)) {
-    return i2c_->WriteRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1,
-                               ctlreg & ~(1 << 5));
+    return i2c_.WriteRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1,
+                              ctlreg & ~(1 << 5));
   }
   return true;
 }
 
 bool PCF8523::stop(void) {
   uint8_t ctlreg;
-  if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1, &ctlreg))
+  if (!i2c_.ReadRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1, &ctlreg))
     return false;
   if (!(ctlreg & (1 << 5))) {
-    return i2c_->WriteRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1,
-                               ctlreg | (1 << 5));
+    return i2c_.WriteRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1,
+                              ctlreg | (1 << 5));
   }
   return true;
 }
 
 bool PCF8523::isRunning() {
   uint8_t ctlreg;
-  if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1, &ctlreg))
+  if (!i2c_.ReadRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1, &ctlreg))
     return false;
 
   return !((ctlreg >> 5) & 1);
@@ -129,7 +129,7 @@ bool PCF8523::isRunning() {
 
 Pcf8523SqwPinMode PCF8523::readSqwPinMode() {
   uint8_t mode;
-  if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, &mode))
+  if (!i2c_.ReadRegister(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, &mode))
     return PCF8523_OFF;
 
   mode >>= 3;
@@ -139,7 +139,7 @@ Pcf8523SqwPinMode PCF8523::readSqwPinMode() {
 }
 
 bool PCF8523::writeSqwPinMode(Pcf8523SqwPinMode mode) {
-  return i2c_->WriteRegister(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, mode << 3);
+  return i2c_.WriteRegister(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, mode << 3);
 }
 
 bool PCF8523::enableSecondTimer() {
@@ -147,8 +147,8 @@ bool PCF8523::enableSecondTimer() {
   uint8_t clkreg;
 
   {
-    auto op = i2c_->CreateReadOp(PCF8523_ADDRESS, PCF8523_CONTROL_1,
-                                 "enableSecondTimer:read");
+    auto op = i2c_.CreateReadOp(PCF8523_ADDRESS, PCF8523_CONTROL_1,
+                                "enableSecondTimer:read");
     if (!op)
       return false;
     op->Read(&ctlreg, sizeof(ctlreg));
@@ -159,8 +159,8 @@ bool PCF8523::enableSecondTimer() {
       return false;
   }
 
-  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL,
-                                "enableSecondTimer:write");
+  auto op = i2c_.CreateWriteOp(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL,
+                               "enableSecondTimer:write");
   if (!op)
     return false;
   // TAM pulse int. mode (shared with Timer A), CLKOUT (aka SQW) disabled
@@ -175,12 +175,12 @@ bool PCF8523::enableSecondTimer() {
 bool PCF8523::disableSecondTimer() {
   // Leave compatible settings intact
   uint8_t ctlreg;
-  if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1, &ctlreg))
+  if (!i2c_.ReadRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1, &ctlreg))
     return false;
 
   // SIE Second timer int. disable
-  return i2c_->WriteRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1,
-                             ctlreg & ~(1 << 2));
+  return i2c_.WriteRegister(PCF8523_ADDRESS, PCF8523_CONTROL_1,
+                            ctlreg & ~(1 << 2));
 }
 
 bool PCF8523::enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
@@ -196,8 +196,8 @@ bool PCF8523::enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
   uint8_t clkreg;
 
   {
-    auto op = i2c_->CreateReadOp(PCF8523_ADDRESS, PCF8523_CONTROL_2,
-                                 "enableCountdownTimer:read");
+    auto op = i2c_.CreateReadOp(PCF8523_ADDRESS, PCF8523_CONTROL_2,
+                                "enableCountdownTimer:read");
     if (!op)
       return false;
     op->Read(&ctlreg, sizeof(ctlreg));
@@ -210,8 +210,8 @@ bool PCF8523::enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
       return false;
   }
 
-  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, PCF8523_CONTROL_2,
-                                "enableCountdownTimer:write");
+  auto op = i2c_.CreateWriteOp(PCF8523_ADDRESS, PCF8523_CONTROL_2,
+                               "enableCountdownTimer:write");
   if (!op)
     return false;
 
@@ -243,17 +243,17 @@ bool PCF8523::enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
 
 bool PCF8523::disableCountdownTimer() {
   uint8_t clkreg;
-  if (!i2c_->ReadRegister(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, &clkreg))
+  if (!i2c_.ReadRegister(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, &clkreg))
     return false;
-  return i2c_->WriteRegister(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL,
-                             ~1 & clkreg);
+  return i2c_.WriteRegister(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL,
+                            ~1 & clkreg);
 }
 
 bool PCF8523::deconfigureAllTimers() {
   disableSecondTimer();  // Surgically clears CONTROL_1
 
-  auto op = i2c_->CreateWriteOp(PCF8523_ADDRESS, PCF8523_CONTROL_2,
-                                "deconfigureAllTimers");
+  auto op = i2c_.CreateWriteOp(PCF8523_ADDRESS, PCF8523_CONTROL_2,
+                               "deconfigureAllTimers");
   if (!op)
     return false;
 
@@ -277,7 +277,7 @@ bool PCF8523::deconfigureAllTimers() {
 bool PCF8523::calibrate(Pcf8523OffsetMode mode, int8_t offset) {
   uint8_t reg = (uint8_t)offset & 0x7F;
   reg |= mode;
-  return i2c_->WriteRegister(PCF8523_ADDRESS, PCF8523_OFFSET, reg);
+  return i2c_.WriteRegister(PCF8523_ADDRESS, PCF8523_OFFSET, reg);
 }
 
 }  // namespace rtc

@@ -11,11 +11,7 @@
 #ifndef RTC_DS3231_H_
 #define RTC_DS3231_H_
 
-#include <memory>
-
-namespace i2c {
-class Master;
-}
+#include <i2clib/master.h>
 
 namespace rtc {
 
@@ -60,7 +56,7 @@ class DS3231 {
     A2   ///< Alarm 2.
   };
 
-  DS3231(std::unique_ptr<i2c::Master> i2c);
+  DS3231(i2c::Master i2c);
 
   /**
    * Set the date and flip the Oscillator Stop Flag.
@@ -74,7 +70,7 @@ class DS3231 {
    *
    * @return True if Wire can find DS3231 or false otherwise.
    */
-  bool begin(void);
+  bool begin();
 
   /**
    * Check the status register Oscillator Stop Flag to see if the DS3231
@@ -83,7 +79,7 @@ class DS3231 {
    * @return True if the bit is set (oscillator stopped) or false if it is
    * running.
    */
-  bool lostPower(void);
+  bool lostPower();
 
   /**
    * Retrieve the current time from the clock.
@@ -153,19 +149,19 @@ class DS3231 {
    * @details The 32kHz output is enabled by default. It requires an external
    * pull-up resistor to function correctly.
    */
-  void enable32K(void);
+  void enable32K();
 
   /**
    * Disable 32KHz Output.
    */
-  void disable32K(void);
+  void disable32K();
 
   /**
    * Get status of 32KHz Output.
    *
    * @return True if enabled otherwise false.
    */
-  bool isEnabled32K(void);
+  bool isEnabled32K();
 
   /**
    * Get the current temperature from the DS3231's temperature sensor.
@@ -184,7 +180,7 @@ class DS3231 {
   bool getAgingOffset(int8_t* aging_offset);
 
  private:
-  std::unique_ptr<i2c::Master> const i2c_;
+  i2c::Master i2c_;
 };
 
 }  // namespace rtc

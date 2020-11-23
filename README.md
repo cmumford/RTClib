@@ -27,21 +27,21 @@ from the RTC:
 
 using namespace rtc;
 
-// Initialize I2C - this needs to be done only once.
+// Initialize the I2C bus - this needs to be done only once.
 i2c::Master::Initialize(I2C_PORT, I2C_SDA_GPIO,
                         I2C_CLK_GPIO, I2C_CLOCK_SPEED);
 
 // Create an I2C master for the RTC object so that
 // it can communicate via the I2C bus.
-std::unique_ptr<i2c::Master> master(new i2c::Master(I2C_PORT, nullptr));
+i2c::Master master(I2C_PORT, nullptr);
 
 // Allocate an DS3231 RTC object - giving it the I2C master.
-std::unique_ptr<DS3231> rtc(new DS3231(std::move(master)));
-rtc->begin();
+DS3231 rtc(std::move(master));
+rtc.begin();
 
 // Retrieve the current time.
 DateTime now;
-rtc->now(&now);
+rtc.now(&now);
 ```
 
 ## Developer Notes

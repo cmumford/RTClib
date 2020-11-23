@@ -11,11 +11,7 @@
 #ifndef RTC_DS1307_H_
 #define RTC_DS1307_H_
 
-#include <memory>
-
-namespace i2c {
-class Master;
-}
+#include <i2clib/master.h>
 
 namespace rtc {
 
@@ -35,14 +31,14 @@ class DS1307 {
     Rate32kHz  // 32kHz square wave.
   };
 
-  DS1307(std::unique_ptr<i2c::Master> i2c);
+  DS1307(i2c::Master i2c);
 
   /**
    * Start I2C for the DS1307 and test succesful connection.
    *
    * @return True if DS1307 is found, false otherwise.
    */
-  bool begin(void);
+  bool begin();
 
   /**
    * Set the date and time in the DS1307.
@@ -59,7 +55,7 @@ class DS1307 {
    *
    * @return true if running, false if not.
    */
-  bool isRunning(void);
+  bool isRunning();
 
   /**
    * Get the current date and time from the DS1307.
@@ -105,7 +101,7 @@ class DS1307 {
   bool writeNVRAM(uint8_t address, const void* buf, size_t num_bytes);
 
  private:
-  std::unique_ptr<i2c::Master> const i2c_;
+  i2c::Master i2c_;
 };
 
 }  // namespace rtc
