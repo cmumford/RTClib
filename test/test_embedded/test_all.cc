@@ -79,32 +79,32 @@ void test_pcf8523_square_wave_pin_mode() {
   auto rtc = CreatePCF8523();
   TEST_ASSERT_TRUE(rtc.begin());
 
-  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_OFF));
-  TEST_ASSERT_EQUAL(PCF8523_OFF, rtc.readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523::SqwPinMode::Off));
+  TEST_ASSERT_EQUAL(PCF8523::SqwPinMode::Off, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_SquareWave1HZ));
-  TEST_ASSERT_EQUAL(PCF8523_SquareWave1HZ, rtc.readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523::SqwPinMode::Rate1Hz));
+  TEST_ASSERT_EQUAL(PCF8523::SqwPinMode::Rate1Hz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_SquareWave32HZ));
-  TEST_ASSERT_EQUAL(PCF8523_SquareWave32HZ, rtc.readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523::SqwPinMode::Rate32Hz));
+  TEST_ASSERT_EQUAL(PCF8523::SqwPinMode::Rate32Hz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_SquareWave1kHz));
-  TEST_ASSERT_EQUAL(PCF8523_SquareWave1kHz, rtc.readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523::SqwPinMode::Rate1kHz));
+  TEST_ASSERT_EQUAL(PCF8523::SqwPinMode::Rate1kHz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_SquareWave4kHz));
-  TEST_ASSERT_EQUAL(PCF8523_SquareWave4kHz, rtc.readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523::SqwPinMode::Rate4kHz));
+  TEST_ASSERT_EQUAL(PCF8523::SqwPinMode::Rate4kHz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_SquareWave8kHz));
-  TEST_ASSERT_EQUAL(PCF8523_SquareWave8kHz, rtc.readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523::SqwPinMode::Rate8kHz));
+  TEST_ASSERT_EQUAL(PCF8523::SqwPinMode::Rate8kHz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_SquareWave16kHz));
-  TEST_ASSERT_EQUAL(PCF8523_SquareWave16kHz, rtc.readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523::SqwPinMode::Rate16kHz));
+  TEST_ASSERT_EQUAL(PCF8523::SqwPinMode::Rate16kHz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_SquareWave32kHz));
-  TEST_ASSERT_EQUAL(PCF8523_SquareWave32kHz, rtc.readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523::SqwPinMode::Rate32kHz));
+  TEST_ASSERT_EQUAL(PCF8523::SqwPinMode::Rate32kHz, rtc.readSqwPinMode());
 
-  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_OFF));
-  TEST_ASSERT_EQUAL(PCF8523_OFF, rtc.readSqwPinMode());
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523::SqwPinMode::Off));
+  TEST_ASSERT_EQUAL(PCF8523::SqwPinMode::Off, rtc.readSqwPinMode());
 }
 
 #endif  // TEST_PCF8623

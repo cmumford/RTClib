@@ -19,18 +19,6 @@ namespace rtc {
 
 class DateTime;
 
-/** PCF8523 INT/SQW pin mode settings */
-enum Pcf8523SqwPinMode {
-  PCF8523_OFF = 7,             /**< Off */
-  PCF8523_SquareWave1HZ = 6,   /**< 1Hz square wave */
-  PCF8523_SquareWave32HZ = 5,  /**< 32Hz square wave */
-  PCF8523_SquareWave1kHz = 4,  /**< 1kHz square wave */
-  PCF8523_SquareWave4kHz = 3,  /**< 4kHz square wave */
-  PCF8523_SquareWave8kHz = 2,  /**< 8kHz square wave */
-  PCF8523_SquareWave16kHz = 1, /**< 16kHz square wave */
-  PCF8523_SquareWave32kHz = 0  /**< 32kHz square wave */
-};
-
 /** PCF8523 Timer Source Clock Frequencies for Timers A and B */
 enum PCF8523TimerClockFreq {
   PCF8523_Frequency4kHz = 0,   /**< 1/4096th second = 244 microseconds,
@@ -65,6 +53,20 @@ enum Pcf8523OffsetMode {
  */
 class PCF8523 {
  public:
+  /**
+   * State of the INT/SQW pin.
+   */
+  enum class SqwPinMode {
+    Off,
+    Rate1Hz,
+    Rate32Hz,
+    Rate1kHz,
+    Rate4kHz,
+    Rate8kHz,
+    Rate16kHz,
+    Rate32kHz,
+  };
+
   PCF8523(i2c::Master i2c);
 
   /**
@@ -137,18 +139,18 @@ class PCF8523 {
   /**
    * Read the mode of the INT/SQW pin on the PCF8523.
    *
-   * @return SQW pin mode as a #Pcf8523SqwPinMode enum
+   * @return SQW pin mode as a #PCF8523::SqwPinMode enum
    */
-  Pcf8523SqwPinMode readSqwPinMode();
+  PCF8523::SqwPinMode readSqwPinMode();
 
   /**
    * Set the INT/SQW pin mode on the PCF8523.
    *
-   * @param mode The mode to set, see the #Pcf8523SqwPinMode enum for options.
+   * @param mode The mode to set, see the #PCF8523::SqwPinMode enum for options.
    *
    * @return True if successful, false if not.
    */
-  bool writeSqwPinMode(Pcf8523SqwPinMode mode);
+  bool writeSqwPinMode(PCF8523::SqwPinMode mode);
 
   /**
    * Enable the Second Timer (1Hz) Interrupt on the PCF8523.

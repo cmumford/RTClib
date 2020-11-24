@@ -30,6 +30,17 @@ constexpr uint8_t PCF8523_TIMER_B_FRCTL = 0x12;  ///< Timer B source clock frequ
 constexpr uint8_t PCF8523_TIMER_B_VALUE = 0x13;  ///< Timer B value (number clock periods)
 constexpr uint8_t PCF8523_OFFSET = 0x0E;         ///< Offset register
 constexpr uint8_t PCF8523_STATUSREG = 0x03;      ///< Status register
+
+constexpr uint8_t CLKOUT_SQW_32kHz = 0b00000000;
+constexpr uint8_t CLKOUT_SQW_16kHz = 0b00001000;
+constexpr uint8_t CLKOUT_SQW_8kHz  = 0b00010000;
+constexpr uint8_t CLKOUT_SQW_4kHz  = 0b00011000;
+constexpr uint8_t CLKOUT_SQW_1kHz  = 0b00100000;
+constexpr uint8_t CLKOUT_SQW_32Hz  = 0b00101000;
+constexpr uint8_t CLKOUT_SQW_1Hz   = 0b00110000;
+constexpr uint8_t CLKOUT_SQW_Off   = 0b00111000;
+constexpr uint8_t CLKOUT_SQW_MASK  = 0b00111000;
+
 // clang-format on
 
 }  // anonymous namespace
@@ -129,19 +140,69 @@ bool PCF8523::isRunning() {
   return !((ctlreg >> 5) & 1);
 }
 
-Pcf8523SqwPinMode PCF8523::readSqwPinMode() {
+PCF8523::SqwPinMode PCF8523::readSqwPinMode() {
   uint8_t mode;
   if (!i2c_.ReadRegister(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, &mode))
-    return PCF8523_OFF;
+    return SqwPinMode::Off;
 
-  mode >>= 3;
-  mode &= 0x7;
-
-  return static_cast<Pcf8523SqwPinMode>(mode);
+  switch (mode & CLKOUT_SQW_MASK) {  // COF[2:0]
+    case CLKOUT_SQW_32kHz:
+      return SqwPinMode::Rate32kHz;
+    case CLKOUT_SQW_16kHz:
+      return SqwPinMode::Rate16kHz;
+    case CLKOUT_SQW_8kHz:
+      return SqwPinMode::Rate8kHz;
+    case CLKOUT_SQW_4kHz:
+      return SqwPinMode::Rate4kHz;
+    case CLKOUT_SQW_1kHz:
+      return SqwPinMode::Rate1kHz;
+    case CLKOUT_SQW_32Hz:
+      return SqwPinMode::Rate32Hz;
+    case CLKOUT_SQW_1Hz:
+      return SqwPinMode::Rate1Hz;
+    case CLKOUT_SQW_Off:
+      // Fallthrough
+    default:
+      return SqwPinMode::Off;
+  }
 }
 
-bool PCF8523::writeSqwPinMode(Pcf8523SqwPinMode mode) {
-  return i2c_.WriteRegister(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, mode << 3);
+bool PCF8523::writeSqwPinMode(PCF8523::SqwPinMode mode) {
+  uint8_t reg = 0x0;
+
+  // TODO: Should this function preserve the other PCF8523_CLKOUTCONTROL
+  // register bits? Most of those are alarm bits, and it's doubtful that
+  // one would want to use alarms as well as the square wave feature.
+  // Should probably **only** set the square wave bits (i.e. COF[2:0])
+  // in this function, and provide API to set the others.
+
+  switch (mode) {
+    case SqwPinMode::Off:
+      SET_BITS(reg, CLKOUT_SQW_Off);
+      break;
+    case SqwPinMode::Rate1Hz:
+      SET_BITS(reg, CLKOUT_SQW_1Hz);
+      break;
+    case SqwPinMode::Rate32Hz:
+      SET_BITS(reg, CLKOUT_SQW_32Hz);
+      break;
+    case SqwPinMode::Rate1kHz:
+      SET_BITS(reg, CLKOUT_SQW_1kHz);
+      break;
+    case SqwPinMode::Rate4kHz:
+      SET_BITS(reg, CLKOUT_SQW_4kHz);
+      break;
+    case SqwPinMode::Rate8kHz:
+      SET_BITS(reg, CLKOUT_SQW_8kHz);
+      break;
+    case SqwPinMode::Rate16kHz:
+      SET_BITS(reg, CLKOUT_SQW_16kHz);
+      break;
+    case SqwPinMode::Rate32kHz:
+      SET_BITS(reg, CLKOUT_SQW_32kHz);
+      break;
+  }
+  return i2c_.WriteRegister(PCF8523_ADDRESS, PCF8523_CLKOUTCONTROL, reg);
 }
 
 bool PCF8523::enableSecondTimer() {
