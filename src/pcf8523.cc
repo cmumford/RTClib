@@ -34,6 +34,8 @@ constexpr uint8_t PCF8523_STATUSREG = 0x03;      ///< Status register
 
 }  // anonymous namespace
 
+PCF8523::PCF8523(i2c::Master i2c) : i2c_(std::move(i2c)) {}
+
 bool PCF8523::begin(void) {
   return i2c_.Ping(PCF8523_ADDRESS);
 }

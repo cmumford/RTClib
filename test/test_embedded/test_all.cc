@@ -16,6 +16,8 @@
 #include <rtclib/pcf8563.h>
 #include <rtclib/timespan.h>
 
+#define TEST_PCF8623
+
 /**
  * The I2C bus speed when running tests.
  *
@@ -25,6 +27,7 @@
 constexpr int kI2CClockHz = 100000;
 constexpr uint8_t DS3231_I2C_ADDRESS = 0x68;
 constexpr uint8_t DS1307_I2C_ADDRESS = 0x68;
+constexpr uint8_t PCF8523_I2C_ADDRESS = 0x68;
 constexpr uint8_t PCF8563_I2C_ADDRESS = 0x51;
 
 SemaphoreHandle_t g_i2c_mutex;
@@ -32,6 +35,8 @@ SemaphoreHandle_t g_i2c_mutex;
 using namespace rtc;
 
 namespace {
+
+#if !defined(TEST_PCF8623)
 
 DS3231 CreateDS3231() {
   return DS3231(i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
@@ -41,9 +46,68 @@ DS1307 CreateDS1307() {
   return DS1307(i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
 }
 
+#endif  // !defined(TEST_PCF8623)
+
 PCF8563 CreatePCF8563() {
   return PCF8563(i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
 }
+
+#if defined(TEST_PCF8623)
+
+PCF8523 CreatePCF8523() {
+  return PCF8523(i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
+}
+
+void test_pcf8523_set_and_get_date() {
+  auto rtc = CreatePCF8523();
+  TEST_ASSERT_TRUE(rtc.begin());
+
+  const DateTime dt(2020, 11, 14, 21, 26, 59);
+  DateTime(rtc.adjust(dt));
+
+  // This is a possible flakey test, as there is "daylight" between the set
+  // and the get call, and the running clock could increment the time.
+  // Instead this test will measure the delta, and only fail if longer than
+  // a specified duration.
+  DateTime now;
+  TEST_ASSERT_TRUE(rtc.now(&now));
+  const TimeSpan delta = now - dt;
+  TEST_ASSERT_LESS_OR_EQUAL(2, std::abs(delta.totalseconds()));
+}
+
+void test_pcf8523_square_wave_pin_mode() {
+  auto rtc = CreatePCF8523();
+  TEST_ASSERT_TRUE(rtc.begin());
+
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_OFF));
+  TEST_ASSERT_EQUAL(PCF8523_OFF, rtc.readSqwPinMode());
+
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_SquareWave1HZ));
+  TEST_ASSERT_EQUAL(PCF8523_SquareWave1HZ, rtc.readSqwPinMode());
+
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_SquareWave32HZ));
+  TEST_ASSERT_EQUAL(PCF8523_SquareWave32HZ, rtc.readSqwPinMode());
+
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_SquareWave1kHz));
+  TEST_ASSERT_EQUAL(PCF8523_SquareWave1kHz, rtc.readSqwPinMode());
+
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_SquareWave4kHz));
+  TEST_ASSERT_EQUAL(PCF8523_SquareWave4kHz, rtc.readSqwPinMode());
+
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_SquareWave8kHz));
+  TEST_ASSERT_EQUAL(PCF8523_SquareWave8kHz, rtc.readSqwPinMode());
+
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_SquareWave16kHz));
+  TEST_ASSERT_EQUAL(PCF8523_SquareWave16kHz, rtc.readSqwPinMode());
+
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_SquareWave32kHz));
+  TEST_ASSERT_EQUAL(PCF8523_SquareWave32kHz, rtc.readSqwPinMode());
+
+  TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8523_OFF));
+  TEST_ASSERT_EQUAL(PCF8523_OFF, rtc.readSqwPinMode());
+}
+
+#endif  // TEST_PCF8623
 
 void test_pcf8563_set_and_get_date() {
   auto rtc = CreatePCF8563();
@@ -84,6 +148,8 @@ void test_pcf8563_square_wave_pin_mode() {
   TEST_ASSERT_TRUE(rtc.writeSqwPinMode(PCF8563::SqwPinMode::Off));
   TEST_ASSERT_EQUAL(PCF8563::SqwPinMode::Off, rtc.readSqwPinMode());
 }
+
+#if !defined(TEST_PCF8623)
 
 void test_ds1307_set_and_get_date() {
   auto rtc = CreateDS1307();
@@ -239,6 +305,8 @@ void test_ds3231_agingOffset() {
   TEST_ASSERT_TRUE(rtc.getAgingOffset(&offset));
 }
 
+#endif  // !defined(TEST_PCF8623)
+
 void process() {
   g_i2c_mutex = xSemaphoreCreateMutex();
 
@@ -250,6 +318,10 @@ void process() {
 
   UNITY_BEGIN();
 
+#if defined(TEST_PCF8623)
+  RUN_TEST(test_pcf8523_set_and_get_date);
+  RUN_TEST(test_pcf8523_square_wave_pin_mode);
+#else
   RUN_TEST(test_ds3231_set_and_get_date);
   RUN_TEST(test_ds3231_32k);
   RUN_TEST(test_ds3231_temperature);
@@ -258,14 +330,17 @@ void process() {
   RUN_TEST(test_ds3231_alarm2);
   RUN_TEST(test_ds3231_agingOffset);
 
+  RUN_TEST(test_ds1307_set_and_get_date);
+  RUN_TEST(test_ds1307_square_wave_pin_mode);
+#endif
+
   RUN_TEST(test_pcf8563_set_and_get_date);
   RUN_TEST(test_pcf8563_square_wave_pin_mode);
 
-  RUN_TEST(test_ds1307_set_and_get_date);
-  RUN_TEST(test_ds1307_square_wave_pin_mode);
-
   UNITY_END();
 }
+
+#if !defined(TEST_PCF8623)
 
 bool clear_ds3231_registers() {
   std::unique_ptr<i2c::Master> master(
@@ -289,6 +364,19 @@ bool clear_ds1307_registers() {
   return op->Execute();
 }
 
+#endif  // !defined(TEST_PCF8623)
+
+bool clear_pcf8523_registers() {
+  std::unique_ptr<i2c::Master> master(
+      new i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
+  uint8_t registers[1 + 0x13] = {0};
+  auto op = master->CreateWriteOp(PCF8523_I2C_ADDRESS, 0x0, "clear_PCF8523");
+  if (!op)
+    return false;
+  op->Write(registers, sizeof(registers));
+  return op->Execute();
+}
+
 bool clear_pcf8563_registers() {
   std::unique_ptr<i2c::Master> master(
       new i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
@@ -304,8 +392,12 @@ bool clear_pcf8563_registers() {
 
 // Called before each test.
 void setUp(void) {
+#if defined(TEST_PCF8623)
+  clear_pcf8523_registers();
+#else
   clear_ds3231_registers();
   clear_ds1307_registers();
+#endif
   clear_pcf8563_registers();
 }
 

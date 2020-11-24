@@ -33,7 +33,7 @@ i2c::Master::Initialize(I2C_PORT, I2C_SDA_GPIO,
 
 // Create an I2C master for the RTC object so that
 // it can communicate via the I2C bus.
-i2c::Master master(I2C_PORT, nullptr);
+i2c::Master master(I2C_PORT, /*i2c_mutex=*/nullptr);
 
 // Allocate an DS3231 RTC object - giving it the I2C master.
 DS3231 rtc(std::move(master));

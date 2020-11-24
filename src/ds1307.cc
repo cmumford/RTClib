@@ -101,7 +101,7 @@ bool DS1307::now(DateTime* dt) {
   // Skip day of week.
   const uint8_t d = bcd2bin(values[REGISTER_TIME_DATE]);
   const uint8_t m = bcd2bin(values[REGISTER_TIME_MONTH]);
-  const uint16_t y = bcd2bin(values[REGISTER_TIME_YEAR]);
+  const uint16_t y = 2000 + bcd2bin(values[REGISTER_TIME_YEAR]);
 
   *dt = DateTime(y, m, d, hh, mm, ss);
   return true;

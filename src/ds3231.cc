@@ -147,11 +147,12 @@ bool DS3231::now(DateTime* dt) {
     return false;
 
   // BUG: Correctly handle the DY/DT flag. This assumes always date.
-  *dt = DateTime(
-      bcd2bin(values[REGISTER_TIME_YEAR]), bcd2bin(values[REGISTER_TIME_MONTH]),
-      bcd2bin(values[REGISTER_TIME_DATE]), bcd2bin(values[REGISTER_TIME_HOURS]),
-      bcd2bin(values[REGISTER_TIME_MINUTES]),
-      bcd2bin(values[REGISTER_TIME_SECONDS]));
+  *dt = DateTime(2000U + bcd2bin(values[REGISTER_TIME_YEAR]),
+                 bcd2bin(values[REGISTER_TIME_MONTH]),
+                 bcd2bin(values[REGISTER_TIME_DATE]),
+                 bcd2bin(values[REGISTER_TIME_HOURS]),
+                 bcd2bin(values[REGISTER_TIME_MINUTES]),
+                 bcd2bin(values[REGISTER_TIME_SECONDS]));
   return true;
 }
 
