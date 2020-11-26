@@ -8,7 +8,7 @@
  * https://github.com/adafruit/RTClib
  */
 
-#include "RTC_util.h"
+#include "rtc_util.h"
 
 uint8_t bcd2bin(uint8_t val) {
   return val - 6 * (val >> 4);

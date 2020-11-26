@@ -13,7 +13,7 @@
 #include <i2clib/master.h>
 #include <i2clib/operation.h>
 #include <rtclib/datetime.h>
-#include "RTC_util.h"
+#include "rtc_util.h"
 
 namespace rtc {
 
