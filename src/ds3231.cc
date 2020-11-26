@@ -17,6 +17,8 @@
 #include <rtclib/datetime.h>
 #include "RTC_util.h"
 
+using i2c::Operation;
+
 namespace rtc {
 
 namespace {
@@ -266,7 +268,7 @@ bool DS3231::setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode) {
     return false;
   op.Write(values, sizeof(values));
 
-  op.RestartReg(REGISTER_CONTROL, i2c::Operation::Type::WRITE);
+  op.RestartReg(REGISTER_CONTROL, Operation::Type::WRITE);
   SET_BITS(ctrl, CONTROL_A1IE);
   op.WriteByte(ctrl);
 
@@ -307,7 +309,7 @@ bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
     return false;
   op.Write(values, sizeof(values));
 
-  op.RestartReg(REGISTER_CONTROL, i2c::Operation::Type::WRITE);
+  op.RestartReg(REGISTER_CONTROL, Operation::Type::WRITE);
   SET_BITS(ctrl, CONTROL_A2IE);
   op.WriteByte(ctrl);
 

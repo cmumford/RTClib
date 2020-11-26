@@ -15,6 +15,8 @@
 #include <rtclib/datetime.h>
 #include "RTC_util.h"
 
+using i2c::Operation;
+
 namespace rtc {
 
 namespace {
@@ -83,7 +85,7 @@ bool PCF8523::adjust(const DateTime& dt) {
   op.Write(values, sizeof(values));
 
   // set to battery switchover mode
-  op.RestartReg(PCF8523_CONTROL_3, i2c::Operation::Type::WRITE);
+  op.RestartReg(PCF8523_CONTROL_3, Operation::Type::WRITE);
   op.WriteByte(0x0);
   return op.Execute();
 }
@@ -215,7 +217,7 @@ bool PCF8523::enableSecondTimer() {
     if (!op.ready())
       return false;
     op.Read(&ctlreg, sizeof(ctlreg));
-    op.RestartReg(PCF8523_CLKOUTCONTROL, i2c::Operation::Type::READ);
+    op.RestartReg(PCF8523_CLKOUTCONTROL, Operation::Type::READ);
     op.Read(&clkreg, sizeof(clkreg));
     if (!op.Execute())
       return false;
@@ -229,7 +231,7 @@ bool PCF8523::enableSecondTimer() {
   op.WriteByte(clkreg | 0xB8);
 
   // SIE Second timer int. enable
-  op.RestartReg(PCF8523_CONTROL_1, i2c::Operation::Type::WRITE);
+  op.RestartReg(PCF8523_CONTROL_1, Operation::Type::WRITE);
   op.WriteByte(ctlreg | (1 << 2));
   return op.Execute();
 }
@@ -264,7 +266,7 @@ bool PCF8523::enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
       return false;
     op.Read(&ctlreg, sizeof(ctlreg));
 
-    op.RestartReg(PCF8523_CLKOUTCONTROL, i2c::Operation::Type::READ);
+    op.RestartReg(PCF8523_CLKOUTCONTROL, Operation::Type::READ);
     op.Read(&clkreg, sizeof(clkreg));
 
     if (!op.Execute())
@@ -280,15 +282,15 @@ bool PCF8523::enableCountdownTimer(PCF8523TimerClockFreq clkFreq,
   op.WriteByte(ctlreg |= 0x01);
 
   // Timer B source clock frequency, optionally int. low pulse width
-  op.RestartReg(PCF8523_TIMER_B_FRCTL, i2c::Operation::Type::WRITE);
+  op.RestartReg(PCF8523_TIMER_B_FRCTL, Operation::Type::WRITE);
   op.WriteByte(lowPulseWidth << 4 | clkFreq);
 
   // Timer B value (number of source clock periods)
-  op.RestartReg(PCF8523_TIMER_B_VALUE, i2c::Operation::Type::WRITE);
+  op.RestartReg(PCF8523_TIMER_B_VALUE, Operation::Type::WRITE);
   op.WriteByte(numPeriods);
 
   // TBM Timer B pulse int. mode, CLKOUT (aka SQW) disabled, TBC start Timer B
-  op.RestartReg(PCF8523_CLKOUTCONTROL, i2c::Operation::Type::WRITE);
+  op.RestartReg(PCF8523_CLKOUTCONTROL, Operation::Type::WRITE);
   op.WriteByte(clkreg | 0x79);
 
   return op.Execute();
@@ -317,13 +319,13 @@ bool PCF8523::deconfigureAllTimers() {
 
   op.WriteByte(0);
 
-  op.RestartReg(PCF8523_CLKOUTCONTROL, i2c::Operation::Type::WRITE);
+  op.RestartReg(PCF8523_CLKOUTCONTROL, Operation::Type::WRITE);
   op.WriteByte(0);
 
-  op.RestartReg(PCF8523_TIMER_B_FRCTL, i2c::Operation::Type::WRITE);
+  op.RestartReg(PCF8523_TIMER_B_FRCTL, Operation::Type::WRITE);
   op.WriteByte(0);
 
-  op.RestartReg(PCF8523_TIMER_B_VALUE, i2c::Operation::Type::WRITE);
+  op.RestartReg(PCF8523_TIMER_B_VALUE, Operation::Type::WRITE);
   op.WriteByte(0);
 
   return op.Execute();

@@ -18,6 +18,8 @@
 
 //#define TEST_PCF8623
 
+using i2c::Master;
+
 /**
  * The I2C bus speed when running tests.
  *
@@ -39,23 +41,23 @@ namespace {
 #if !defined(TEST_PCF8623)
 
 DS3231 CreateDS3231() {
-  return DS3231(i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
+  return DS3231(Master(TEST_I2C_PORT1, g_i2c_mutex));
 }
 
 DS1307 CreateDS1307() {
-  return DS1307(i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
+  return DS1307(Master(TEST_I2C_PORT1, g_i2c_mutex));
 }
 
 #endif  // !defined(TEST_PCF8623)
 
 PCF8563 CreatePCF8563() {
-  return PCF8563(i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
+  return PCF8563(Master(TEST_I2C_PORT1, g_i2c_mutex));
 }
 
 #if defined(TEST_PCF8623)
 
 PCF8523 CreatePCF8523() {
-  return PCF8523(i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
+  return PCF8523(Master(TEST_I2C_PORT1, g_i2c_mutex));
 }
 
 void test_pcf8523_set_and_get_date() {
@@ -253,7 +255,7 @@ void test_ds3231_square_wave_pin_mode() {
 }
 
 void test_ds3231_alarm1() {
-  DS3231 rtc(i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
+  DS3231 rtc(Master(TEST_I2C_PORT1, g_i2c_mutex));
   TEST_ASSERT_TRUE(rtc.begin());
 
   // Enable square wave and verify alarm set failure.
@@ -266,7 +268,7 @@ void test_ds3231_alarm1() {
   TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS3231::SqwPinMode::Off));
   TEST_ASSERT_TRUE(rtc.setAlarm1(dt, DS3231::Alarm1Mode::Hour));
 
-  i2c::Master master(TEST_I2C_PORT1, g_i2c_mutex);
+  Master master(TEST_I2C_PORT1, g_i2c_mutex);
   auto op = master.CreateReadOp(0x68, 0x07, "test_ds3231_alarm1");
   TEST_ASSERT_TRUE(op.ready());
   uint8_t values[4];
@@ -276,7 +278,7 @@ void test_ds3231_alarm1() {
 }
 
 void test_ds3231_alarm2() {
-  DS3231 rtc(i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
+  DS3231 rtc(Master(TEST_I2C_PORT1, g_i2c_mutex));
   TEST_ASSERT_TRUE(rtc.begin());
 
   // Enable square wave and verify alarm set failure.
@@ -288,7 +290,7 @@ void test_ds3231_alarm2() {
   // Now set to alarm mode.
   TEST_ASSERT_TRUE(rtc.writeSqwPinMode(DS3231::SqwPinMode::Off));
 
-  i2c::Master master(TEST_I2C_PORT1, g_i2c_mutex);
+  Master master(TEST_I2C_PORT1, g_i2c_mutex);
   auto op = master.CreateReadOp(0x68, 0x0b, "test_ds3231_alarm2");
   TEST_ASSERT_TRUE(op.ready());
   uint8_t values[3];
@@ -310,11 +312,11 @@ void test_ds3231_agingOffset() {
 void process() {
   g_i2c_mutex = xSemaphoreCreateMutex();
 
-  i2c::Master::Initialize(TEST_I2C_PORT1, PORT_1_I2C_SDA_GPIO,
-                          PORT_1_I2C_CLK_GPIO, kI2CClockHz);
+  Master::Initialize(TEST_I2C_PORT1, PORT_1_I2C_SDA_GPIO, PORT_1_I2C_CLK_GPIO,
+                     kI2CClockHz);
 
-  i2c::Master::Initialize(TEST_I2C_PORT2, PORT_2_I2C_SDA_GPIO,
-                          PORT_2_I2C_CLK_GPIO, kI2CClockHz);
+  Master::Initialize(TEST_I2C_PORT2, PORT_2_I2C_SDA_GPIO, PORT_2_I2C_CLK_GPIO,
+                     kI2CClockHz);
 
   UNITY_BEGIN();
 
@@ -343,7 +345,7 @@ void process() {
 #if !defined(TEST_PCF8623)
 
 bool clear_ds3231_registers() {
-  i2c::Master master(TEST_I2C_PORT1, g_i2c_mutex);
+  Master master(TEST_I2C_PORT1, g_i2c_mutex);
   uint8_t registers[1 + 0x12] = {0};
   auto op = master.CreateWriteOp(DS3231_I2C_ADDRESS, 0x0, "clear_DS3231");
   if (!op.ready())
@@ -353,7 +355,7 @@ bool clear_ds3231_registers() {
 }
 
 bool clear_ds1307_registers() {
-  i2c::Master master(TEST_I2C_PORT2, g_i2c_mutex);
+  Master master(TEST_I2C_PORT2, g_i2c_mutex);
   uint8_t registers[1 + 0x07] = {0};
   auto op = master.CreateWriteOp(DS1307_I2C_ADDRESS, 0x0, "clear_DS1307");
   if (!op.ready())
@@ -365,7 +367,7 @@ bool clear_ds1307_registers() {
 #endif  // !defined(TEST_PCF8623)
 
 bool clear_pcf8523_registers() {
-  i2c::Master master(TEST_I2C_PORT1, g_i2c_mutex);
+  Master master(TEST_I2C_PORT1, g_i2c_mutex);
   uint8_t registers[1 + 0x13] = {0};
   auto op = master.CreateWriteOp(PCF8523_I2C_ADDRESS, 0x0, "clear_PCF8523");
   if (!op.ready())
@@ -375,7 +377,7 @@ bool clear_pcf8523_registers() {
 }
 
 bool clear_pcf8563_registers() {
-  i2c::Master master(TEST_I2C_PORT1, g_i2c_mutex);
+  Master master(TEST_I2C_PORT1, g_i2c_mutex);
   uint8_t registers[1 + 0x0f] = {0};
   auto op = master.CreateWriteOp(PCF8563_I2C_ADDRESS, 0x0, "clear_PCF8563");
   if (!op.ready())
