@@ -71,6 +71,8 @@ bool DS1307::isRunning(void) {
 
 bool DS1307::adjust(const DateTime& dt) {
   auto op = i2c_.CreateWriteOp(DS1307_ADDRESS, REGISTER_TIME_SECONDS, "adjust");
+  if (!op.ready())
+    return false;
   const uint8_t values[7] = {
       bin2bcd(dt.second()),
       bin2bcd(dt.minute()),
@@ -81,18 +83,19 @@ bool DS1307::adjust(const DateTime& dt) {
       bin2bcd(dt.year() - 2000U),
   };
 
-  op->Write(values, sizeof(values));
+  op.Write(values, sizeof(values));
 
-  return op->Execute();
+  return op.Execute();
 }
 
 bool DS1307::now(DateTime* dt) {
   auto op = i2c_.CreateReadOp(DS1307_ADDRESS, REGISTER_TIME_SECONDS, "now");
-
-  uint8_t values[7];  // for registers 0x00 - 0x06.
-  if (!op->Read(values, sizeof(values)))
+  if (!op.ready())
     return false;
-  if (!op->Execute())
+  uint8_t values[7];  // for registers 0x00 - 0x06.
+  if (!op.Read(values, sizeof(values)))
+    return false;
+  if (!op.Execute())
     return false;
 
   const uint8_t ss = bcd2bin(values[REGISTER_TIME_SECONDS]);
@@ -159,21 +162,21 @@ bool DS1307::writeSqwPinMode(SqwPinMode mode) {
 bool DS1307::readnvram(uint8_t address, void* buf, size_t num_bytes) {
   auto op =
       i2c_.CreateReadOp(DS1307_ADDRESS, REGISTER_NVRAM + address, "readnvram");
-  if (!op)
+  if (!op.ready())
     return false;
-  if (!op->Read(buf, num_bytes))
+  if (!op.Read(buf, num_bytes))
     return false;
-  return op->Execute();
+  return op.Execute();
 }
 
 bool DS1307::writeNVRAM(uint8_t address, const void* buf, size_t num_bytes) {
   auto op = i2c_.CreateWriteOp(DS1307_ADDRESS, REGISTER_NVRAM + address,
                                "writeNVRAM");
-  if (!op)
+  if (!op.ready())
     return false;
-  if (!op->Write(buf, num_bytes))
+  if (!op.Write(buf, num_bytes))
     return false;
-  return op->Execute();
+  return op.Execute();
 }
 
 }  // namespace rtc

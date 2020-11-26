@@ -54,7 +54,7 @@ bool PCF8563::lostPower() {
 bool PCF8563::adjust(const DateTime& dt) {
   auto op =
       i2c_.CreateWriteOp(PCF8563_I2C_ADDRESS, REGISTER_VL_SECONDS, "adjust");
-  if (!op)
+  if (!op.ready())
     return false;
   const uint8_t values[7] = {
       bin2bcd(dt.second()),
@@ -65,17 +65,17 @@ bool PCF8563::adjust(const DateTime& dt) {
       bin2bcd(dt.month()),
       bin2bcd(dt.year() - 2000),
   };
-  op->Write(values, sizeof(values));
-  return op->Execute();
+  op.Write(values, sizeof(values));
+  return op.Execute();
 }
 
 bool PCF8563::now(DateTime* dt) {
   auto op = i2c_.CreateReadOp(PCF8563_I2C_ADDRESS, REGISTER_VL_SECONDS, "now");
-  if (!op)
+  if (!op.ready())
     return false;
   uint8_t values[7];
-  op->Read(values, sizeof(values));
-  if (!op->Execute())
+  op.Read(values, sizeof(values));
+  if (!op.Execute())
     return false;
 
   const uint8_t ss = bcd2bin(values[0] & 0x7F);

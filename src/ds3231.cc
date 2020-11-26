@@ -115,7 +115,7 @@ bool DS3231::adjust(const DateTime& dt) {
   {
     auto op =
         i2c_.CreateWriteOp(DS3231_I2C_ADDRESS, REGISTER_TIME_SECONDS, "adjust");
-    if (!op)
+    if (!op.ready())
       return false;
     const uint8_t values[7] = {
         bin2bcd(dt.second()),       bin2bcd(dt.minute()),
@@ -124,8 +124,8 @@ bool DS3231::adjust(const DateTime& dt) {
         bin2bcd(dt.year() - 2000U),
     };
 
-    op->Write(values, sizeof(values));
-    if (!op->Execute())
+    op.Write(values, sizeof(values));
+    if (!op.Execute())
       return false;
   }
 
@@ -139,11 +139,11 @@ bool DS3231::adjust(const DateTime& dt) {
 bool DS3231::now(DateTime* dt) {
   uint8_t values[7];  // for registers 0x00 - 0x06.
   auto op = i2c_.CreateReadOp(DS3231_I2C_ADDRESS, REGISTER_TIME_SECONDS, "now");
-  if (!op)
+  if (!op.ready())
     return false;
-  if (!op->Read(values, sizeof(values)))
+  if (!op.Read(values, sizeof(values)))
     return false;
-  if (!op->Execute())
+  if (!op.Execute())
     return false;
 
   // BUG: Correctly handle the DY/DT flag. This assumes always date.
@@ -208,11 +208,11 @@ bool DS3231::writeSqwPinMode(SqwPinMode mode) {
 
 float DS3231::getTemperature() {
   auto op = i2c_.CreateReadOp(DS3231_I2C_ADDRESS, REGISTER_TEMP_MSB, "getTemp");
-  if (!op)
+  if (!op.ready())
     return std::numeric_limits<int16_t>::max();
   uint8_t values[2];  // MSB and LSB respectively.
-  op->Read(&values, sizeof(values));
-  if (!op->Execute())
+  op.Read(&values, sizeof(values));
+  if (!op.Execute())
     return std::numeric_limits<int16_t>::max();
   // Combine the 10-bit signed msb+lsb into a single floating point number
   // with 0.25°C accuracy. See DSD3231 spec pg. 15.
@@ -262,15 +262,15 @@ bool DS3231::setAlarm1(const DateTime& dt, Alarm1Mode alarm_mode) {
 
   auto op = i2c_.CreateWriteOp(DS3231_I2C_ADDRESS, REGISTER_ALARM1_SECONDS,
                                "setalm1");
-  if (!op)
+  if (!op.ready())
     return false;
-  op->Write(values, sizeof(values));
+  op.Write(values, sizeof(values));
 
-  op->Restart(DS3231_I2C_ADDRESS, REGISTER_CONTROL, i2c::OperationType::WRITE);
+  op.RestartReg(REGISTER_CONTROL, i2c::Operation::Type::WRITE);
   SET_BITS(ctrl, CONTROL_A1IE);
-  op->WriteByte(ctrl);
+  op.WriteByte(ctrl);
 
-  return op->Execute();
+  return op.Execute();
 }
 
 bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
@@ -303,15 +303,15 @@ bool DS3231::setAlarm2(const DateTime& dt, Alarm2Mode alarm_mode) {
 
   auto op = i2c_.CreateWriteOp(DS3231_I2C_ADDRESS, REGISTER_ALARM2_MINUTES,
                                "setalm2");
-  if (!op)
+  if (!op.ready())
     return false;
-  op->Write(values, sizeof(values));
+  op.Write(values, sizeof(values));
 
-  op->Restart(DS3231_I2C_ADDRESS, REGISTER_CONTROL, i2c::OperationType::WRITE);
+  op.RestartReg(REGISTER_CONTROL, i2c::Operation::Type::WRITE);
   SET_BITS(ctrl, CONTROL_A2IE);
-  op->WriteByte(ctrl);
+  op.WriteByte(ctrl);
 
-  return op->Execute();
+  return op.Execute();
 }
 
 void DS3231::disableAlarm(Alarm alarm) {

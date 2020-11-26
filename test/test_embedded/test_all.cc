@@ -16,7 +16,7 @@
 #include <rtclib/pcf8563.h>
 #include <rtclib/timespan.h>
 
-#define TEST_PCF8623
+//#define TEST_PCF8623
 
 /**
  * The I2C bus speed when running tests.
@@ -268,10 +268,10 @@ void test_ds3231_alarm1() {
 
   i2c::Master master(TEST_I2C_PORT1, g_i2c_mutex);
   auto op = master.CreateReadOp(0x68, 0x07, "test_ds3231_alarm1");
-  TEST_ASSERT_NOT_NULL(op);
+  TEST_ASSERT_TRUE(op.ready());
   uint8_t values[4];
-  op->Read(values, sizeof(values));
-  TEST_ASSERT_TRUE(op->Execute());
+  op.Read(values, sizeof(values));
+  TEST_ASSERT_TRUE(op.Execute());
   // TODO: Verify all register values once alarms are completed.
 }
 
@@ -290,10 +290,10 @@ void test_ds3231_alarm2() {
 
   i2c::Master master(TEST_I2C_PORT1, g_i2c_mutex);
   auto op = master.CreateReadOp(0x68, 0x0b, "test_ds3231_alarm2");
-  TEST_ASSERT_NOT_NULL(op);
+  TEST_ASSERT_TRUE(op.ready());
   uint8_t values[3];
-  op->Read(values, sizeof(values));
-  TEST_ASSERT_TRUE(op->Execute());
+  op.Read(values, sizeof(values));
+  TEST_ASSERT_TRUE(op.Execute());
   // TODO: Verify all register values once alarms are completed.
 }
 
@@ -343,49 +343,45 @@ void process() {
 #if !defined(TEST_PCF8623)
 
 bool clear_ds3231_registers() {
-  std::unique_ptr<i2c::Master> master(
-      new i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
+  i2c::Master master(TEST_I2C_PORT1, g_i2c_mutex);
   uint8_t registers[1 + 0x12] = {0};
-  auto op = master->CreateWriteOp(DS3231_I2C_ADDRESS, 0x0, "clear_DS3231");
-  if (!op)
+  auto op = master.CreateWriteOp(DS3231_I2C_ADDRESS, 0x0, "clear_DS3231");
+  if (!op.ready())
     return false;
-  op->Write(registers, sizeof(registers));
-  return op->Execute();
+  op.Write(registers, sizeof(registers));
+  return op.Execute();
 }
 
 bool clear_ds1307_registers() {
-  std::unique_ptr<i2c::Master> master(
-      new i2c::Master(TEST_I2C_PORT2, g_i2c_mutex));
+  i2c::Master master(TEST_I2C_PORT2, g_i2c_mutex);
   uint8_t registers[1 + 0x07] = {0};
-  auto op = master->CreateWriteOp(DS1307_I2C_ADDRESS, 0x0, "clear_DS1307");
-  if (!op)
+  auto op = master.CreateWriteOp(DS1307_I2C_ADDRESS, 0x0, "clear_DS1307");
+  if (!op.ready())
     return false;
-  op->Write(registers, sizeof(registers));
-  return op->Execute();
+  op.Write(registers, sizeof(registers));
+  return op.Execute();
 }
 
 #endif  // !defined(TEST_PCF8623)
 
 bool clear_pcf8523_registers() {
-  std::unique_ptr<i2c::Master> master(
-      new i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
+  i2c::Master master(TEST_I2C_PORT1, g_i2c_mutex);
   uint8_t registers[1 + 0x13] = {0};
-  auto op = master->CreateWriteOp(PCF8523_I2C_ADDRESS, 0x0, "clear_PCF8523");
-  if (!op)
+  auto op = master.CreateWriteOp(PCF8523_I2C_ADDRESS, 0x0, "clear_PCF8523");
+  if (!op.ready())
     return false;
-  op->Write(registers, sizeof(registers));
-  return op->Execute();
+  op.Write(registers, sizeof(registers));
+  return op.Execute();
 }
 
 bool clear_pcf8563_registers() {
-  std::unique_ptr<i2c::Master> master(
-      new i2c::Master(TEST_I2C_PORT1, g_i2c_mutex));
+  i2c::Master master(TEST_I2C_PORT1, g_i2c_mutex);
   uint8_t registers[1 + 0x0f] = {0};
-  auto op = master->CreateWriteOp(PCF8563_I2C_ADDRESS, 0x0, "clear_PCF8563");
-  if (!op)
+  auto op = master.CreateWriteOp(PCF8563_I2C_ADDRESS, 0x0, "clear_PCF8563");
+  if (!op.ready())
     return false;
-  op->Write(registers, sizeof(registers));
-  return op->Execute();
+  op.Write(registers, sizeof(registers));
+  return op.Execute();
 }
 
 }  // namespace
