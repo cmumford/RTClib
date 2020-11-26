@@ -67,3 +67,8 @@ your hardware. Run the tests as follows:
 ```sh
 make test
 ```
+
+The hardware test setup looks like this:
+
+![RTC testing configuration](images/clocks.jpg)
+
