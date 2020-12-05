@@ -29,6 +29,7 @@ constexpr uint8_t DS3231_I2C_ADDRESS = 0x68;
 constexpr uint8_t DS1307_I2C_ADDRESS = 0x68;
 constexpr uint8_t PCF8523_I2C_ADDRESS = 0x68;
 constexpr uint8_t PCF8563_I2C_ADDRESS = 0x51;
+constexpr TickType_t kStartupDelay = 1000 / portTICK_PERIOD_MS;
 
 SemaphoreHandle_t g_i2c_mutex;
 
@@ -405,6 +406,12 @@ void setUp(void) {
   }
 }
 
+void WaitForDebugMonitor() {
+  // Poor man's way of waiting till the monitor has connected.
+  vTaskDelay(kStartupDelay);
+}
+
 extern "C" void app_main() {
+  WaitForDebugMonitor();
   process();
 }
