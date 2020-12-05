@@ -352,7 +352,8 @@ bool clear_ds3231_registers() {
   auto op = master.CreateWriteOp(DS3231_I2C_ADDRESS, 0x0, "clear_DS3231");
   if (!op.ready())
     return false;
-  op.Write(registers, sizeof(registers));
+  if (!op.Write(registers, sizeof(registers)))
+    return false;
   return op.Execute();
 }
 
@@ -362,7 +363,8 @@ bool clear_ds1307_registers() {
   auto op = master.CreateWriteOp(DS1307_I2C_ADDRESS, 0x0, "clear_DS1307");
   if (!op.ready())
     return false;
-  op.Write(registers, sizeof(registers));
+  if (!op.Write(registers, sizeof(registers)))
+    return false;
   return op.Execute();
 }
 
@@ -372,7 +374,8 @@ bool clear_pcf8523_registers() {
   auto op = master.CreateWriteOp(PCF8523_I2C_ADDRESS, 0x0, "clear_PCF8523");
   if (!op.ready())
     return false;
-  op.Write(registers, sizeof(registers));
+  if (!op.Write(registers, sizeof(registers)))
+    return false;
   return op.Execute();
 }
 
@@ -382,7 +385,8 @@ bool clear_pcf8563_registers() {
   auto op = master.CreateWriteOp(PCF8563_I2C_ADDRESS, 0x0, "clear_PCF8563");
   if (!op.ready())
     return false;
-  op.Write(registers, sizeof(registers));
+  if (!op.Write(registers, sizeof(registers)))
+    return false;
   return op.Execute();
 }
 
