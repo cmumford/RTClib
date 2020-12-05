@@ -18,6 +18,10 @@
 
 using i2c::Master;
 
+using namespace rtc;
+
+namespace {
+
 /**
  * The I2C bus speed when running tests.
  *
@@ -32,11 +36,6 @@ constexpr uint8_t PCF8563_I2C_ADDRESS = 0x51;
 constexpr TickType_t kStartupDelay = 1000 / portTICK_PERIOD_MS;
 
 SemaphoreHandle_t g_i2c_mutex;
-
-using namespace rtc;
-
-namespace {
-
 int g_test_clock;
 
 DS3231 CreateDS3231() {
