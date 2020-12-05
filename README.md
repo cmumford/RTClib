@@ -8,9 +8,9 @@ Additionally:
 
 1. Return values (usually boolean) indicate success/failure
    of most calls.
-2. API requires C++11.
+2. Modernize implementation to support/require [C++11](https://en.cppreference.com/w/cpp/11).
 3. Bug fixes.
-4. Unit tests.
+4. Unit tests (with hardware testing).
 5. PulseView protocol decoders.
 
 This is currently a [PlatformIO](https://platformio.org/) library.
@@ -28,8 +28,9 @@ from the RTC:
 using namespace rtc;
 
 // Initialize the I2C bus - this needs to be done only once.
-i2c::Master::Initialize(I2C_PORT, I2C_SDA_GPIO,
-                        I2C_CLK_GPIO, I2C_CLOCK_SPEED);
+i2c::Master::Initialize({I2C_PORT, I2C_SDA_GPIO,
+                         I2C_CLK_GPIO, I2C_CLOCK_SPEED,
+                         false, false});
 
 // Create an I2C master for the RTC object so that
 // it can communicate via the I2C bus.
@@ -46,8 +47,8 @@ rtc.now(&now);
 
 ## Developer Notes
 
-The implementation is largely platform independent, platform specific
-code is restricted to a few files. Support for Arduino might be re-added
+The implementation is largely platform independent. Platform specific
+code is restricted to a few files, and support for Arduino might be re-added
 n the future.
 
 ### Code formatting
