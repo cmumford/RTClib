@@ -309,8 +309,9 @@ void process() {
 
   UNITY_BEGIN();
 
-  Master::Initialize(TEST_I2C_PORT, DS3231_I2C_SDA_GPIO, DS3231_I2C_CLK_GPIO,
-                     kI2CClockHz);
+  Master::Initialize({TEST_I2C_PORT, DS3231_I2C_SDA_GPIO, DS3231_I2C_CLK_GPIO,
+                      kI2CClockHz, false, false});
+
   g_test_clock = 3231;
   RUN_TEST(test_ds3231_set_and_get_date);
   RUN_TEST(test_ds3231_32k);
@@ -321,22 +322,24 @@ void process() {
   RUN_TEST(test_ds3231_agingOffset);
   Master::Shutdown(TEST_I2C_PORT);
 
-  Master::Initialize(TEST_I2C_PORT, DS1307_I2C_SDA_GPIO, DS1307_I2C_CLK_GPIO,
-                     kI2CClockHz);
+  Master::Initialize({TEST_I2C_PORT, DS1307_I2C_SDA_GPIO, DS1307_I2C_CLK_GPIO,
+                      kI2CClockHz, true, true});
   g_test_clock = 1307;
   RUN_TEST(test_ds1307_set_and_get_date);
   RUN_TEST(test_ds1307_square_wave_pin_mode);
   Master::Shutdown(TEST_I2C_PORT);
 
-  Master::Initialize(TEST_I2C_PORT, PCF8523_I2C_SDA_GPIO, PCF8523_I2C_CLK_GPIO,
-                     kI2CClockHz);
+  // The project test setup's DS1307 breakout doesn't have I2C pullup resistors,
+  // so enable the MCU's pullup resistors.
+  Master::Initialize({TEST_I2C_PORT, PCF8523_I2C_SDA_GPIO, PCF8523_I2C_CLK_GPIO,
+                      kI2CClockHz, false, false});
   g_test_clock = 8523;
   RUN_TEST(test_pcf8523_set_and_get_date);
   RUN_TEST(test_pcf8523_square_wave_pin_mode);
   Master::Shutdown(TEST_I2C_PORT);
 
-  Master::Initialize(TEST_I2C_PORT, PCF8563_I2C_SDA_GPIO, PCF8563_I2C_CLK_GPIO,
-                     kI2CClockHz);
+  Master::Initialize({TEST_I2C_PORT, PCF8563_I2C_SDA_GPIO, PCF8563_I2C_CLK_GPIO,
+                      kI2CClockHz, false, false});
   g_test_clock = 8563;
   RUN_TEST(test_pcf8563_set_and_get_date);
   RUN_TEST(test_pcf8563_square_wave_pin_mode);
